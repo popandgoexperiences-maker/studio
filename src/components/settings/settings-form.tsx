@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import { useEffect } from 'react';
 import Image from 'next/image';
 import { Save, Upload, Loader2 } from 'lucide-react';
@@ -27,7 +27,7 @@ type SettingsFormProps = {
 
 export function SettingsForm({ user, images }: SettingsFormProps) {
     const { toast } = useToast();
-    const [state, formAction] = useFormState(updateSettings, undefined);
+    const [state, formAction] = useActionState(updateSettings, undefined);
 
     useEffect(() => {
         if (state?.message) {

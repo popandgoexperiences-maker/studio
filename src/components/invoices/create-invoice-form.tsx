@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition, useActionState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useFormState } from 'react-dom';
 import { Plus, Trash2, Loader2, Save } from 'lucide-react';
 
 import { createInvoice } from '@/lib/actions';
@@ -36,7 +35,7 @@ const invoiceSchema = z.object({
 type InvoiceFormValues = z.infer<typeof invoiceSchema>;
 
 export function CreateInvoiceForm() {
-  const [state, formAction] = useFormState(createInvoice, undefined);
+  const [state, formAction] = useActionState(createInvoice, undefined);
   const { toast } = useToast();
   
   const [isPending, startTransition] = useTransition();

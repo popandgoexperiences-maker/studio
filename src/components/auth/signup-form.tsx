@@ -1,6 +1,7 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
 import Link from 'next/link';
 import { signup } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ import { AlertCircle, UserPlus } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 export function SignupForm() {
-  const [state, dispatch] = useFormState(signup, undefined);
+  const [state, dispatch] = useActionState(signup, undefined);
 
   return (
     <form action={dispatch}>
