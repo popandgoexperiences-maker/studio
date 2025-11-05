@@ -16,7 +16,6 @@ import { Logo } from '@/components/logo';
 import { Settings, LogOut, FileText, User } from 'lucide-react';
 import { logout } from '@/lib/actions';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useIsMobile } from '@/hooks/use-mobile';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,10 +31,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { Skeleton } from './ui/skeleton';
 
 export function SidebarNav() {
   const pathname = usePathname();
-  const isMobile = useIsMobile();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -48,14 +47,49 @@ export function SidebarNav() {
   ];
 
   const userProfile = (
-    <div className="flex items-center gap-3">
-      <Avatar className="h-9 w-9">
-        <AvatarImage src="https://picsum.photos/seed/avatar/40/40" alt="Avatar" data-ai-hint="person avatar" />
-        <AvatarFallback>TN</AvatarFallback>
-      </Avatar>
-      <div>
-        <p className="text-sm font-medium text-sidebar-foreground">Tu Nombre</p>
-        <p className="text-xs text-sidebar-foreground/70">tu@email.com</p>
+     <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-auto w-full justify-start p-2 text-left">
+           <div className="flex items-center gap-3">
+              <Avatar className="h-9 w-9">
+                <AvatarImage src="https://picsum.photos/seed/avatar/40/40" alt="Avatar" data-ai-hint="person avatar" />
+                <AvatarFallback>TN</AvatarFallback>
+              </Avatar>
+              <div className='text-left'>
+                <p className="text-sm font-medium text-sidebar-foreground">Tu Nombre</p>
+                <p className="text-xs text-sidebar-foreground/70">tu@email.com</p>
+              </div>
+            </div>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent side="right" align="start" className="w-56">
+        <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <Link href="/settings">
+          <DropdownMenuItem>
+            <User className="mr-2 h-4 w-4" />
+            <span>Perfil</span>
+          </DropdownMenuItem>
+        </Link>
+        <DropdownMenuSeparator />
+        <form action={logout}>
+          <DropdownMenuItem asChild>
+            <button type="submit" className='w-full'>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Cerrar sesión</span>
+            </button>
+          </DropdownMenuItem>
+        </form>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
+  const userProfileSkeleton = (
+    <div className="flex items-center gap-3 p-2">
+      <Skeleton className="h-9 w-9 rounded-full" />
+      <div className="space-y-1">
+        <Skeleton className="h-4 w-20" />
+        <Skeleton className="h-3 w-28" />
       </div>
     </div>
   );
@@ -68,12 +102,12 @@ export function SidebarNav() {
       <SidebarContent className="p-2">
         <SidebarMenu>
           {navItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
+             <SidebarMenuItem key={item.href}>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Link href={item.href}>
-                      <SidebarMenuButton isActive={pathname === item.href}>
+                      <SidebarMenuButton isActive={pathname.startsWith(item.href)}>
                         <item.icon />
                         <span>{item.label}</span>
                       </SidebarMenuButton>
@@ -91,48 +125,7 @@ export function SidebarNav() {
       <SidebarFooter>
         <SidebarSeparator />
         <div className="p-2">
-          {isClient ? (
-            isMobile ? (
-              userProfile
-            ) : (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-auto w-full justify-start p-2 text-left">
-                    {userProfile}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent side="right" align="start" className="w-56">
-                  <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <Link href="/settings">
-                    <DropdownMenuItem>
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Perfil</span>
-                    </DropdownMenuItem>
-                  </Link>
-                  <DropdownMenuSeparator />
-                  <form action={logout}>
-                    <DropdownMenuItem asChild>
-                      <button type="submit" className='w-full'>
-                        <LogOut className="mr-2 h-4 w-4" />
-                        <span>Cerrar sesión</span>
-                      </button>
-                    </DropdownMenuItem>
-                  </form>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )
-          ) : (
-            // Render a skeleton or placeholder on the server and during initial client render
-            <div className="flex items-center gap-3 p-2">
-                <Avatar className="h-9 w-9">
-                    <AvatarFallback>TN</AvatarFallback>
-                </Avatar>
-                <div>
-                    <p className="text-sm font-medium text-sidebar-foreground">Cargando...</p>
-                </div>
-            </div>
-          )}
+          {isClient ? userProfile : userProfileSkeleton}
         </div>
       </SidebarFooter>
     </>
