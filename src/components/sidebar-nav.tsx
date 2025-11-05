@@ -66,7 +66,7 @@ export function SidebarNav() {
             <SidebarMenuItem key={item.href}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Link href={item.href} passHref legacyBehavior>
+                  <Link href={item.href} passHref>
                     <SidebarMenuButton
                       as="a"
                       isActive={pathname === item.href}
