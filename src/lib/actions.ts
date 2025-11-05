@@ -25,6 +25,7 @@ export async function login(prevState: any, formData: FormData) {
   // En una aplicación real, aquí llamarías a Firebase Auth.
   // Para esta simulación, asumimos que el inicio de sesión es exitoso.
 
+  revalidatePath('/');
   redirect('/');
 }
 
@@ -46,6 +47,7 @@ export async function signup(prevState: any, formData: FormData) {
   
   // En una aplicación real, aquí llamarías a Firebase Auth para crear un usuario.
   
+  revalidatePath('/');
   redirect('/');
 }
 
@@ -59,9 +61,9 @@ export async function logout() {
 // --- INVOICE ACTIONS ---
 
 const LineItemSchema = z.object({
-  description: z.string().min(1, "La descripción no puede estar vacía."),
-  quantity: z.coerce.number().gt(0, "La cantidad debe ser mayor que 0."),
-  unitPrice: z.coerce.number().gt(0, "El precio debe ser mayor que 0."),
+  descripcion: z.string().min(1, "La descripción no puede estar vacía."),
+  cantidad: z.coerce.number().gt(0, "La cantidad debe ser mayor que 0."),
+  precioUnitario: z.coerce.number().gt(0, "El precio debe ser mayor que 0."),
 });
 
 const InvoiceSchema = z.object({
