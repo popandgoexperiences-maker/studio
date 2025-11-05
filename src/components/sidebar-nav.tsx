@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -36,6 +36,12 @@ import {
 export function SidebarNav() {
   const pathname = usePathname();
   const isMobile = useIsMobile();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
 
   const navItems = [
     { href: '/invoices', label: 'Facturas', icon: FileText },
@@ -64,22 +70,23 @@ export function SidebarNav() {
         <SidebarMenu>
           {navItems.map((item) => (
             <SidebarMenuItem key={item.href}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link href={item.href} passHref>
-                    <SidebarMenuButton
-                      as="a"
-                      isActive={pathname === item.href}
-                    >
-                      <item.icon />
-                      <span>{item.label}</span>
-                    </SidebarMenuButton>
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent side="right" align="center">
-                  {item.label}
-                </TooltipContent>
-              </Tooltip>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link href={item.href}>
+                      <SidebarMenuButton
+                        isActive={pathname === item.href}
+                      >
+                        <item.icon />
+                        <span>{item.label}</span>
+                      </SidebarMenuButton>
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" align="center">
+                    {item.label}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
@@ -87,7 +94,7 @@ export function SidebarNav() {
       <SidebarFooter>
         <SidebarSeparator />
         <div className="p-2">
-          {isMobile ? (
+          {isClient && (isMobile ? (
              userProfile
           ) : (
             <DropdownMenu>
@@ -116,7 +123,7 @@ export function SidebarNav() {
                 </form>
               </DropdownMenuContent>
             </DropdownMenu>
-          )}
+          ))}
         </div>
       </SidebarFooter>
     </>
