@@ -26,6 +26,11 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import { Button } from './ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export function SidebarNav() {
   const pathname = usePathname();
@@ -58,15 +63,21 @@ export function SidebarNav() {
         <SidebarMenu>
           {navItems.map((item) => (
             <SidebarMenuItem key={item.href}>
-              <Link href={item.href}>
-                <SidebarMenuButton
-                  isActive={pathname === item.href}
-                  tooltip={{ children: item.label, side: 'right' }}
-                >
-                  <item.icon />
-                  <span>{item.label}</span>
-                </SidebarMenuButton>
-              </Link>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link href={item.href}>
+                    <SidebarMenuButton
+                      isActive={pathname === item.href}
+                    >
+                      <item.icon />
+                      <span>{item.label}</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="right" align="center">
+                  {item.label}
+                </TooltipContent>
+              </Tooltip>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
