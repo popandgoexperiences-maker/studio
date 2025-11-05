@@ -9,7 +9,6 @@ import { Plus, Trash2, Loader2, Save } from 'lucide-react';
 
 import { createInvoice } from '@/lib/actions';
 import { formatCurrency } from '@/lib/utils';
-import { calculateInvoiceAmounts } from '@/ai/flows/calculate-invoice-amounts';
 
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -70,28 +69,18 @@ export function CreateInvoiceForm() {
   const lineItemsWatch = watch('lineItems');
 
   useEffect(() => {
-    const calculateTotals = async () => {
+    const calculateTotals = () => {
       const lineItems = getValues('lineItems').filter(
         item => item.descripcion && item.cantidad > 0 && item.precioUnitario > 0
       );
 
       if (lineItems.length > 0) {
         setIsCalculating(true);
-        try {
-          const result = await calculateInvoiceAmounts({ conceptos: lineItems.map(i => ({...i, precioUnitario: Number(i.precioUnitario), cantidad: Number(i.cantidad)})) });
-          if (result) {
-            setTotals(result);
-          }
-        } catch (error) {
-          console.error("Error calculating totals:", error);
-          toast({
-            variant: "destructive",
-            title: "Error de cálculo",
-            description: "No se pudieron calcular los totales automáticamente.",
-          });
-        } finally {
-          setIsCalculating(false);
-        }
+        const subtotal = lineItems.reduce((acc, item) => acc + Number(item.cantidad) * Number(item.precioUnitario), 0);
+        const iva = subtotal * 0.10;
+        const total = subtotal + iva;
+        setTotals({ subtotal, iva, total });
+        setIsCalculating(false);
       } else {
         setTotals({ subtotal: 0, iva: 0, total: 0 });
       }
