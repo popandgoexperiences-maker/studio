@@ -1,3 +1,22 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "default-logo",
+      "description": "Default company logo placeholder",
+      "imageUrl": "https://images.unsplash.com/photo-1687523327554-fa9f50423489?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxjb21wYW55JTIwbG9nb3xlbnwwfHx8fDE3NjIzNDE0ODh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "company logo"
+    },
+    {
+      "id": "default-signature",
+      "description": "Default signature placeholder",
+      "imageUrl": "https://images.unsplash.com/photo-1647464884131-ce1af69be064?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxzaWduYXR1cmUlMjBncmFwaGljfGVufDB8fHx8MTc2MjM4Mjg3NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "signature graphic"
+    },
+    {
+      "id": "default-seal",
+      "description": "Default company seal placeholder",
+      "imageUrl": "https://images.unsplash.com/photo-1756988183893-dbf4a5dbbce7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxjb21wYW55JTIwc2VhbHxlbnwwfHx8fDE3NjIzODI4NzR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "company seal"
+    }
+  ]
 }
