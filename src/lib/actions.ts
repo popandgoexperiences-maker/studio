@@ -25,8 +25,8 @@ export async function login(prevState: any, formData: FormData) {
   // En una aplicación real, aquí llamarías a Firebase Auth.
   // Para esta simulación, asumimos que el inicio de sesión es exitoso.
 
-  revalidatePath('/');
-  redirect('/');
+  revalidatePath('/invoices');
+  redirect('/invoices');
 }
 
 const SignupSchema = z.object({
@@ -47,8 +47,8 @@ export async function signup(prevState: any, formData: FormData) {
   
   // En una aplicación real, aquí llamarías a Firebase Auth para crear un usuario.
   
-  revalidatePath('/');
-  redirect('/');
+  revalidatePath('/invoices');
+  redirect('/invoices');
 }
 
 
@@ -119,8 +119,8 @@ export async function createInvoice(prevState: any, formData: FormData) {
     return { message: 'Error al crear la factura.' };
   }
 
-  revalidatePath('/');
-  redirect('/');
+  revalidatePath('/invoices');
+  redirect('/invoices');
 }
 
 // --- SETTINGS ACTIONS ---

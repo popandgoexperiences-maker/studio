@@ -32,7 +32,7 @@ export function SidebarNav() {
   const isMobile = useIsMobile();
 
   const navItems = [
-    { href: '/', label: 'Facturas', icon: FileText },
+    { href: '/invoices', label: 'Facturas', icon: FileText },
     { href: '/settings', label: 'Configuración', icon: Settings },
   ];
 
