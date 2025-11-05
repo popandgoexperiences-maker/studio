@@ -42,7 +42,6 @@ export function SidebarNav() {
     setIsClient(true);
   }, []);
 
-
   const navItems = [
     { href: '/invoices', label: 'Facturas', icon: FileText },
     { href: '/settings', label: 'Configuración', icon: Settings },
@@ -74,9 +73,7 @@ export function SidebarNav() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Link href={item.href}>
-                      <SidebarMenuButton
-                        isActive={pathname === item.href}
-                      >
+                      <SidebarMenuButton isActive={pathname === item.href}>
                         <item.icon />
                         <span>{item.label}</span>
                       </SidebarMenuButton>
@@ -94,36 +91,48 @@ export function SidebarNav() {
       <SidebarFooter>
         <SidebarSeparator />
         <div className="p-2">
-          {isClient && (isMobile ? (
-             userProfile
+          {isClient ? (
+            isMobile ? (
+              userProfile
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-auto w-full justify-start p-2 text-left">
+                    {userProfile}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="right" align="start" className="w-56">
+                  <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <Link href="/settings">
+                    <DropdownMenuItem>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Perfil</span>
+                    </DropdownMenuItem>
+                  </Link>
+                  <DropdownMenuSeparator />
+                  <form action={logout}>
+                    <DropdownMenuItem asChild>
+                      <button type="submit" className='w-full'>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Cerrar sesión</span>
+                      </button>
+                    </DropdownMenuItem>
+                  </form>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )
           ) : (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-auto w-full justify-start p-2 text-left">
-                  {userProfile}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="right" align="start" className="w-56">
-                <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <Link href="/settings">
-                  <DropdownMenuItem>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Perfil</span>
-                  </DropdownMenuItem>
-                </Link>
-                <DropdownMenuSeparator />
-                <form action={logout}>
-                   <DropdownMenuItem asChild>
-                     <button type="submit" className='w-full'>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Cerrar sesión</span>
-                     </button>
-                  </DropdownMenuItem>
-                </form>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ))}
+            // Render a skeleton or placeholder on the server and during initial client render
+            <div className="flex items-center gap-3 p-2">
+                <Avatar className="h-9 w-9">
+                    <AvatarFallback>TN</AvatarFallback>
+                </Avatar>
+                <div>
+                    <p className="text-sm font-medium text-sidebar-foreground">Cargando...</p>
+                </div>
+            </div>
+          )}
         </div>
       </SidebarFooter>
     </>
