@@ -9,22 +9,22 @@ import { fetchNextInvoiceNumber, fetchUser, saveInvoice, updateUserProfile } fro
 
 const LoginSchema = z.object({
   email: z.string().email('Por favor, introduce un email válido.'),
-  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres.'),
+  password: z.string().min(1, 'La contraseña es requerida.'),
 });
 
 export async function login(prevState: any, formData: FormData) {
-  try {
-    const validatedFields = LoginSchema.safeParse(Object.fromEntries(formData.entries()));
+  const validatedFields = LoginSchema.safeParse(Object.fromEntries(formData.entries()));
 
-    if (!validatedFields.success) {
-      return {
-        message: 'Error de validación. Revisa los campos.',
-      };
-    }
-    // In a real app, you'd call Firebase auth here.
-  } catch (error) {
-    return { message: 'Error al iniciar sesión.' };
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Error de validación.',
+    };
   }
+
+  // En una aplicación real, aquí llamarías a Firebase Auth.
+  // Para esta simulación, asumimos que el inicio de sesión es exitoso.
+
   redirect('/');
 }
 
@@ -35,20 +35,20 @@ const SignupSchema = z.object({
 });
 
 export async function signup(prevState: any, formData: FormData) {
-  try {
-    const validatedFields = SignupSchema.safeParse(Object.fromEntries(formData.entries()));
+  const validatedFields = SignupSchema.safeParse(Object.fromEntries(formData.entries()));
 
-    if (!validatedFields.success) {
-      return {
-        message: 'Error de validación. Revisa los campos.',
-      };
-    }
-    // In a real app, you'd call Firebase auth to create a user.
-  } catch (error) {
-    return { message: 'Error al registrarse.' };
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Error de validación. Revisa los campos.',
+    };
   }
+  
+  // En una aplicación real, aquí llamarías a Firebase Auth para crear un usuario.
+  
   redirect('/');
 }
+
 
 export async function logout() {
   // In a real app, you'd call Firebase signOut here.

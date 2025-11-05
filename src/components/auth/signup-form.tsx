@@ -27,16 +27,19 @@ export function SignupForm() {
           <div className="space-y-2">
             <Label htmlFor="name">Nombre Completo</Label>
             <Input id="name" name="name" placeholder="Tu Nombre" required />
+            {state?.errors?.name && <p className="text-sm text-destructive">{state.errors.name}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input id="email" name="email" type="email" placeholder="tu@email.com" required />
+            {state?.errors?.email && <p className="text-sm text-destructive">{state.errors.email}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Contraseña</Label>
             <Input id="password" name="password" type="password" required />
+            {state?.errors?.password && <p className="text-sm text-destructive">{state.errors.password}</p>}
           </div>
-           {state?.message && (
+           {state?.message && !state.errors && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Error</AlertTitle>
