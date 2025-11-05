@@ -29,6 +29,7 @@ import { Button } from './ui/button';
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
