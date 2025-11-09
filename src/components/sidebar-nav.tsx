@@ -22,38 +22,13 @@ import {
 } from '@/components/ui/tooltip';
 import { UserProfileButton } from './auth/user-profile-button';
 
-
 export function SidebarNav() {
   const pathname = usePathname();
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   const navItems = [
     { href: '/invoices', label: 'Facturas', icon: FileText },
     { href: '/settings', label: 'Configuración', icon: Settings },
   ];
-
-  if (!isClient) {
-    return (
-      <>
-        <SidebarHeader>
-          <Logo className="text-sidebar-foreground" />
-        </SidebarHeader>
-        <SidebarContent className="p-2">
-          {/* Skeleton while waiting for client render */}
-        </SidebarContent>
-        <SidebarFooter>
-          <SidebarSeparator />
-          <div className="p-2">
-            <UserProfileButton />
-          </div>
-        </SidebarFooter>
-      </>
-    )
-  }
 
   return (
     <>
@@ -68,7 +43,7 @@ export function SidebarNav() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Link href={item.href}>
-                      <SidebarMenuButton isActive={pathname.startsWith(item.href)}>
+                      <SidebarMenuButton>
                         <item.icon />
                         <span>{item.label}</span>
                       </SidebarMenuButton>
@@ -86,7 +61,7 @@ export function SidebarNav() {
       <SidebarFooter>
         <SidebarSeparator />
         <div className="p-2">
-            <UserProfileButton />
+          <UserProfileButton />
         </div>
       </SidebarFooter>
     </>
