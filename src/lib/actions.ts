@@ -67,6 +67,7 @@ const LineItemSchema = z.object({
 });
 
 const ClientSchema = z.object({
+    id: z.string().optional(),
     name: z.string().min(1, "El nombre del cliente es requerido."),
     nif: z.string().min(1, "El NIF del cliente es requerido."),
     address: z.string().min(1, "La dirección del cliente es requerida."),

@@ -58,10 +58,11 @@ export function CreateInvoiceForm({ clients }: { clients: Client[] }) {
     watch,
     getValues,
     setValue,
+    resetField,
   } = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: {
-      client: { name: '', nif: '', address: '' },
+      client: { id: '', name: '', nif: '', address: '' },
       lineItems: [{ descripcion: '', cantidad: 1, precioUnitario: 0 }],
     },
   });
@@ -99,7 +100,7 @@ export function CreateInvoiceForm({ clients }: { clients: Client[] }) {
     return () => {
         clearTimeout(handler);
     };
-  }, [lineItemsWatch, getValues, toast]);
+  }, [lineItemsWatch, getValues]);
   
   const onFormSubmit = (data: InvoiceFormValues) => {
     startTransition(() => {
@@ -139,11 +140,25 @@ export function CreateInvoiceForm({ clients }: { clients: Client[] }) {
                             clients={clients}
                             value={clientNameWatch}
                             onClientSelect={(client) => {
+                                setValue('client.id', client.id);
                                 setValue('client.name', client.name);
                                 setValue('client.nif', client.nif);
                                 setValue('client.address', client.address);
                             }}
-                            onValueChange={(value) => setValue('client.name', value)}
+                            onValueChange={(value) => {
+                                setValue('client.name', value);
+                                // If user types a new name, clear the id.
+                                if (clients.find(c => c.name === value)) {
+                                    const client = clients.find(c => c.name === value);
+                                    if(client) {
+                                      setValue('client.id', client.id);
+                                      setValue('client.nif', client.nif);
+                                      setValue('client.address', client.address);
+                                    }
+                                } else {
+                                    setValue('client.id', '');
+                                }
+                            }}
                         />
                         {errors.client?.name && <p className="text-sm text-destructive mt-1">{errors.client.name.message}</p>}
                     </div>

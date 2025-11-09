@@ -115,11 +115,12 @@ export async function fetchNextInvoiceNumber(): Promise<string> {
   return `F-${String(nextNumber).padStart(3, '0')}`;
 }
 
-export async function saveInvoice(invoiceData: Omit<Invoice, 'id' | 'user'> & { user: User }): Promise<Invoice> {
+export async function saveInvoice(invoiceData: Omit<Invoice, 'id' | 'user'> & { user: User, client: Client }): Promise<Invoice> {
   await delay(1000);
   
   // Find or create client
-  let client = mockClients.find(c => c.name.toLowerCase() === invoiceData.client.name.toLowerCase());
+  let client = mockClients.find(c => c.id === invoiceData.client.id || c.name.toLowerCase() === invoiceData.client.name.toLowerCase());
+
   if (!client) {
       client = {
           id: String(mockClients.length + 1),
