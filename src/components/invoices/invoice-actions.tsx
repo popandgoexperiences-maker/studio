@@ -30,7 +30,8 @@ export function InvoiceActions({ invoice, user }: { invoice: Invoice; user: User
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {isClient ? (
-           <PDFDownloadLink
+          <DropdownMenuItem asChild>
+            <PDFDownloadLink
               document={<InvoicePDFDocument invoice={invoice} user={user} />}
               fileName={`factura-${invoice.invoiceNumber}.pdf`}
               className="relative flex w-full cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground"
@@ -49,13 +50,14 @@ export function InvoiceActions({ invoice, user }: { invoice: Invoice; user: User
                 )
               }
             </PDFDownloadLink>
+          </DropdownMenuItem>
         ) : (
            <DropdownMenuItem disabled>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               <span>Generando...</span>
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem disabled={!invoice.pdfUrl || invoice.status === 'generating'}>
+        <DropdownMenuItem disabled>
           <Send className="mr-2 h-4 w-4" />
           <span>Enviar por email</span>
         </DropdownMenuItem>
