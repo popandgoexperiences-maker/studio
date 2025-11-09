@@ -25,10 +25,10 @@ import type { Invoice, User } from '@/lib/definitions';
 import { formatCurrency } from '@/lib/utils';
 import { StatusBadge } from './status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { InvoicePDFDocument } from './invoice-pdf-document';
 
 // Dynamically import the PDF download component and disable SSR
-// This is the correct way to handle client-side-only libraries in Next.js
-const InvoicePDFDownload = dynamic(() => import('./invoice-pdf-download').then(mod => mod.InvoicePDFDownload), {
+const PDFDownloadLink = dynamic(() => import('@react-pdf/renderer').then(mod => mod.PDFDownloadLink), {
   ssr: false,
   loading: () => (
     <div className="relative flex w-full cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors">
@@ -87,10 +87,25 @@ export function InvoicesTable({ invoices, user }: { invoices: Invoice[], user: U
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                       <InvoicePDFDownload invoice={invoice} user={user}>
-                          <Download className="mr-2 h-4 w-4" />
-                          <span>Descargar PDF</span>
-                        </InvoicePDFDownload>
+                       <PDFDownloadLink
+                          document={<InvoicePDFDocument invoice={invoice} user={user} />}
+                          fileName={`factura-${invoice.invoiceNumber}.pdf`}
+                          className="relative flex w-full cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground"
+                        >
+                          {({ loading }) => 
+                            loading ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <span>Generando...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Download className="mr-2 h-4 w-4" />
+                                <span>Descargar PDF</span>
+                              </>
+                            )
+                          }
+                        </PDFDownloadLink>
                       <DropdownMenuItem disabled={!invoice.pdfUrl || invoice.status === 'generating'}>
                         <Send className="mr-2 h-4 w-4" />
                         <span>Enviar por email</span>
