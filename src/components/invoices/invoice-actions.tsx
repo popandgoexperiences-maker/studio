@@ -11,7 +11,6 @@ import { MoreHorizontal, Download, Send, Loader2 } from 'lucide-react';
 import type { Invoice, User } from '@/lib/definitions';
 import { InvoicePDFDocument } from './invoice-pdf-document';
 import { useState } from 'react';
-import { pdf } from '@react-pdf/renderer';
 
 export function InvoiceActions({ invoice, user }: { invoice: Invoice; user: User }) {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -19,6 +18,8 @@ export function InvoiceActions({ invoice, user }: { invoice: Invoice; user: User
   const handleDownload = async () => {
     setIsGenerating(true);
     try {
+      // Dynamically import the pdf function only on the client-side, inside the handler
+      const { pdf } = await import('@react-pdf/renderer');
       const blob = await pdf(<InvoicePDFDocument invoice={invoice} user={user} />).toBlob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -30,7 +31,6 @@ export function InvoiceActions({ invoice, user }: { invoice: Invoice; user: User
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Failed to generate PDF", error);
-      // Aquí podrías mostrar una notificación de error al usuario
     } finally {
       setIsGenerating(false);
     }
