@@ -60,7 +60,6 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
     watch,
     getValues,
     setValue,
-    resetField,
   } = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: {
@@ -79,29 +78,23 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
 
   useEffect(() => {
     const calculateTotals = () => {
-      const lineItems = getValues('lineItems').filter(
-        item => item.descripcion && item.cantidad > 0 && item.precioUnitario > 0
-      );
+      setIsCalculating(true);
+      const lineItems = getValues('lineItems');
+      const subtotal = lineItems.reduce((acc, item) => {
+        const quantity = Number(item.cantidad) || 0;
+        const unitPrice = Number(item.precioUnitario) || 0;
+        return acc + quantity * unitPrice;
+      }, 0);
+      
+      const iva = subtotal * vatRate;
+      const total = subtotal + iva;
 
-      if (lineItems.length > 0) {
-        setIsCalculating(true);
-        const subtotal = lineItems.reduce((acc, item) => acc + Number(item.cantidad) * Number(item.precioUnitario), 0);
-        const iva = subtotal * vatRate;
-        const total = subtotal + iva;
-        setTotals({ subtotal, iva, total });
-        setIsCalculating(false);
-      } else {
-        setTotals({ subtotal: 0, iva: 0, total: 0 });
-      }
+      setTotals({ subtotal, iva, total });
+      setIsCalculating(false);
     };
-    
-    const handler = setTimeout(() => {
-        calculateTotals();
-    }, 500);
 
-    return () => {
-        clearTimeout(handler);
-    };
+    const debounceTimeout = setTimeout(calculateTotals, 300);
+    return () => clearTimeout(debounceTimeout);
   }, [lineItemsWatch, getValues, vatRate]);
   
   const onFormSubmit = (data: InvoiceFormValues) => {
