@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import {
   Table,
@@ -27,20 +28,27 @@ import { StatusBadge } from './status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { InvoicePDFDocument } from './invoice-pdf-document';
 
-// Dynamically import the PDF download component and disable SSR
-const PDFDownloadLink = dynamic(() => import('@react-pdf/renderer').then(mod => mod.PDFDownloadLink), {
-  ssr: false,
-  loading: () => (
-    <div className="relative flex w-full cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors">
-      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-      <span>Cargando...</span>
-    </div>
-  ),
-});
-
+const PDFDownloadLink = dynamic(
+  () => import('@react-pdf/renderer').then(mod => mod.PDFDownloadLink),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="relative flex w-full cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors">
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        <span>Cargando...</span>
+      </div>
+    ),
+  }
+);
 
 export function InvoicesTable({ invoices, user }: { invoices: Invoice[], user: User }) {
-    if (invoices.length === 0) {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (invoices.length === 0) {
     return (
       <Card>
         <CardContent className="pt-6">
@@ -87,12 +95,13 @@ export function InvoicesTable({ invoices, user }: { invoices: Invoice[], user: U
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                       <PDFDownloadLink
+                      {isClient && (
+                        <PDFDownloadLink
                           document={<InvoicePDFDocument invoice={invoice} user={user} />}
                           fileName={`factura-${invoice.invoiceNumber}.pdf`}
                           className="relative flex w-full cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground"
                         >
-                          {({ loading }) => 
+                          {({ loading }) =>
                             loading ? (
                               <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -106,6 +115,7 @@ export function InvoicesTable({ invoices, user }: { invoices: Invoice[], user: U
                             )
                           }
                         </PDFDownloadLink>
+                      )}
                       <DropdownMenuItem disabled={!invoice.pdfUrl || invoice.status === 'generating'}>
                         <Send className="mr-2 h-4 w-4" />
                         <span>Enviar por email</span>
