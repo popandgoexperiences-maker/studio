@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import {
   Table,
@@ -14,40 +13,18 @@ import {
   Card,
   CardContent,
 } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Download, Send, Loader2 } from 'lucide-react';
 import type { Invoice, User } from '@/lib/definitions';
 import { formatCurrency } from '@/lib/utils';
 import { StatusBadge } from './status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { InvoicePDFDocument } from './invoice-pdf-document';
 
-const PDFDownloadLink = dynamic(
-  () => import('@react-pdf/renderer').then(mod => mod.PDFDownloadLink),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="relative flex w-full cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors">
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        <span>Cargando...</span>
-      </div>
-    ),
-  }
-);
+const InvoiceActions = dynamic(() => import('./invoice-actions').then(mod => mod.InvoiceActions), {
+  ssr: false,
+  loading: () => <Skeleton className="h-8 w-8" />,
+});
+
 
 export function InvoicesTable({ invoices, user }: { invoices: Invoice[], user: User }) {
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
   if (invoices.length === 0) {
     return (
       <Card>
@@ -87,41 +64,7 @@ export function InvoicesTable({ invoices, user }: { invoices: Invoice[], user: U
                   <StatusBadge status={invoice.status} />
                 </TableCell>
                 <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Abrir menú</span>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {isClient && (
-                        <PDFDownloadLink
-                          document={<InvoicePDFDocument invoice={invoice} user={user} />}
-                          fileName={`factura-${invoice.invoiceNumber}.pdf`}
-                          className="relative flex w-full cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground"
-                        >
-                          {({ loading }) =>
-                            loading ? (
-                              <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                <span>Generando...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Download className="mr-2 h-4 w-4" />
-                                <span>Descargar PDF</span>
-                              </>
-                            )
-                          }
-                        </PDFDownloadLink>
-                      )}
-                      <DropdownMenuItem disabled={!invoice.pdfUrl || invoice.status === 'generating'}>
-                        <Send className="mr-2 h-4 w-4" />
-                        <span>Enviar por email</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <InvoiceActions invoice={invoice} user={user} />
                 </TableCell>
               </TableRow>
             ))}
