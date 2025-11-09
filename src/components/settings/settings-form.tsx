@@ -15,12 +15,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { SignaturePad } from './signature-pad';
 
 type SettingsFormProps = {
   user: User;
   images: {
     logo?: ImagePlaceholder;
-    signature?: ImagePlaceholder;
     seal?: ImagePlaceholder;
   }
 };
@@ -89,7 +89,15 @@ export function SettingsForm({ user, images }: SettingsFormProps) {
                 <CardContent className="space-y-6">
                     <ImageUploadField name="logo" label="Logo" image={images.logo} currentImageUrl={user.logoUrl} />
                     <Separator />
-                    <ImageUploadField name="signature" label="Firma" image={images.signature} currentImageUrl={user.signatureUrl} />
+                    <div className="flex flex-col sm:flex-row items-start gap-6">
+                        <div className="w-full sm:w-1/3">
+                            <Label className="text-base font-medium">Firma</Label>
+                            <p className="text-sm text-muted-foreground mt-1">Dibuja tu firma en el recuadro. Se guardará al hacer clic en "Guardar cambios".</p>
+                        </div>
+                        <div className="w-full sm:w-2/3 flex items-center gap-4">
+                            <SignaturePad name="signature" currentImageUrl={user.signatureUrl} />
+                        </div>
+                    </div>
                     <Separator />
                     <ImageUploadField name="seal" label="Sello de Empresa" image={images.seal} currentImageUrl={user.sealUrl} />
                 </CardContent>

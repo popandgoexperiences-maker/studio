@@ -168,6 +168,7 @@ const SettingsSchema = z.object({
   address: z.string().optional(),
   phone: z.string().optional(),
   vatRate: z.coerce.number().min(0, "El IVA no puede ser negativo.").optional(),
+  signatureUrl: z.string().optional(),
 });
 
 export async function updateSettings(prevState: any, formData: FormData) {
@@ -188,7 +189,19 @@ export async function updateSettings(prevState: any, formData: FormData) {
 
     // In a real app, file handling for logo, signature, seal would be here.
     // For this mock, we assume they are handled separately or we just update text fields.
-    await updateUserProfile(validatedFields.data);
+    
+    const { signatureUrl, ...rest } = validatedFields.data;
+
+    let updatedUserData: Partial<User> = { ...rest };
+
+    // Handle signature data URL
+    const signatureDataUrl = formData.get('signature');
+    if (signatureDataUrl && typeof signatureDataUrl === 'string' && signatureDataUrl.startsWith('data:image/png;base64,')) {
+      updatedUserData.signatureUrl = signatureDataUrl;
+    }
+
+
+    await updateUserProfile(updatedUserData);
 
   } catch (e) {
     return { message: 'Error al actualizar el perfil.' };

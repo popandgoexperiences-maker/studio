@@ -7,7 +7,6 @@ export default async function SettingsPage() {
     const user = await fetchUser();
     
     const logo = PlaceHolderImages.find(img => img.id === 'default-logo');
-    const signature = PlaceHolderImages.find(img => img.id === 'default-signature');
     const seal = PlaceHolderImages.find(img => img.id === 'default-seal');
 
     return (
@@ -16,7 +15,7 @@ export default async function SettingsPage() {
                 title="Configuración"
                 description="Gestiona la información de tu empresa y tus datos personales."
             />
-            <SettingsForm user={user} images={{ logo, signature, seal }} />
+            <SettingsForm user={user} images={{ logo, seal }} />
         </div>
     );
 }
