@@ -4,7 +4,8 @@ import { useEffect, useState, useTransition, useActionState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Trash2, Loader2, Save } from 'lucide-react';
+import { Plus, Trash2, Loader2, Save, UserPlus } from 'lucide-react';
+import Link from 'next/link';
 
 import { createInvoice } from '@/lib/actions';
 import { formatCurrency } from '@/lib/utils';
@@ -134,43 +135,52 @@ export function CreateInvoiceForm({ clients }: { clients: Client[] }) {
                 <CardHeader>
                     <CardTitle>Datos del Cliente</CardTitle>
                 </CardHeader>
-                <CardContent className="grid sm:grid-cols-2 gap-4">
-                    <div className="sm:col-span-2">
-                        <ClientAutocomplete 
-                            clients={clients}
-                            value={clientNameWatch}
-                            onClientSelect={(client) => {
-                                setValue('client.id', client.id);
-                                setValue('client.name', client.name);
-                                setValue('client.nif', client.nif);
-                                setValue('client.address', client.address);
-                            }}
-                            onValueChange={(value) => {
-                                setValue('client.name', value);
-                                // If user types a new name, clear the id.
-                                if (clients.find(c => c.name === value)) {
-                                    const client = clients.find(c => c.name === value);
+                <CardContent className="space-y-4">
+                    <div className='flex items-end gap-2'>
+                        <div className="flex-grow">
+                            <ClientAutocomplete 
+                                clients={clients}
+                                value={clientNameWatch}
+                                onClientSelect={(client) => {
+                                    setValue('client.id', client.id);
+                                    setValue('client.name', client.name);
+                                    setValue('client.nif', client.nif);
+                                    setValue('client.address', client.address);
+                                }}
+                                onValueChange={(value) => {
+                                    setValue('client.name', value);
+                                    // If user types a new name, clear the id.
+                                    const client = clients.find(c => c.name.toLowerCase() === value.toLowerCase());
                                     if(client) {
                                       setValue('client.id', client.id);
                                       setValue('client.nif', client.nif);
                                       setValue('client.address', client.address);
+                                    } else {
+                                        setValue('client.id', '');
                                     }
-                                } else {
-                                    setValue('client.id', '');
-                                }
-                            }}
-                        />
-                        {errors.client?.name && <p className="text-sm text-destructive mt-1">{errors.client.name.message}</p>}
+                                }}
+                            />
+                        </div>
+                        <Button asChild variant="outline">
+                            <Link href="/clients/new">
+                                <UserPlus className="h-4 w-4" />
+                                <span className='hidden sm:inline ml-2'>Nuevo Cliente</span>
+                            </Link>
+                        </Button>
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="clientNif">NIF/CIF</Label>
-                        <Input id="clientNif" {...register('client.nif')} />
-                        {errors.client?.nif && <p className="text-sm text-destructive">{errors.client.nif.message}</p>}
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="clientAddress">Dirección</Label>
-                        <Input id="clientAddress" {...register('client.address')} />
-                        {errors.client?.address && <p className="text-sm text-destructive">{errors.client.address.message}</p>}
+                    {errors.client?.name && <p className="text-sm text-destructive mt-1">{errors.client.name.message}</p>}
+                    
+                    <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="clientNif">NIF/CIF</Label>
+                            <Input id="clientNif" {...register('client.nif')} />
+                            {errors.client?.nif && <p className="text-sm text-destructive">{errors.client.nif.message}</p>}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="clientAddress">Dirección</Label>
+                            <Input id="clientAddress" {...register('client.address')} />
+                            {errors.client?.address && <p className="text-sm text-destructive">{errors.client.address.message}</p>}
+                        </div>
                     </div>
                 </CardContent>
             </Card>

@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { fetchNextInvoiceNumber, fetchUser, saveInvoice, updateUserProfile } from '@/lib/data';
+import { fetchNextInvoiceNumber, fetchUser, saveInvoice, updateUserProfile, saveClient } from '@/lib/data';
 
 // --- AUTH ACTIONS ---
 
@@ -66,7 +66,7 @@ const LineItemSchema = z.object({
   precioUnitario: z.coerce.number().gt(0, "El precio debe ser mayor que 0."),
 });
 
-const ClientSchema = z.object({
+const ClientSchemaForInvoice = z.object({
     id: z.string().optional(),
     name: z.string().min(1, "El nombre del cliente es requerido."),
     nif: z.string().min(1, "El NIF del cliente es requerido."),
@@ -74,7 +74,7 @@ const ClientSchema = z.object({
 });
 
 const InvoiceSchema = z.object({
-  client: ClientSchema,
+  client: ClientSchemaForInvoice,
   lineItems: z.array(LineItemSchema).min(1, "Debe haber al menos un concepto."),
   subtotal: z.coerce.number(),
   vat: z.coerce.number(),
@@ -128,6 +128,35 @@ export async function createInvoice(prevState: any, formData: FormData) {
   revalidatePath('/invoices');
   revalidatePath('/clients');
   redirect('/invoices');
+}
+
+// --- CLIENT ACTIONS ---
+
+const ClientSchema = z.object({
+  name: z.string().min(1, "El nombre del cliente es requerido."),
+  nif: z.string().min(1, "El NIF del cliente es requerido."),
+  address: z.string().min(1, "La dirección del cliente es requerida."),
+});
+
+export async function createClient(prevState: any, formData: FormData) {
+    const validatedFields = ClientSchema.safeParse(Object.fromEntries(formData.entries()));
+
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Error de validación.',
+        };
+    }
+
+    try {
+        await saveClient(validatedFields.data);
+    } catch (e) {
+        return { message: 'Error al guardar el cliente.' };
+    }
+
+    revalidatePath('/clients');
+    revalidatePath('/invoices/new');
+    redirect('/clients');
 }
 
 // --- SETTINGS ACTIONS ---

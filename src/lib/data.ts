@@ -115,20 +115,26 @@ export async function fetchNextInvoiceNumber(): Promise<string> {
   return `F-${String(nextNumber).padStart(3, '0')}`;
 }
 
-export async function saveInvoice(invoiceData: Omit<Invoice, 'id' | 'user'> & { user: User, client: Client }): Promise<Invoice> {
+export async function saveInvoice(invoiceData: Omit<Invoice, 'id' | 'user'> & { user: User, client: Partial<Client> & Pick<Client, 'name' | 'nif' | 'address'> }): Promise<Invoice> {
   await delay(1000);
   
   // Find or create client
-  let client = mockClients.find(c => c.id === invoiceData.client.id || c.name.toLowerCase() === invoiceData.client.name.toLowerCase());
+  let client = mockClients.find(c => c.id === invoiceData.client.id);
 
   if (!client) {
-      client = {
-          id: String(mockClients.length + 1),
-          name: invoiceData.client.name,
-          nif: invoiceData.client.nif,
-          address: invoiceData.client.address
-      };
-      mockClients.push(client);
+      // Check if a client with the same name exists to avoid duplicates
+      const existingClient = mockClients.find(c => c.name.toLowerCase() === invoiceData.client.name.toLowerCase());
+      if (existingClient) {
+        client = existingClient;
+      } else {
+        client = {
+            id: String(mockClients.length + 1),
+            name: invoiceData.client.name,
+            nif: invoiceData.client.nif,
+            address: invoiceData.client.address
+        };
+        mockClients.push(client);
+      }
   }
 
   const newInvoice: Invoice = {
@@ -162,4 +168,14 @@ export async function updateUserProfile(userData: Partial<User>): Promise<User> 
   await delay(700);
   mockUser = { ...mockUser, ...userData };
   return { ...mockUser };
+}
+
+export async function saveClient(clientData: Omit<Client, 'id'>): Promise<Client> {
+    await delay(600);
+    const newClient: Client = {
+        id: String(mockClients.length + 1),
+        ...clientData
+    };
+    mockClients.push(newClient);
+    return newClient;
 }

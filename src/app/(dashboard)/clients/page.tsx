@@ -1,6 +1,9 @@
 import { Suspense } from 'react';
+import Link from 'next/link';
+import { PlusCircle } from 'lucide-react';
 import { fetchClients, fetchInvoices } from '@/lib/data';
 import { PageHeader } from '@/components/page-header';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -17,7 +20,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-import Link from 'next/link';
+
 
 export default function ClientsPage() {
   return (
@@ -25,7 +28,14 @@ export default function ClientsPage() {
       <PageHeader
         title="Clientes"
         description="Consulta la lista de tus clientes y sus facturas."
-      />
+      >
+        <Button asChild>
+            <Link href="/clients/new">
+                <PlusCircle />
+                <span>Nuevo Cliente</span>
+            </Link>
+        </Button>
+      </PageHeader>
       <Suspense fallback={<ClientsTableSkeleton />}>
         <ClientsTableWrapper />
       </Suspense>
