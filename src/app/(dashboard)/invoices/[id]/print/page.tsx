@@ -1,23 +1,28 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { fetchInvoices, fetchUser } from '@/lib/data';
 import { formatCurrency } from '@/lib/utils';
 import type { Invoice, User } from '@/lib/definitions';
 
-export default function InvoicePrintPage({ params }: { params: { id: string } }) {
+export default function InvoicePrintPage() {
+  const params = useParams();
+  const { id } = params;
+
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
+      if (!id) return;
       try {
         const [invoicesData, userData] = await Promise.all([
           fetchInvoices(),
           fetchUser(),
         ]);
-        const foundInvoice = invoicesData.find((inv) => inv.id === params.id);
+        const foundInvoice = invoicesData.find((inv) => inv.id === id);
         setInvoice(foundInvoice || null);
         setUser(userData);
       } catch (error) {
@@ -28,7 +33,7 @@ export default function InvoicePrintPage({ params }: { params: { id: string } })
     }
 
     loadData();
-  }, [params.id]);
+  }, [id]);
 
   useEffect(() => {
     if (!loading && invoice) {
