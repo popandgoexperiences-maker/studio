@@ -65,7 +65,7 @@ export function InvoicesTable({ invoices, user }: { invoices: Invoice[], user: U
                   <StatusBadge status={invoice.status} />
                 </TableCell>
                 <TableCell>
-                  <DynamicInvoiceActions invoice={invoice} user={user} />
+                  <DynamicInvoiceActions invoice={invoice} />
                 </TableCell>
               </TableRow>
             ))}

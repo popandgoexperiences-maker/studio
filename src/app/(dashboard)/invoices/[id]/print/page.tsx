@@ -1,0 +1,219 @@
+import { fetchInvoices, fetchUser } from '@/lib/data';
+import { formatCurrency } from '@/lib/utils';
+import Image from 'next/image';
+
+export default async function InvoicePrintPage({ params }: { params: { id: string } }) {
+  const [invoices, user] = await Promise.all([fetchInvoices(), fetchUser()]);
+  const invoice = invoices.find(inv => inv.id === params.id);
+
+  if (!invoice) {
+    return <div>Factura no encontrada</div>;
+  }
+  const vatRate = user.vatRate ?? 0.10;
+
+  return (
+    <html lang="es">
+      <head>
+          <title>{`Factura ${invoice.invoiceNumber}`}</title>
+          <style>
+              {`
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+                body {
+                  font-family: 'Inter', sans-serif;
+                  font-size: 10px;
+                  color: #333;
+                  background-color: #fff;
+                  -webkit-print-color-adjust: exact;
+                  print-color-adjust: exact;
+                }
+                @page {
+                  size: A4;
+                  margin: 1cm;
+                }
+                .container {
+                  width: 100%;
+                  margin: 0 auto;
+                }
+                .header {
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: flex-start;
+                  margin-bottom: 30px;
+                  border-bottom: 1px solid #e5e5e5;
+                  padding-bottom: 10px;
+                }
+                .company-details {
+                  display: flex;
+                  flex-direction: column;
+                }
+                .company-name {
+                  font-size: 14px;
+                  font-weight: bold;
+                }
+                .company-info {
+                  font-size: 9px;
+                }
+                .logo {
+                  width: 100px;
+                  height: 40px;
+                  object-fit: contain;
+                }
+                .invoice-details {
+                  text-align: right;
+                }
+                .invoice-title {
+                  font-size: 24px;
+                  font-weight: bold;
+                }
+                .invoice-number, .invoice-date {
+                  font-size: 11px;
+                }
+                .client-info {
+                  margin-bottom: 30px;
+                }
+                .bill-to {
+                  font-weight: bold;
+                  margin-bottom: 5px;
+                }
+                table {
+                  width: 100%;
+                  border-collapse: collapse;
+                }
+                th, td {
+                  padding: 8px;
+                  text-align: left;
+                }
+                thead {
+                  background-color: #f3f4f6;
+                }
+                thead th {
+                  border-top: 1px solid #d1d5db;
+                  border-bottom: 1px solid #d1d5db;
+                  font-weight: bold;
+                }
+                tbody tr {
+                  border-bottom: 1px solid #e5e7eb;
+                }
+                .col-description { width: 55%; }
+                .col-qty, .col-price, .col-total { width: 15%; text-align: right; }
+                .totals {
+                  margin-top: 20px;
+                  display: flex;
+                  justify-content: flex-end;
+                }
+                .totals-container {
+                  width: 40%;
+                }
+                .total-row {
+                  display: flex;
+                  justify-content: space-between;
+                  padding: 4px 0;
+                }
+                .grand-total-row {
+                  margin-top: 5px;
+                  padding-top: 5px;
+                  border-top: 1px solid #333;
+                  font-weight: bold;
+                }
+                .footer {
+                  position: fixed;
+                  bottom: 1cm;
+                  left: 1cm;
+                  right: 1cm;
+                  text-align: center;
+                  font-size: 8px;
+                  color: #999;
+                }
+                .print-button {
+                  position: fixed;
+                  top: 20px;
+                  right: 20px;
+                  padding: 10px 20px;
+                  background-color: #007bff;
+                  color: white;
+                  border: none;
+                  border-radius: 5px;
+                  cursor: pointer;
+                }
+                @media print {
+                  .print-button {
+                    display: none;
+                  }
+                  body {
+                    margin: 0;
+                  }
+                }
+              `}
+          </style>
+      </head>
+      <body>
+        <div className="container">
+          <div className="header">
+            <div className="company-details">
+              {user.logoUrl && <img className="logo" src={user.logoUrl} alt="Logo" />}
+              <div className="company-name" style={{ marginTop: user.logoUrl ? '10px' : '0' }}>{user.name}</div>
+              <div className="company-info">{user.nif}</div>
+              <div className="company-info">{user.address}</div>
+              <div className="company-info">{user.email}</div>
+            </div>
+            <div className="invoice-details">
+              <div className="invoice-title">FACTURA</div>
+              <div className="invoice-number">{invoice.invoiceNumber}</div>
+              <div className="invoice-date">Fecha: {new Date(invoice.date).toLocaleDateString('es-ES')}</div>
+            </div>
+          </div>
+
+          <div className="client-info">
+            <div className="bill-to">Facturar a:</div>
+            <div>{invoice.client.name}</div>
+            <div>{invoice.client.nif}</div>
+            <div>{invoice.client.address}</div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th className="col-description">Descripción</th>
+                <th className="col-qty">Cantidad</th>
+                <th className="col-price">Precio</th>
+                <th className="col-total">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {invoice.lineItems.map((item, index) => (
+                <tr key={index}>
+                  <td className="col-description">{item.description}</td>
+                  <td className="col-qty">{item.quantity}</td>
+                  <td className="col-price">{formatCurrency(item.unitPrice)}</td>
+                  <td className="col-total">{formatCurrency(item.quantity * item.unitPrice)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="totals">
+            <div className="totals-container">
+              <div className="total-row">
+                <span>Subtotal</span>
+                <span>{formatCurrency(invoice.subtotal)}</span>
+              </div>
+              <div className="total-row">
+                <span>IVA ({(vatRate * 100).toFixed(0)}%)</span>
+                <span>{formatCurrency(invoice.vat)}</span>
+              </div>
+              <div className="total-row grand-total-row">
+                <span>TOTAL</span>
+                <span>{formatCurrency(invoice.total)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="footer">
+            Gracias por su confianza.
+          </div>
+        </div>
+        <button className="print-button" onClick={() => window.print()}>Imprimir / Guardar como PDF</button>
+      </body>
+    </html>
+  );
+}
