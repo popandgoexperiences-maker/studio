@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import {
   Table,
   TableBody,
@@ -19,12 +20,23 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Download, Send } from 'lucide-react';
+import { MoreHorizontal, Download, Send, Loader2 } from 'lucide-react';
 import type { Invoice, User } from '@/lib/definitions';
 import { formatCurrency } from '@/lib/utils';
 import { StatusBadge } from './status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { InvoicePDFDownload } from './invoice-pdf-download';
+
+// Dynamically import the PDF download component and disable SSR
+const InvoicePDFDownload = dynamic(() => import('./invoice-pdf-download').then(mod => mod.InvoicePDFDownload), {
+  ssr: false,
+  loading: () => (
+    <div className="relative flex w-full cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors">
+      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      <span>Cargando...</span>
+    </div>
+  ),
+});
+
 
 export function InvoicesTable({ invoices, user }: { invoices: Invoice[], user: User }) {
     if (invoices.length === 0) {
@@ -74,12 +86,10 @@ export function InvoicesTable({ invoices, user }: { invoices: Invoice[], user: U
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                       <DropdownMenuItem asChild>
-                        <InvoicePDFDownload invoice={invoice} user={user}>
+                       <InvoicePDFDownload invoice={invoice} user={user}>
                           <Download className="mr-2 h-4 w-4" />
                           <span>Descargar PDF</span>
                         </InvoicePDFDownload>
-                      </DropdownMenuItem>
                       <DropdownMenuItem disabled={!invoice.pdfUrl || invoice.status === 'generating'}>
                         <Send className="mr-2 h-4 w-4" />
                         <span>Enviar por email</span>

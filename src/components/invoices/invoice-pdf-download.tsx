@@ -1,43 +1,38 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { Invoice, User } from '@/lib/definitions';
 import { InvoicePDFDocument } from './invoice-pdf-document';
-import { Button } from '../ui/button';
-import { Download, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 interface InvoicePDFDownloadProps {
   invoice: Invoice;
   user: User;
   children: React.ReactNode;
+  className?: string;
 }
 
-export function InvoicePDFDownload({ invoice, user, children }: InvoicePDFDownloadProps) {
-  const [isClient, setIsClient] = useState(false);
+export function InvoicePDFDownload({ invoice, user, children, className }: InvoicePDFDownloadProps) {
+  
+  const defaultClassName = "relative flex w-full cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground";
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  const disabledSpan = (
-    <span className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors opacity-50">
-      <Download className="mr-2 h-4 w-4" />
-      <span>Descargar PDF</span>
-    </span>
-  );
-
-  if (!isClient || invoice.status === 'generating') {
-    return disabledSpan;
+  if (invoice.status === 'generating') {
+    return (
+      <span className={`${defaultClassName} opacity-50`}>
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        <span>Generando...</span>
+      </span>
+    );
   }
 
   return (
     <PDFDownloadLink
       document={<InvoicePDFDocument invoice={invoice} user={user} />}
       fileName={`factura-${invoice.invoiceNumber}.pdf`}
-      className="relative flex w-full cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground"
+      className={className || defaultClassName}
     >
-      {({ blob, url, loading, error }) => 
+      {({ loading }) => 
         loading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
