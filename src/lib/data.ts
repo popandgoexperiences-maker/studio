@@ -5,6 +5,8 @@ import type { User, Invoice, Client } from '@/lib/definitions';
 import { PlaceHolderImages } from './placeholder-images';
 
 const logo = PlaceHolderImages.find(img => img.id === 'default-logo');
+const signature = PlaceHolderImages.find(img => img.id === 'default-signature');
+const seal = PlaceHolderImages.find(img => img.id === 'default-seal');
 
 let mockUser: User = {
   id: '1',
@@ -14,8 +16,8 @@ let mockUser: User = {
   address: 'Tu Dirección, 123, Tu Ciudad',
   phone: '600123456',
   logoUrl: logo?.imageUrl,
-  signatureUrl: 'https://picsum.photos/seed/signature/200/100',
-  sealUrl: 'https://picsum.photos/seed/seal/120/120',
+  signatureUrl: signature?.imageUrl,
+  sealUrl: seal?.imageUrl,
   vatRate: 0.10,
 };
 
