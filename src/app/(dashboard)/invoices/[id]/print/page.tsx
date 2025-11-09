@@ -1,150 +1,179 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import { fetchInvoices, fetchUser } from '@/lib/data';
 import { formatCurrency } from '@/lib/utils';
-import Image from 'next/image';
+import type { Invoice, User } from '@/lib/definitions';
 
-export default async function InvoicePrintPage({ params }: { params: { id: string } }) {
-  const [invoices, user] = await Promise.all([fetchInvoices(), fetchUser()]);
-  const invoice = invoices.find(inv => inv.id === params.id);
+export default function InvoicePrintPage({ params }: { params: { id: string } }) {
+  const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!invoice) {
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [invoicesData, userData] = await Promise.all([
+          fetchInvoices(),
+          fetchUser(),
+        ]);
+        const foundInvoice = invoicesData.find((inv) => inv.id === params.id);
+        setInvoice(foundInvoice || null);
+        setUser(userData);
+      } catch (error) {
+        console.error('Failed to load invoice data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadData();
+  }, [params.id]);
+
+  if (loading) {
+    return <div>Cargando factura...</div>;
+  }
+
+  if (!invoice || !user) {
     return <div>Factura no encontrada</div>;
   }
-  const vatRate = user.vatRate ?? 0.10;
+
+  const vatRate = user.vatRate ?? 0.1;
 
   return (
     <html lang="es">
       <head>
-          <title>{`Factura ${invoice.invoiceNumber}`}</title>
-          <style>
-              {`
-                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
-                body {
-                  font-family: 'Inter', sans-serif;
-                  font-size: 10px;
-                  color: #333;
-                  background-color: #fff;
-                  -webkit-print-color-adjust: exact;
-                  print-color-adjust: exact;
-                }
-                @page {
-                  size: A4;
-                  margin: 1cm;
-                }
-                .container {
-                  width: 100%;
-                  margin: 0 auto;
-                }
-                .header {
-                  display: flex;
-                  justify-content: space-between;
-                  align-items: flex-start;
-                  margin-bottom: 30px;
-                  border-bottom: 1px solid #e5e5e5;
-                  padding-bottom: 10px;
-                }
-                .company-details {
-                  display: flex;
-                  flex-direction: column;
-                }
-                .company-name {
-                  font-size: 14px;
-                  font-weight: bold;
-                }
-                .company-info {
-                  font-size: 9px;
-                }
-                .logo {
-                  width: 100px;
-                  height: 40px;
-                  object-fit: contain;
-                }
-                .invoice-details {
-                  text-align: right;
-                }
-                .invoice-title {
-                  font-size: 24px;
-                  font-weight: bold;
-                }
-                .invoice-number, .invoice-date {
-                  font-size: 11px;
-                }
-                .client-info {
-                  margin-bottom: 30px;
-                }
-                .bill-to {
-                  font-weight: bold;
-                  margin-bottom: 5px;
-                }
-                table {
-                  width: 100%;
-                  border-collapse: collapse;
-                }
-                th, td {
-                  padding: 8px;
-                  text-align: left;
-                }
-                thead {
-                  background-color: #f3f4f6;
-                }
-                thead th {
-                  border-top: 1px solid #d1d5db;
-                  border-bottom: 1px solid #d1d5db;
-                  font-weight: bold;
-                }
-                tbody tr {
-                  border-bottom: 1px solid #e5e7eb;
-                }
-                .col-description { width: 55%; }
-                .col-qty, .col-price, .col-total { width: 15%; text-align: right; }
-                .totals {
-                  margin-top: 20px;
-                  display: flex;
-                  justify-content: flex-end;
-                }
-                .totals-container {
-                  width: 40%;
-                }
-                .total-row {
-                  display: flex;
-                  justify-content: space-between;
-                  padding: 4px 0;
-                }
-                .grand-total-row {
-                  margin-top: 5px;
-                  padding-top: 5px;
-                  border-top: 1px solid #333;
-                  font-weight: bold;
-                }
-                .footer {
-                  position: fixed;
-                  bottom: 1cm;
-                  left: 1cm;
-                  right: 1cm;
-                  text-align: center;
-                  font-size: 8px;
-                  color: #999;
-                }
-                .print-button {
-                  position: fixed;
-                  top: 20px;
-                  right: 20px;
-                  padding: 10px 20px;
-                  background-color: #007bff;
-                  color: white;
-                  border: none;
-                  border-radius: 5px;
-                  cursor: pointer;
-                }
-                @media print {
-                  .print-button {
-                    display: none;
-                  }
-                  body {
-                    margin: 0;
-                  }
-                }
-              `}
-          </style>
+        <title>{`Factura ${invoice.invoiceNumber}`}</title>
+        <style>
+          {`
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+            body {
+              font-family: 'Inter', sans-serif;
+              font-size: 10px;
+              color: #333;
+              background-color: #fff;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            @page {
+              size: A4;
+              margin: 1cm;
+            }
+            .container {
+              width: 100%;
+              margin: 0 auto;
+            }
+            .header {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              margin-bottom: 30px;
+              border-bottom: 1px solid #e5e5e5;
+              padding-bottom: 10px;
+            }
+            .company-details {
+              display: flex;
+              flex-direction: column;
+            }
+            .company-name {
+              font-size: 14px;
+              font-weight: bold;
+            }
+            .company-info {
+              font-size: 9px;
+            }
+            .logo {
+              width: 100px;
+              height: 40px;
+              object-fit: contain;
+            }
+            .invoice-details {
+              text-align: right;
+            }
+            .invoice-title {
+              font-size: 24px;
+              font-weight: bold;
+            }
+            .invoice-number, .invoice-date {
+              font-size: 11px;
+            }
+            .client-info {
+              margin-bottom: 30px;
+            }
+            .bill-to {
+              font-weight: bold;
+              margin-bottom: 5px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+            }
+            th, td {
+              padding: 8px;
+              text-align: left;
+            }
+            thead {
+              background-color: #f3f4f6;
+            }
+            thead th {
+              border-top: 1px solid #d1d5db;
+              border-bottom: 1px solid #d1d5db;
+              font-weight: bold;
+            }
+            tbody tr {
+              border-bottom: 1px solid #e5e7eb;
+            }
+            .col-description { width: 55%; }
+            .col-qty, .col-price, .col-total { width: 15%; text-align: right; }
+            .totals {
+              margin-top: 20px;
+              display: flex;
+              justify-content: flex-end;
+            }
+            .totals-container {
+              width: 40%;
+            }
+            .total-row {
+              display: flex;
+              justify-content: space-between;
+              padding: 4px 0;
+            }
+            .grand-total-row {
+              margin-top: 5px;
+              padding-top: 5px;
+              border-top: 1px solid #333;
+              font-weight: bold;
+            }
+            .footer {
+              position: fixed;
+              bottom: 1cm;
+              left: 1cm;
+              right: 1cm;
+              text-align: center;
+              font-size: 8px;
+              color: #999;
+            }
+            .print-button {
+              position: fixed;
+              top: 20px;
+              right: 20px;
+              padding: 10px 20px;
+              background-color: #007bff;
+              color: white;
+              border: none;
+              border-radius: 5px;
+              cursor: pointer;
+            }
+            @media print {
+              .print-button {
+                display: none;
+              }
+              body {
+                margin: 0;
+              }
+            }
+          `}
+        </style>
       </head>
       <body>
         <div className="container">
