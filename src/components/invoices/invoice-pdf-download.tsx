@@ -20,13 +20,15 @@ export function InvoicePDFDownload({ invoice, user, children }: InvoicePDFDownlo
     setIsClient(true);
   }, []);
 
+  const disabledSpan = (
+    <span className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors opacity-50">
+      <Download className="mr-2 h-4 w-4" />
+      <span>Descargar PDF</span>
+    </span>
+  );
+
   if (!isClient || invoice.status === 'generating') {
-    return (
-      <span className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors opacity-50">
-        <Download className="mr-2 h-4 w-4" />
-        <span>Descargar PDF</span>
-      </span>
-    );
+    return disabledSpan;
   }
 
   return (
