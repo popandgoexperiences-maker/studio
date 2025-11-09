@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -25,11 +25,35 @@ import { UserProfileButton } from './auth/user-profile-button';
 
 export function SidebarNav() {
   const pathname = usePathname();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const navItems = [
     { href: '/invoices', label: 'Facturas', icon: FileText },
     { href: '/settings', label: 'Configuración', icon: Settings },
   ];
+
+  if (!isClient) {
+    return (
+      <>
+        <SidebarHeader>
+          <Logo className="text-sidebar-foreground" />
+        </SidebarHeader>
+        <SidebarContent className="p-2">
+          {/* Skeleton while waiting for client render */}
+        </SidebarContent>
+        <SidebarFooter>
+          <SidebarSeparator />
+          <div className="p-2">
+            <UserProfileButton />
+          </div>
+        </SidebarFooter>
+      </>
+    )
+  }
 
   return (
     <>
@@ -62,7 +86,7 @@ export function SidebarNav() {
       <SidebarFooter>
         <SidebarSeparator />
         <div className="p-2">
-          <UserProfileButton />
+            <UserProfileButton />
         </div>
       </SidebarFooter>
     </>
