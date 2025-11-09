@@ -167,11 +167,17 @@ const SettingsSchema = z.object({
   nif: z.string().optional(),
   address: z.string().optional(),
   phone: z.string().optional(),
+  vatRate: z.coerce.number().min(0, "El IVA no puede ser negativo.").optional(),
 });
 
 export async function updateSettings(prevState: any, formData: FormData) {
   try {
-    const validatedFields = SettingsSchema.safeParse(Object.fromEntries(formData.entries()));
+    const rawData = Object.fromEntries(formData.entries());
+    const dataToValidate = {
+        ...rawData,
+        vatRate: rawData.vatRate ? Number(rawData.vatRate) / 100 : undefined,
+    }
+    const validatedFields = SettingsSchema.safeParse(dataToValidate);
 
     if (!validatedFields.success) {
       return {
@@ -189,5 +195,6 @@ export async function updateSettings(prevState: any, formData: FormData) {
   }
 
   revalidatePath('/settings');
+  revalidatePath('/invoices/new');
   return { message: 'Perfil actualizado con éxito.' };
 }

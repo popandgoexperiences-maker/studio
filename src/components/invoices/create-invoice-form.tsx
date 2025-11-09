@@ -9,7 +9,7 @@ import Link from 'next/link';
 
 import { createInvoice } from '@/lib/actions';
 import { formatCurrency } from '@/lib/utils';
-import type { Client } from '@/lib/definitions';
+import type { Client, User } from '@/lib/definitions';
 
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -42,9 +42,10 @@ const invoiceSchema = z.object({
 
 type InvoiceFormValues = z.infer<typeof invoiceSchema>;
 
-export function CreateInvoiceForm({ clients }: { clients: Client[] }) {
+export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: User }) {
   const [state, formAction] = useActionState(createInvoice, undefined);
   const { toast } = useToast();
+  const vatRate = user.vatRate ?? 0.10;
   
   const [isPending, startTransition] = useTransition();
   const [isCalculating, setIsCalculating] = useState(false);
@@ -85,7 +86,7 @@ export function CreateInvoiceForm({ clients }: { clients: Client[] }) {
       if (lineItems.length > 0) {
         setIsCalculating(true);
         const subtotal = lineItems.reduce((acc, item) => acc + Number(item.cantidad) * Number(item.precioUnitario), 0);
-        const iva = subtotal * 0.10;
+        const iva = subtotal * vatRate;
         const total = subtotal + iva;
         setTotals({ subtotal, iva, total });
         setIsCalculating(false);
@@ -101,7 +102,7 @@ export function CreateInvoiceForm({ clients }: { clients: Client[] }) {
     return () => {
         clearTimeout(handler);
     };
-  }, [lineItemsWatch, getValues]);
+  }, [lineItemsWatch, getValues, vatRate]);
   
   const onFormSubmit = (data: InvoiceFormValues) => {
     startTransition(() => {
@@ -245,7 +246,7 @@ export function CreateInvoiceForm({ clients }: { clients: Client[] }) {
                         <span className="font-medium">{formatCurrency(totals.subtotal)}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">IVA (10%)</span>
+                        <span className="text-muted-foreground">IVA ({vatRate * 100}%)</span>
                         <span className="font-medium">{formatCurrency(totals.iva)}</span>
                     </div>
                     <Separator />

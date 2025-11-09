@@ -13,6 +13,7 @@ let mockUser: User = {
   logoUrl: 'https://picsum.photos/seed/logo/200/80',
   signatureUrl: 'https://picsum.photos/seed/signature/200/100',
   sealUrl: 'https://picsum.photos/seed/seal/120/120',
+  vatRate: 0.10,
 };
 
 let mockClients: Client[] = [

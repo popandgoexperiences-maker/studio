@@ -15,6 +15,7 @@ export type User = {
   logoUrl?: string;
   signatureUrl?: string;
   sealUrl?: string;
+  vatRate?: number;
 };
 
 export type LineItem = {

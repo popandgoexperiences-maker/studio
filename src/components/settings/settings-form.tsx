@@ -67,6 +67,17 @@ export function SettingsForm({ user, images }: SettingsFormProps) {
                         <Label htmlFor="email">Email de Contacto</Label>
                         <Input id="email" name="email" type="email" defaultValue={user.email} />
                     </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="vatRate">Tipo de IVA (%)</Label>
+                        <Input 
+                            id="vatRate" 
+                            name="vatRate" 
+                            type="number" 
+                            step="0.01"
+                            defaultValue={user.vatRate ? user.vatRate * 100 : 10}
+                            placeholder="Ej: 21"
+                        />
+                    </div>
                 </CardContent>
             </Card>
 
