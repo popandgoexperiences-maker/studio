@@ -17,15 +17,17 @@ export function InvoicePDFDownload({ invoice, user, children, className }: Invoi
   
   const defaultClassName = "relative flex w-full cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground";
 
+  // The 'generating' status is now a visual indicator; the component will always try to render the link.
+  // The parent component (`InvoicesTable`) is responsible for disabling the action if needed.
   if (invoice.status === 'generating') {
     return (
-      <span className={`${defaultClassName} opacity-50`}>
+      <span className={`${className || defaultClassName} opacity-50`}>
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         <span>Generando...</span>
       </span>
     );
   }
-
+  
   return (
     <PDFDownloadLink
       document={<InvoicePDFDocument invoice={invoice} user={user} />}

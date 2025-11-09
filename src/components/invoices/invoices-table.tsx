@@ -27,6 +27,7 @@ import { StatusBadge } from './status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Dynamically import the PDF download component and disable SSR
+// This is the correct way to handle client-side-only libraries in Next.js
 const InvoicePDFDownload = dynamic(() => import('./invoice-pdf-download').then(mod => mod.InvoicePDFDownload), {
   ssr: false,
   loading: () => (
