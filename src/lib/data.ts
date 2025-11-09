@@ -2,6 +2,9 @@
 // In a real application, this would be replaced with calls to a database like Firestore.
 
 import type { User, Invoice, Client } from '@/lib/definitions';
+import { PlaceHolderImages } from './placeholder-images';
+
+const logo = PlaceHolderImages.find(img => img.id === 'default-logo');
 
 let mockUser: User = {
   id: '1',
@@ -10,7 +13,7 @@ let mockUser: User = {
   nif: '12345678A',
   address: 'Tu Dirección, 123, Tu Ciudad',
   phone: '600123456',
-  logoUrl: 'https://picsum.photos/seed/logo/200/80',
+  logoUrl: logo?.imageUrl,
   signatureUrl: 'https://picsum.photos/seed/signature/200/100',
   sealUrl: 'https://picsum.photos/seed/seal/120/120',
   vatRate: 0.10,
@@ -141,7 +144,8 @@ export async function saveInvoice(invoiceData: Omit<Invoice, 'id' | 'user'> & { 
   const newInvoice: Invoice = {
     ...invoiceData,
     id: String(mockInvoices.length + 4), // simple unique ID
-    status: 'generating', // Simulate PDF generation
+    status: 'pending', // No longer generating
+    pdfUrl: '#',
     client: client,
     user: {
       name: invoiceData.user.name,
@@ -151,15 +155,6 @@ export async function saveInvoice(invoiceData: Omit<Invoice, 'id' | 'user'> & { 
     }
   };
   mockInvoices.unshift(newInvoice);
-
-  // Simulate PDF being ready
-  setTimeout(() => {
-    const foundIndex = mockInvoices.findIndex(inv => inv.id === newInvoice.id);
-    if (foundIndex !== -1) {
-      mockInvoices[foundIndex].status = 'pending';
-      mockInvoices[foundIndex].pdfUrl = '#';
-    }
-  }, 3000);
 
   return newInvoice;
 }

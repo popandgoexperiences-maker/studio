@@ -5,7 +5,7 @@ import { Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/page-header';
 import { InvoicesTable, InvoicesTableSkeleton } from '@/components/invoices/invoices-table';
-import { fetchInvoices } from '@/lib/data';
+import { fetchInvoices, fetchUser } from '@/lib/data';
 import { Search } from '@/components/search';
 
 export default function InvoicesPage({
@@ -40,12 +40,16 @@ export default function InvoicesPage({
 }
 
 async function InvoicesTableWrapper({ query }: { query: string }) {
-  const invoices = await fetchInvoices();
+  const [invoices, user] = await Promise.all([
+    fetchInvoices(),
+    fetchUser()
+  ]);
+
   const filteredInvoices = invoices.filter(
     (invoice) =>
       invoice.client.name.toLowerCase().includes(query.toLowerCase()) ||
       invoice.invoiceNumber.toLowerCase().includes(query.toLowerCase())
   );
 
-  return <InvoicesTable invoices={filteredInvoices} />;
+  return <InvoicesTable invoices={filteredInvoices} user={user} />;
 }

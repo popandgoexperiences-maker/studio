@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Table,
   TableBody,
@@ -18,12 +20,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal, Download, Send } from 'lucide-react';
-import type { Invoice } from '@/lib/definitions';
+import type { Invoice, User } from '@/lib/definitions';
 import { formatCurrency } from '@/lib/utils';
 import { StatusBadge } from './status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { InvoicePDFDownload } from './invoice-pdf-download';
 
-export function InvoicesTable({ invoices }: { invoices: Invoice[] }) {
+export function InvoicesTable({ invoices, user }: { invoices: Invoice[], user: User }) {
     if (invoices.length === 0) {
     return (
       <Card>
@@ -71,9 +74,11 @@ export function InvoicesTable({ invoices }: { invoices: Invoice[] }) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem disabled={!invoice.pdfUrl || invoice.status === 'generating'}>
-                        <Download className="mr-2 h-4 w-4" />
-                        <span>Descargar PDF</span>
+                       <DropdownMenuItem asChild>
+                        <InvoicePDFDownload invoice={invoice} user={user}>
+                          <Download className="mr-2 h-4 w-4" />
+                          <span>Descargar PDF</span>
+                        </InvoicePDFDownload>
                       </DropdownMenuItem>
                       <DropdownMenuItem disabled={!invoice.pdfUrl || invoice.status === 'generating'}>
                         <Send className="mr-2 h-4 w-4" />
