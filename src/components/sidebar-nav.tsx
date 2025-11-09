@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   SidebarHeader,
   SidebarContent,
@@ -21,6 +22,7 @@ import {
 import { UserProfileButton } from './auth/user-profile-button';
 
 export function SidebarNav() {
+  const pathname = usePathname();
   const navItems = [
     { href: '/invoices', label: 'Facturas', icon: FileText },
     { href: '/settings', label: 'Configuración', icon: Settings },
@@ -39,7 +41,7 @@ export function SidebarNav() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Link href={item.href}>
-                      <SidebarMenuButton>
+                       <SidebarMenuButton isActive={pathname === item.href}>
                         <item.icon />
                         <span>{item.label}</span>
                       </SidebarMenuButton>

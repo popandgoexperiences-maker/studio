@@ -25,13 +25,13 @@ export function UserProfileButton() {
 
   if (!isClient) {
     return (
-        <div className="flex items-center gap-3 p-2">
-            <Skeleton className="h-9 w-9 rounded-full" />
-            <div className="space-y-1">
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-3 w-28" />
-            </div>
+      <div className="flex items-center gap-3 p-2 h-[52px]">
+        <Skeleton className="h-9 w-9 rounded-full" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-3 w-28" />
         </div>
+      </div>
     );
   }
 
@@ -43,7 +43,7 @@ export function UserProfileButton() {
             <AvatarImage src="https://picsum.photos/seed/avatar/40/40" alt="Avatar" data-ai-hint="person avatar" />
             <AvatarFallback>TN</AvatarFallback>
           </Avatar>
-          <div className='text-left'>
+          <div className='text-left ml-2'>
             <p className="text-sm font-medium text-sidebar-foreground">Tu Nombre</p>
             <p className="text-xs text-sidebar-foreground/70">tu@email.com</p>
           </div>
