@@ -1,6 +1,5 @@
 'use client';
 
-import { PDFDownloadLink } from '@react-pdf/renderer';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,10 +11,13 @@ import { MoreHorizontal, Download, Send, Loader2 } from 'lucide-react';
 import type { Invoice, User } from '@/lib/definitions';
 import { InvoicePDFDocument } from './invoice-pdf-document';
 import { useEffect, useState } from 'react';
+import type { PDFDownloadLink } from '@react-pdf/renderer';
 
 export function InvoiceActions({ invoice, user }: { invoice: Invoice; user: User }) {
   const [isClient, setIsClient] = useState(false);
 
+  // This hook ensures that the component only renders on the client side.
+  // The error was caused by the PDF library trying to run on the server.
   useEffect(() => {
     setIsClient(true);
   }, []);

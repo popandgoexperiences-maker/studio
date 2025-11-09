@@ -1,6 +1,5 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import {
   Table,
   TableBody,
@@ -17,8 +16,10 @@ import type { Invoice, User } from '@/lib/definitions';
 import { formatCurrency } from '@/lib/utils';
 import { StatusBadge } from './status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { InvoiceActions } from './invoice-actions';
+import dynamic from 'next/dynamic';
 
-const InvoiceActions = dynamic(() => import('./invoice-actions').then(mod => mod.InvoiceActions), {
+const DynamicInvoiceActions = dynamic(() => import('./invoice-actions').then(mod => mod.InvoiceActions), {
   ssr: false,
   loading: () => <Skeleton className="h-8 w-8" />,
 });
@@ -64,7 +65,7 @@ export function InvoicesTable({ invoices, user }: { invoices: Invoice[], user: U
                   <StatusBadge status={invoice.status} />
                 </TableCell>
                 <TableCell>
-                  <InvoiceActions invoice={invoice} user={user} />
+                  <DynamicInvoiceActions invoice={invoice} user={user} />
                 </TableCell>
               </TableRow>
             ))}
