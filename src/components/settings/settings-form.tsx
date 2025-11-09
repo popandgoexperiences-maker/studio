@@ -1,9 +1,9 @@
 'use client';
 
 import { useActionState } from 'react';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { Save, Upload, Loader2 } from 'lucide-react';
+import { Save, Upload } from 'lucide-react';
 
 import type { User } from '@/lib/definitions';
 import type { ImagePlaceholder } from '@/lib/placeholder-images';
@@ -76,11 +76,11 @@ export function SettingsForm({ user, images }: SettingsFormProps) {
                     <CardDescription>Logo, firma y sello para tus facturas en PDF.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    <ImageUploadField label="Logo" image={images.logo} currentImageUrl={user.logoUrl} />
+                    <ImageUploadField name="logo" label="Logo" image={images.logo} currentImageUrl={user.logoUrl} />
                     <Separator />
-                    <ImageUploadField label="Firma" image={images.signature} currentImageUrl={user.signatureUrl} />
+                    <ImageUploadField name="signature" label="Firma" image={images.signature} currentImageUrl={user.signatureUrl} />
                     <Separator />
-                    <ImageUploadField label="Sello de Empresa" image={images.seal} currentImageUrl={user.sealUrl} />
+                    <ImageUploadField name="seal" label="Sello de Empresa" image={images.seal} currentImageUrl={user.sealUrl} />
                 </CardContent>
                  <CardFooter>
                     <Button type="submit">
@@ -92,9 +92,26 @@ export function SettingsForm({ user, images }: SettingsFormProps) {
     );
 }
 
-function ImageUploadField({ label, image, currentImageUrl }: { label: string, image?: ImagePlaceholder, currentImageUrl?: string }) {
-    const imageUrl = currentImageUrl || image?.imageUrl;
+function ImageUploadField({ name, label, image, currentImageUrl }: { name: string; label: string, image?: ImagePlaceholder, currentImageUrl?: string }) {
+    const defaultImageUrl = currentImageUrl || image?.imageUrl;
     const imageHint = image?.imageHint || 'image';
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | undefined>(defaultImageUrl);
+
+    const handleButtonClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPreviewUrl(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     return (
         <div className="flex flex-col sm:flex-row items-start gap-6">
@@ -104,13 +121,22 @@ function ImageUploadField({ label, image, currentImageUrl }: { label: string, im
             </div>
             <div className="w-full sm:w-2/3 flex items-center gap-4">
                 <div className="w-48 h-24 rounded-md border border-dashed flex items-center justify-center bg-muted/50 p-2">
-                    {imageUrl ? (
-                        <Image src={imageUrl} alt={label} width={160} height={80} className="object-contain" data-ai-hint={imageHint} />
+                    {previewUrl ? (
+                        <Image src={previewUrl} alt={label} width={160} height={80} className="object-contain" data-ai-hint={imageHint} />
                     ) : (
                         <span className="text-xs text-muted-foreground">Sin imagen</span>
                     )}
                 </div>
-                <Button variant="outline" type="button">
+                <input
+                    type="file"
+                    name={name}
+                    id={name}
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/png, image/jpeg, image/gif"
+                    onChange={handleFileChange}
+                />
+                <Button variant="outline" type="button" onClick={handleButtonClick}>
                     <Upload className="mr-2" /> Cambiar
                 </Button>
             </div>
