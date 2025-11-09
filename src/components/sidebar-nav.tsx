@@ -67,14 +67,14 @@ export function SidebarNav() {
               <SidebarMenuItem key={item.href}>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Link href={item.href}>
+                    <Link href={item.href} passHref>
+                      <TooltipTrigger asChild>
                         <SidebarMenuButton isActive={isActive}>
                           <item.icon />
                           <span>{item.label}</span>
                         </SidebarMenuButton>
-                      </Link>
-                    </TooltipTrigger>
+                      </TooltipTrigger>
+                    </Link>
                     <TooltipContent side="right" align="center">
                       {item.label}
                     </TooltipContent>
