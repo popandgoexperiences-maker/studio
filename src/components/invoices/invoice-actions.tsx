@@ -11,8 +11,15 @@ import { Button } from '@/components/ui/button';
 import { MoreHorizontal, Download, Send, Loader2 } from 'lucide-react';
 import type { Invoice, User } from '@/lib/definitions';
 import { InvoicePDFDocument } from './invoice-pdf-document';
+import { useEffect, useState } from 'react';
 
 export function InvoiceActions({ invoice, user }: { invoice: Invoice; user: User }) {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -22,25 +29,32 @@ export function InvoiceActions({ invoice, user }: { invoice: Invoice; user: User
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <PDFDownloadLink
-          document={<InvoicePDFDocument invoice={invoice} user={user} />}
-          fileName={`factura-${invoice.invoiceNumber}.pdf`}
-          className="relative flex w-full cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground"
-        >
-          {({ loading }) =>
-            loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                <span>Generando...</span>
-              </>
-            ) : (
-              <>
-                <Download className="mr-2 h-4 w-4" />
-                <span>Descargar PDF</span>
-              </>
-            )
-          }
-        </PDFDownloadLink>
+        {isClient ? (
+           <PDFDownloadLink
+              document={<InvoicePDFDocument invoice={invoice} user={user} />}
+              fileName={`factura-${invoice.invoiceNumber}.pdf`}
+              className="relative flex w-full cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground"
+            >
+              {({ loading }) =>
+                loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <span>Generando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    <span>Descargar PDF</span>
+                  </>
+                )
+              }
+            </PDFDownloadLink>
+        ) : (
+           <DropdownMenuItem disabled>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <span>Generando...</span>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem disabled={!invoice.pdfUrl || invoice.status === 'generating'}>
           <Send className="mr-2 h-4 w-4" />
           <span>Enviar por email</span>
