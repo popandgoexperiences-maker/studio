@@ -15,11 +15,15 @@ import type { PDFDownloadLink } from '@react-pdf/renderer';
 
 export function InvoiceActions({ invoice, user }: { invoice: Invoice; user: User }) {
   const [isClient, setIsClient] = useState(false);
+  const [PdfLink, setPdfLink] = useState<typeof PDFDownloadLink | null>(null);
 
-  // This hook ensures that the component only renders on the client side.
-  // The error was caused by the PDF library trying to run on the server.
   useEffect(() => {
+    // This hook ensures that the component only renders on the client side.
     setIsClient(true);
+    // Dynamically import the PDFDownloadLink component only on the client
+    import('@react-pdf/renderer').then(module => {
+      setPdfLink(() => module.PDFDownloadLink);
+    });
   }, []);
 
   return (
@@ -31,9 +35,9 @@ export function InvoiceActions({ invoice, user }: { invoice: Invoice; user: User
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {isClient ? (
+        {isClient && PdfLink ? (
           <DropdownMenuItem asChild>
-            <PDFDownloadLink
+            <PdfLink
               document={<InvoicePDFDocument invoice={invoice} user={user} />}
               fileName={`factura-${invoice.invoiceNumber}.pdf`}
               className="relative flex w-full cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground"
@@ -51,7 +55,7 @@ export function InvoiceActions({ invoice, user }: { invoice: Invoice; user: User
                   </>
                 )
               }
-            </PDFDownloadLink>
+            </PdfLink>
           </DropdownMenuItem>
         ) : (
            <DropdownMenuItem disabled>
