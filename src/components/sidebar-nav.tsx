@@ -20,9 +20,16 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { UserProfileButton } from './auth/user-profile-button';
+import { useEffect, useState } from 'react';
 
 export function SidebarNav() {
   const pathname = usePathname();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const navItems = [
     { href: '/invoices', label: 'Facturas', icon: FileText },
     { href: '/settings', label: 'Configuración', icon: Settings },
@@ -35,25 +42,28 @@ export function SidebarNav() {
       </SidebarHeader>
       <SidebarContent className="p-2">
         <SidebarMenu>
-          {navItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Link href={item.href}>
-                       <SidebarMenuButton isActive={pathname === item.href}>
-                        <item.icon />
-                        <span>{item.label}</span>
-                      </SidebarMenuButton>
+          {navItems.map((item) => {
+            const isActive = isClient ? pathname === item.href : false;
+            return (
+              <SidebarMenuItem key={item.href}>
+                <TooltipProvider>
+                  <Tooltip>
+                    <Link href={item.href} passHref legacyBehavior>
+                      <TooltipTrigger asChild>
+                        <SidebarMenuButton isActive={isActive}>
+                          <item.icon />
+                          <span>{item.label}</span>
+                        </SidebarMenuButton>
+                      </TooltipTrigger>
                     </Link>
-                  </TooltipTrigger>
-                  <TooltipContent side="right" align="center">
-                    {item.label}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </SidebarMenuItem>
-          ))}
+                    <TooltipContent side="right" align="center">
+                      {item.label}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
