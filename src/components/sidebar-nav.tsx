@@ -35,6 +35,25 @@ export function SidebarNav() {
     { href: '/settings', label: 'Configuración', icon: Settings },
   ];
 
+  if (!isClient) {
+    return (
+      <>
+        <SidebarHeader>
+          <Logo className="text-sidebar-foreground" />
+        </SidebarHeader>
+        <SidebarContent className="p-2">
+          {/* Skeleton or placeholder */}
+        </SidebarContent>
+        <SidebarFooter>
+          <SidebarSeparator />
+          <div className="p-2">
+            <UserProfileButton />
+          </div>
+        </SidebarFooter>
+      </>
+    );
+  }
+
   return (
     <>
       <SidebarHeader>
@@ -48,14 +67,14 @@ export function SidebarNav() {
               <SidebarMenuItem key={item.href}>
                 <TooltipProvider>
                   <Tooltip>
-                    <Link href={item.href} passHref legacyBehavior>
-                      <TooltipTrigger asChild>
+                    <TooltipTrigger asChild>
+                      <Link href={item.href}>
                         <SidebarMenuButton isActive={isActive}>
                           <item.icon />
                           <span>{item.label}</span>
                         </SidebarMenuButton>
-                      </TooltipTrigger>
-                    </Link>
+                      </Link>
+                    </TooltipTrigger>
                     <TooltipContent side="right" align="center">
                       {item.label}
                     </TooltipContent>
