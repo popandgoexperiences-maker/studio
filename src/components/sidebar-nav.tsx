@@ -62,19 +62,19 @@ export function SidebarNav() {
       <SidebarContent className="p-2">
         <SidebarMenu>
           {navItems.map((item) => {
-            const isActive = isClient ? pathname === item.href : false;
+            const isActive = pathname === item.href;
             return (
               <SidebarMenuItem key={item.href}>
                 <TooltipProvider>
                   <Tooltip>
-                    <Link href={item.href} passHref legacyBehavior>
-                      <TooltipTrigger asChild>
-                        <SidebarMenuButton isActive={isActive} as="a">
+                    <TooltipTrigger asChild>
+                      <Link href={item.href}>
+                        <SidebarMenuButton isActive={isActive}>
                           <item.icon />
                           <span>{item.label}</span>
                         </SidebarMenuButton>
-                      </TooltipTrigger>
-                    </Link>
+                      </Link>
+                    </TooltipTrigger>
                     <TooltipContent side="right" align="center">
                       {item.label}
                     </TooltipContent>
