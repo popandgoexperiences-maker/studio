@@ -10,21 +10,31 @@ import { Button } from '@/components/ui/button';
 import { MoreHorizontal, Download, Send, Loader2 } from 'lucide-react';
 import type { Invoice, User } from '@/lib/definitions';
 import { InvoicePDFDocument } from './invoice-pdf-document';
-import { useEffect, useState } from 'react';
-import type { PDFDownloadLink } from '@react-pdf/renderer';
+import { useState } from 'react';
+import { pdf } from '@react-pdf/renderer';
 
 export function InvoiceActions({ invoice, user }: { invoice: Invoice; user: User }) {
-  const [isClient, setIsClient] = useState(false);
-  const [PdfLink, setPdfLink] = useState<typeof PDFDownloadLink | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  useEffect(() => {
-    // This hook ensures that the component only renders on the client side.
-    setIsClient(true);
-    // Dynamically import the PDFDownloadLink component only on the client
-    import('@react-pdf/renderer').then(module => {
-      setPdfLink(() => module.PDFDownloadLink);
-    });
-  }, []);
+  const handleDownload = async () => {
+    setIsGenerating(true);
+    try {
+      const blob = await pdf(<InvoicePDFDocument invoice={invoice} user={user} />).toBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `factura-${invoice.invoiceNumber}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Failed to generate PDF", error);
+      // Aquí podrías mostrar una notificación de error al usuario
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   return (
     <DropdownMenu>
@@ -35,34 +45,19 @@ export function InvoiceActions({ invoice, user }: { invoice: Invoice; user: User
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {isClient && PdfLink ? (
-          <DropdownMenuItem asChild>
-            <PdfLink
-              document={<InvoicePDFDocument invoice={invoice} user={user} />}
-              fileName={`factura-${invoice.invoiceNumber}.pdf`}
-              className="relative flex w-full cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground"
-            >
-              {({ loading }) =>
-                loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    <span>Generando...</span>
-                  </>
-                ) : (
-                  <>
-                    <Download className="mr-2 h-4 w-4" />
-                    <span>Descargar PDF</span>
-                  </>
-                )
-              }
-            </PdfLink>
-          </DropdownMenuItem>
-        ) : (
-           <DropdownMenuItem disabled>
+        <DropdownMenuItem onClick={handleDownload} disabled={isGenerating}>
+          {isGenerating ? (
+            <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               <span>Generando...</span>
-          </DropdownMenuItem>
-        )}
+            </>
+          ) : (
+            <>
+              <Download className="mr-2 h-4 w-4" />
+              <span>Descargar PDF</span>
+            </>
+          )}
+        </DropdownMenuItem>
         <DropdownMenuItem disabled>
           <Send className="mr-2 h-4 w-4" />
           <span>Enviar por email</span>
