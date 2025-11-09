@@ -8,6 +8,7 @@ import { Plus, Trash2, Loader2, Save } from 'lucide-react';
 
 import { createInvoice } from '@/lib/actions';
 import { formatCurrency } from '@/lib/utils';
+import type { Client } from '@/lib/definitions';
 
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,7 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { ClientAutocomplete } from './client-autocomplete';
 
 const lineItemSchema = z.object({
   descripcion: z.string().min(1, "La descripción es requerida."),
@@ -25,16 +27,21 @@ const lineItemSchema = z.object({
   precioUnitario: z.coerce.number().min(0.01, "El precio debe ser positivo."),
 });
 
+const clientSchema = z.object({
+    id: z.string().optional(),
+    name: z.string().min(1, "El nombre del cliente es requerido."),
+    nif: z.string().min(1, "El NIF del cliente es requerido."),
+    address: z.string().min(1, "La dirección del cliente es requerida."),
+});
+
 const invoiceSchema = z.object({
-  clientName: z.string().min(1, "El nombre del cliente es requerido."),
-  clientNif: z.string().min(1, "El NIF del cliente es requerido."),
-  clientAddress: z.string().min(1, "La dirección del cliente es requerida."),
+  client: clientSchema,
   lineItems: z.array(lineItemSchema).min(1, "Debe haber al menos un concepto."),
 });
 
 type InvoiceFormValues = z.infer<typeof invoiceSchema>;
 
-export function CreateInvoiceForm() {
+export function CreateInvoiceForm({ clients }: { clients: Client[] }) {
   const [state, formAction] = useActionState(createInvoice, undefined);
   const { toast } = useToast();
   
@@ -50,12 +57,11 @@ export function CreateInvoiceForm() {
     formState: { errors },
     watch,
     getValues,
+    setValue,
   } = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: {
-      clientName: '',
-      clientNif: '',
-      clientAddress: '',
+      client: { name: '', nif: '', address: '' },
       lineItems: [{ descripcion: '', cantidad: 1, precioUnitario: 0 }],
     },
   });
@@ -66,6 +72,7 @@ export function CreateInvoiceForm() {
   });
 
   const lineItemsWatch = watch('lineItems');
+  const clientNameWatch = watch('client.name');
 
   useEffect(() => {
     const calculateTotals = () => {
@@ -97,9 +104,7 @@ export function CreateInvoiceForm() {
   const onFormSubmit = (data: InvoiceFormValues) => {
     startTransition(() => {
         const formData = new FormData();
-        formData.append('clientName', data.clientName);
-        formData.append('clientNif', data.clientNif);
-        formData.append('clientAddress', data.clientAddress);
+        formData.append('client', JSON.stringify(data.client));
         formData.append('lineItems', JSON.stringify(data.lineItems));
         formData.append('subtotal', totals.subtotal.toString());
         formData.append('vat', totals.iva.toString());
@@ -129,20 +134,28 @@ export function CreateInvoiceForm() {
                     <CardTitle>Datos del Cliente</CardTitle>
                 </CardHeader>
                 <CardContent className="grid sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="clientName">Nombre o Razón Social</Label>
-                        <Input id="clientName" {...register('clientName')} />
-                        {errors.clientName && <p className="text-sm text-destructive">{errors.clientName.message}</p>}
+                    <div className="sm:col-span-2">
+                        <ClientAutocomplete 
+                            clients={clients}
+                            value={clientNameWatch}
+                            onClientSelect={(client) => {
+                                setValue('client.name', client.name);
+                                setValue('client.nif', client.nif);
+                                setValue('client.address', client.address);
+                            }}
+                            onValueChange={(value) => setValue('client.name', value)}
+                        />
+                        {errors.client?.name && <p className="text-sm text-destructive mt-1">{errors.client.name.message}</p>}
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="clientNif">NIF/CIF</Label>
-                        <Input id="clientNif" {...register('clientNif')} />
-                        {errors.clientNif && <p className="text-sm text-destructive">{errors.clientNif.message}</p>}
+                        <Input id="clientNif" {...register('client.nif')} />
+                        {errors.client?.nif && <p className="text-sm text-destructive">{errors.client.nif.message}</p>}
                     </div>
-                    <div className="sm:col-span-2 space-y-2">
+                    <div className="space-y-2">
                         <Label htmlFor="clientAddress">Dirección</Label>
-                        <Input id="clientAddress" {...register('clientAddress')} />
-                        {errors.clientAddress && <p className="text-sm text-destructive">{errors.clientAddress.message}</p>}
+                        <Input id="clientAddress" {...register('client.address')} />
+                        {errors.client?.address && <p className="text-sm text-destructive">{errors.client.address.message}</p>}
                     </div>
                 </CardContent>
             </Card>

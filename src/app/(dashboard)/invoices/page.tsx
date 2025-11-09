@@ -43,7 +43,7 @@ async function InvoicesTableWrapper({ query }: { query: string }) {
   const invoices = await fetchInvoices();
   const filteredInvoices = invoices.filter(
     (invoice) =>
-      invoice.clientName.toLowerCase().includes(query.toLowerCase()) ||
+      invoice.client.name.toLowerCase().includes(query.toLowerCase()) ||
       invoice.invoiceNumber.toLowerCase().includes(query.toLowerCase())
   );
 

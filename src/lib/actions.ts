@@ -66,10 +66,14 @@ const LineItemSchema = z.object({
   precioUnitario: z.coerce.number().gt(0, "El precio debe ser mayor que 0."),
 });
 
+const ClientSchema = z.object({
+    name: z.string().min(1, "El nombre del cliente es requerido."),
+    nif: z.string().min(1, "El NIF del cliente es requerido."),
+    address: z.string().min(1, "La dirección del cliente es requerida."),
+});
+
 const InvoiceSchema = z.object({
-  clientName: z.string().min(1, "El nombre del cliente es requerido."),
-  clientNif: z.string().min(1, "El NIF del cliente es requerido."),
-  clientAddress: z.string().min(1, "La dirección del cliente es requerida."),
+  client: ClientSchema,
   lineItems: z.array(LineItemSchema).min(1, "Debe haber al menos un concepto."),
   subtotal: z.coerce.number(),
   vat: z.coerce.number(),
@@ -80,9 +84,12 @@ const InvoiceSchema = z.object({
 export async function createInvoice(prevState: any, formData: FormData) {
   try {
     const lineItems = JSON.parse(formData.get('lineItems') as string);
+    const client = JSON.parse(formData.get('client') as string);
+
     const validatedFields = InvoiceSchema.safeParse({
       ...Object.fromEntries(formData.entries()),
       lineItems,
+      client,
     });
 
     if (!validatedFields.success) {
@@ -93,7 +100,7 @@ export async function createInvoice(prevState: any, formData: FormData) {
       };
     }
 
-    const { clientName, clientNif, clientAddress, subtotal, vat, total } = validatedFields.data;
+    const { subtotal, vat, total } = validatedFields.data;
     
     const [invoiceNumber, user] = await Promise.all([
       fetchNextInvoiceNumber(),
@@ -102,9 +109,7 @@ export async function createInvoice(prevState: any, formData: FormData) {
 
     await saveInvoice({
       invoiceNumber,
-      clientName,
-      clientNif,
-      clientAddress,
+      client: validatedFields.data.client,
       date: new Date().toISOString().split('T')[0],
       lineItems,
       subtotal,
@@ -120,6 +125,7 @@ export async function createInvoice(prevState: any, formData: FormData) {
   }
 
   revalidatePath('/invoices');
+  revalidatePath('/clients');
   redirect('/invoices');
 }
 

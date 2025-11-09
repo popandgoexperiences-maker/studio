@@ -12,7 +12,7 @@ import {
   SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
-import { Settings, FileText } from 'lucide-react';
+import { Settings, FileText, Users } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -32,6 +32,7 @@ export function SidebarNav() {
 
   const navItems = [
     { href: '/invoices', label: 'Facturas', icon: FileText },
+    { href: '/clients', label: 'Clientes', icon: Users },
     { href: '/settings', label: 'Configuración', icon: Settings },
   ];
 
@@ -65,21 +66,21 @@ export function SidebarNav() {
             const isActive = pathname === item.href;
             return (
               <SidebarMenuItem key={item.href}>
-                <TooltipProvider>
-                  <Tooltip>
-                    <Link href={item.href} passHref>
+                <Link href={item.href} passHref legacyBehavior>
+                  <TooltipProvider>
+                    <Tooltip>
                       <TooltipTrigger asChild>
-                        <SidebarMenuButton isActive={isActive}>
+                        <SidebarMenuButton isActive={isActive} as="a">
                           <item.icon />
                           <span>{item.label}</span>
                         </SidebarMenuButton>
                       </TooltipTrigger>
-                    </Link>
-                    <TooltipContent side="right" align="center">
-                      {item.label}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                      <TooltipContent side="right" align="center">
+                        {item.label}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </Link>
               </SidebarMenuItem>
             );
           })}

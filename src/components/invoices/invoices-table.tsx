@@ -56,7 +56,7 @@ export function InvoicesTable({ invoices }: { invoices: Invoice[] }) {
             {invoices.map((invoice) => (
               <TableRow key={invoice.id}>
                 <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                <TableCell>{invoice.clientName}</TableCell>
+                <TableCell>{invoice.client.name}</TableCell>
                 <TableCell className="hidden md:table-cell">{new Date(invoice.date).toLocaleDateString('es-ES')}</TableCell>
                 <TableCell className="text-right">{formatCurrency(invoice.total)}</TableCell>
                 <TableCell className="hidden sm:table-cell">

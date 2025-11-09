@@ -1,3 +1,10 @@
+export type Client = {
+  id: string;
+  name: string;
+  nif: string;
+  address: string;
+};
+
 export type User = {
   id: string;
   name: string;
@@ -19,9 +26,7 @@ export type LineItem = {
 export type Invoice = {
   id: string;
   invoiceNumber: string;
-  clientName: string;
-  clientNif: string;
-  clientAddress: string;
+  client: Client;
   date: string;
   lineItems: LineItem[];
   subtotal: number;

@@ -1,7 +1,7 @@
 // This file provides a mock data layer.
 // In a real application, this would be replaced with calls to a database like Firestore.
 
-import type { User, Invoice } from '@/lib/definitions';
+import type { User, Invoice, Client } from '@/lib/definitions';
 
 let mockUser: User = {
   id: '1',
@@ -15,13 +15,17 @@ let mockUser: User = {
   sealUrl: 'https://picsum.photos/seed/seal/120/120',
 };
 
+let mockClients: Client[] = [
+    { id: '1', name: 'Empresa Grande S.L.', nif: 'B87654321', address: 'Calle Ancha 1, Madrid' },
+    { id: '2', name: 'Cliente Mediano S.A.', nif: 'A12345678', address: 'Avenida Central 2, Barcelona' },
+    { id: '3', name: 'Pequeño Autónomo', nif: 'Y9876543Z', address: 'Plaza Nueva 3, Valencia' },
+];
+
 let mockInvoices: Invoice[] = [
   {
     id: '1',
     invoiceNumber: 'F-003',
-    clientName: 'Empresa Grande S.L.',
-    clientNif: 'B87654321',
-    clientAddress: 'Calle Ancha 1, Madrid',
+    client: mockClients[0],
     date: '2024-07-20',
     lineItems: [
       { description: 'Diseño Web', quantity: 1, unitPrice: 1200 },
@@ -42,9 +46,7 @@ let mockInvoices: Invoice[] = [
   {
     id: '2',
     invoiceNumber: 'F-002',
-    clientName: 'Cliente Mediano S.A.',
-    clientNif: 'A12345678',
-    clientAddress: 'Avenida Central 2, Barcelona',
+    client: mockClients[1],
     date: '2024-06-15',
     lineItems: [
       { description: 'Consultoría SEO', quantity: 10, unitPrice: 75 },
@@ -64,9 +66,7 @@ let mockInvoices: Invoice[] = [
   {
     id: '3',
     invoiceNumber: 'F-001',
-    clientName: 'Pequeño Autónomo',
-    clientNif: 'Y9876543Z',
-    clientAddress: 'Plaza Nueva 3, Valencia',
+    client: mockClients[2],
     date: '2024-05-01',
     lineItems: [
       { description: 'Creación de Logo', quantity: 1, unitPrice: 400 },
@@ -87,6 +87,11 @@ let mockInvoices: Invoice[] = [
 
 // Simulate network delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+export async function fetchClients(): Promise<Client[]> {
+  await delay(400);
+  return [...mockClients];
+}
 
 export async function fetchInvoices(): Promise<Invoice[]> {
   await delay(500);
@@ -112,10 +117,24 @@ export async function fetchNextInvoiceNumber(): Promise<string> {
 
 export async function saveInvoice(invoiceData: Omit<Invoice, 'id' | 'user'> & { user: User }): Promise<Invoice> {
   await delay(1000);
+  
+  // Find or create client
+  let client = mockClients.find(c => c.name.toLowerCase() === invoiceData.client.name.toLowerCase());
+  if (!client) {
+      client = {
+          id: String(mockClients.length + 1),
+          name: invoiceData.client.name,
+          nif: invoiceData.client.nif,
+          address: invoiceData.client.address
+      };
+      mockClients.push(client);
+  }
+
   const newInvoice: Invoice = {
     ...invoiceData,
     id: String(mockInvoices.length + 4), // simple unique ID
     status: 'generating', // Simulate PDF generation
+    client: client,
     user: {
       name: invoiceData.user.name,
       email: invoiceData.user.email,
