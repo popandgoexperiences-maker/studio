@@ -113,7 +113,7 @@ export async function createInvoice(prevState: any, formData: FormData) {
       invoiceNumber,
       client: validatedFields.data.client,
       date: new Date().toISOString().split('T')[0],
-      lineItems,
+      lineItems: validatedFields.data.lineItems,
       subtotal,
       vat,
       total,
@@ -202,7 +202,10 @@ export async function updateSettings(prevState: any, formData: FormData) {
         updatedUserData.logoUrl = await fileToDataUrl(logoFile);
     }
 
-    // Handle signature data URL - already in validatedFields.data.signature
+    // Handle signature data URL - it comes from a string field, so it is in validatedFields.data.signature
+    if (validatedFields.data.signature && validatedFields.data.signature.startsWith('data:image')) {
+      updatedUserData.signatureUrl = validatedFields.data.signature;
+    }
     
     // Handle seal image
     const sealFile = formData.get('seal') as File | null;
