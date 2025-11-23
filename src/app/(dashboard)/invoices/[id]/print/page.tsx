@@ -56,9 +56,7 @@ export default function InvoicePrintPage() {
   // making this component the root of the document.
   return (
     <>
-        <head>
-        <title>{`Factura ${invoice.invoiceNumber}`}</title>
-        <style>
+      <style>
           {`
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
             body {
@@ -214,7 +212,6 @@ export default function InvoicePrintPage() {
             }
           `}
         </style>
-      </head>
       <div className="page-container">
           <div className="container">
           <div className="header">
