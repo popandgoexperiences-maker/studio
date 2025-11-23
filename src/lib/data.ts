@@ -12,7 +12,7 @@ import {
   limit,
   orderBy,
 } from 'firebase/firestore';
-import { getAuth }s from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 
 import {
   setDocumentNonBlocking,
