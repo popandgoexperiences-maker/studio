@@ -15,18 +15,9 @@ export function SignaturePad({ value, onChange }: SignaturePadProps) {
   const sigPadRef = useRef<SignatureCanvas>(null);
   const [isEmpty, setIsEmpty] = useState(true);
 
-  // Set initial signature from prop value
   useEffect(() => {
-    if (value && sigPadRef.current) {
-        // We check if it's not empty to avoid overwriting a new signature with the old value on re-render
-        if(sigPadRef.current.isEmpty()) {
-            sigPadRef.current.fromDataURL(value, {
-              width: 400,
-              height: 150,
-            });
-        }
-        setIsEmpty(false);
-    }
+    // Only update the empty state based on the initial value
+    setIsEmpty(!value);
   }, [value]);
 
   const clear = () => {
@@ -37,28 +28,44 @@ export function SignaturePad({ value, onChange }: SignaturePadProps) {
 
   const handleEnd = () => {
     if (sigPadRef.current) {
-      const dataUrl = sigPadRef.current.getTrimmedCanvas().toDataURL('image/png');
-      onChange(dataUrl);
-      setIsEmpty(sigPadRef.current.isEmpty());
+      // Check if canvas is empty before getting data URL
+      if (sigPadRef.current.isEmpty()) {
+        onChange('');
+        setIsEmpty(true);
+      } else {
+        const dataUrl = sigPadRef.current.getTrimmedCanvas().toDataURL('image/png');
+        onChange(dataUrl);
+        setIsEmpty(false);
+      }
     }
   };
 
   return (
     <div className="flex flex-col gap-4">
-       <div className="w-full max-w-sm rounded-md border border-input bg-background">
-          <SignatureCanvas
-            ref={sigPadRef}
-            penColor='black'
-            canvasProps={{
-              width: 400,
-              height: 150,
-              className: 'sigCanvas rounded-md',
-            }}
-            onEnd={handleEnd}
-          />
-      </div>
+      <div className="flex items-center gap-4">
+        <div className="w-full max-w-sm rounded-md border border-input bg-background">
+            <SignatureCanvas
+              ref={sigPadRef}
+              penColor='black'
+              canvasProps={{
+                width: 400,
+                height: 150,
+                className: 'sigCanvas rounded-md',
+              }}
+              onEnd={handleEnd}
+            />
+        </div>
+        {value && (
+            <div className="hidden sm:flex flex-col items-center gap-2">
+                <p className="text-xs text-muted-foreground">Firma Actual</p>
+                <div className="w-32 h-16 rounded-md border p-1 flex items-center justify-center bg-muted/50">
+                    <Image src={value} alt="Firma actual" width={120} height={60} className="object-contain" />
+                </div>
+            </div>
+        )}
+       </div>
       <div className="flex gap-2">
-        <Button variant="outline" type="button" onClick={clear} disabled={isEmpty && !value}>
+        <Button variant="outline" type="button" onClick={clear} disabled={isEmpty}>
           <Eraser className="mr-2 h-4 w-4" />
           Limpiar
         </Button>
