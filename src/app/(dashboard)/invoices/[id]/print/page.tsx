@@ -8,7 +8,7 @@ import type { Invoice, User } from '@/lib/definitions';
 
 export default function InvoicePrintPage() {
   const params = useParams();
-  const { id } = params;
+  const id = params.id as string;
 
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -52,9 +52,11 @@ export default function InvoicePrintPage() {
 
   const vatRate = user.vatRate ?? 0.1;
 
+  // The <html> and <body> tags are removed as this page will be rendered inside its own empty layout,
+  // making this component the root of the document.
   return (
-    <html lang="es">
-      <head>
+    <>
+        <head>
         <title>{`Factura ${invoice.invoiceNumber}`}</title>
         <style>
           {`
@@ -213,84 +215,82 @@ export default function InvoicePrintPage() {
           `}
         </style>
       </head>
-      <body>
-        <div className="page-container">
-            <div className="container">
-            <div className="header">
-                <div className="company-details">
-                {user.logoUrl && <img className="logo" src={user.logoUrl} alt="Logo" />}
-                <div className="company-name">{user.name}</div>
-                <div className="company-info">{user.nif}</div>
-                <div className="company-info">{user.address}</div>
-                <div className="company-info">{user.email}</div>
-                </div>
-                <div className="invoice-details">
-                <div className="invoice-title">FACTURA</div>
-                <div className="invoice-number">{invoice.invoiceNumber}</div>
-                <div className="invoice-date">Fecha: {new Date(invoice.date).toLocaleDateString('es-ES')}</div>
-                </div>
-            </div>
+      <div className="page-container">
+          <div className="container">
+          <div className="header">
+              <div className="company-details">
+              {user.logoUrl && <img className="logo" src={user.logoUrl} alt="Logo" />}
+              <div className="company-name">{user.name}</div>
+              <div className="company-info">{user.nif}</div>
+              <div className="company-info">{user.address}</div>
+              <div className="company-info">{user.email}</div>
+              </div>
+              <div className="invoice-details">
+              <div className="invoice-title">FACTURA</div>
+              <div className="invoice-number">{invoice.invoiceNumber}</div>
+              <div className="invoice-date">Fecha: {new Date(invoice.date).toLocaleDateString('es-ES')}</div>
+              </div>
+          </div>
 
-            <div className="client-info">
-                <div className="bill-to">Facturar a:</div>
-                <div>{invoice.client.name}</div>
-                <div>{invoice.client.nif}</div>
-                <div>{invoice.client.address}</div>
-            </div>
+          <div className="client-info">
+              <div className="bill-to">Facturar a:</div>
+              <div>{invoice.client.name}</div>
+              <div>{invoice.client.nif}</div>
+              <div>{invoice.client.address}</div>
+          </div>
 
-            <table>
-                <thead>
-                <tr>
-                    <th className="col-description">Descripción</th>
-                    <th className="col-qty">Cantidad</th>
-                    <th className="col-price">Precio Unit.</th>
-                    <th className="col-total">Total</th>
-                </tr>
-                </thead>
-                <tbody>
-                {invoice.lineItems.map((item, index) => (
-                    <tr key={index}>
-                    <td className="col-description">{item.description}</td>
-                    <td className="col-qty">{item.quantity}</td>
-                    <td className="col-price">{formatCurrency(item.unitPrice)}</td>
-                    <td className="col-total">{formatCurrency(item.quantity * item.unitPrice)}</td>
-                    </tr>
-                ))}
-                </tbody>
-            </table>
+          <table>
+              <thead>
+              <tr>
+                  <th className="col-description">Descripción</th>
+                  <th className="col-qty">Cantidad</th>
+                  <th className="col-price">Precio Unit.</th>
+                  <th className="col-total">Total</th>
+              </tr>
+              </thead>
+              <tbody>
+              {invoice.lineItems.map((item, index) => (
+                  <tr key={index}>
+                  <td className="col-description">{item.description}</td>
+                  <td className="col-qty">{item.quantity}</td>
+                  <td className="col-price">{formatCurrency(item.unitPrice)}</td>
+                  <td className="col-total">{formatCurrency(item.quantity * item.unitPrice)}</td>
+                  </tr>
+              ))}
+              </tbody>
+          </table>
 
-            <div className="totals">
-                <div className="totals-container">
-                <div className="total-row">
-                    <span>Subtotal</span>
-                    <span>{formatCurrency(invoice.subtotal)}</span>
-                </div>
-                <div className="total-row">
-                    <span>IVA ({(vatRate * 100).toFixed(0)}%)</span>
-                    <span>{formatCurrency(invoice.vat)}</span>
-                </div>
-                <div className="total-row grand-total-row">
-                    <span>TOTAL</span>
-                    <span>{formatCurrency(invoice.total)}</span>
-                </div>
-                </div>
-            </div>
+          <div className="totals">
+              <div className="totals-container">
+              <div className="total-row">
+                  <span>Subtotal</span>
+                  <span>{formatCurrency(invoice.subtotal)}</span>
+              </div>
+              <div className="total-row">
+                  <span>IVA ({(vatRate * 100).toFixed(0)}%)</span>
+                  <span>{formatCurrency(invoice.vat)}</span>
+              </div>
+              <div className="total-row grand-total-row">
+                  <span>TOTAL</span>
+                  <span>{formatCurrency(invoice.total)}</span>
+              </div>
+              </div>
+          </div>
 
-            </div>
+          </div>
 
-            <div className="footer">
-                <div className='footer-notes'>
-                    Gracias por su confianza.
-                </div>
-                <div className="footer-signature">
-                    {user.signatureUrl && <img src={user.signatureUrl} alt="Firma" className="signature-image" />}
-                    <div>Firma</div>
-                </div>
-                 {user.sealUrl && <img src={user.sealUrl} alt="Sello" className="seal-image" />}
-            </div>
-        </div>
-        <button className="print-button" onClick={() => window.print()}>Imprimir / Guardar como PDF</button>
-      </body>
-    </html>
+          <div className="footer">
+              <div className='footer-notes'>
+                  Gracias por su confianza.
+              </div>
+              <div className="footer-signature">
+                  {user.signatureUrl && <img src={user.signatureUrl} alt="Firma" className="signature-image" />}
+                  <div>Firma</div>
+              </div>
+                {user.sealUrl && <img src={user.sealUrl} alt="Sello" className="seal-image" />}
+          </div>
+      </div>
+      <button className="print-button" onClick={() => window.print()}>Imprimir / Guardar como PDF</button>
+    </>
   );
 }
