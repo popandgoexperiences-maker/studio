@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Save, Upload, Loader2 } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
