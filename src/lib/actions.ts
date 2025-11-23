@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { fetchNextInvoiceNumber, fetchUser, saveInvoice, updateUserProfile, saveClient } from '@/lib/data';
+import type { User } from './definitions';
 
 // --- AUTH ACTIONS ---
 
@@ -63,7 +64,7 @@ export async function logout() {
 const LineItemSchema = z.object({
   descripcion: z.string().min(1, "La descripción no puede estar vacía."),
   cantidad: z.coerce.number().gt(0, "La cantidad debe ser mayor que 0."),
-  precioUnitario: z.coerce.number().gt(0, "El precio debe ser mayor que 0."),
+  precioUnitario: z.coerce.number().gte(0, "El precio debe ser 0 o mayor."),
 });
 
 const ClientSchemaForInvoice = z.object({
@@ -168,16 +169,25 @@ const SettingsSchema = z.object({
   address: z.string().optional(),
   phone: z.string().optional(),
   vatRate: z.coerce.number().min(0, "El IVA no puede ser negativo.").optional(),
-  signatureUrl: z.string().optional(),
 });
+
+// Helper function to convert a File to a Data URL
+async function fileToDataUrl(file: File): Promise<string> {
+    const buffer = await file.arrayBuffer();
+    const base64 = Buffer.from(buffer).toString('base64');
+    return `data:${file.type};base64,${base64}`;
+}
+
 
 export async function updateSettings(prevState: any, formData: FormData) {
   try {
     const rawData = Object.fromEntries(formData.entries());
+    
     const dataToValidate = {
         ...rawData,
         vatRate: rawData.vatRate ? Number(rawData.vatRate) / 100 : undefined,
-    }
+    };
+    
     const validatedFields = SettingsSchema.safeParse(dataToValidate);
 
     if (!validatedFields.success) {
@@ -187,27 +197,35 @@ export async function updateSettings(prevState: any, formData: FormData) {
       };
     }
 
-    // In a real app, file handling for logo, signature, seal would be here.
-    // For this mock, we assume they are handled separately or we just update text fields.
+    let updatedUserData: Partial<User> = { ...validatedFields.data };
     
-    const { signatureUrl, ...rest } = validatedFields.data;
-
-    let updatedUserData: Partial<User> = { ...rest };
+    // Handle logo image
+    const logoFile = formData.get('logo') as File | null;
+    if (logoFile && logoFile.size > 0) {
+        updatedUserData.logoUrl = await fileToDataUrl(logoFile);
+    }
 
     // Handle signature data URL
-    const signatureDataUrl = formData.get('signature');
-    if (signatureDataUrl && typeof signatureDataUrl === 'string' && signatureDataUrl.startsWith('data:image/png;base64,')) {
+    const signatureDataUrl = formData.get('signature') as string | null;
+    if (signatureDataUrl && signatureDataUrl.startsWith('data:image/png;base64,')) {
       updatedUserData.signatureUrl = signatureDataUrl;
     }
 
+    // Handle seal image
+    const sealFile = formData.get('seal') as File | null;
+    if (sealFile && sealFile.size > 0) {
+        updatedUserData.sealUrl = await fileToDataUrl(sealFile);
+    }
 
     await updateUserProfile(updatedUserData);
 
   } catch (e) {
+    console.error("Error updating settings:", e);
     return { message: 'Error al actualizar el perfil.' };
   }
 
   revalidatePath('/settings');
   revalidatePath('/invoices/new');
+  revalidatePath('/(dashboard)/layout.tsx');
   return { message: 'Perfil actualizado con éxito.' };
 }
