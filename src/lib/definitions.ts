@@ -6,7 +6,7 @@ export type Client = {
 };
 
 export type User = {
-  id: string;
+  id: string; // Firebase Auth UID
   name: string;
   email: string;
   nif?: string;
@@ -26,19 +26,14 @@ export type LineItem = {
 
 export type Invoice = {
   id: string;
+  userId: string; // Foreign key to User
   invoiceNumber: string;
   client: Client;
-  date: string;
+  date: string; // ISO 8601 format
   lineItems: LineItem[];
   subtotal: number;
   vat: number;
   total: number;
   pdfUrl?: string;
   status: 'draft' | 'pending' | 'paid' | 'generating';
-  user: {
-    name: string;
-    nif?: string;
-    address?: string;
-    email: string;
-  };
 };

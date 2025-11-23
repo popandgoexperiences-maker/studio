@@ -1,155 +1,34 @@
-/**
- * This ruleset enforces a strict user-ownership model for an invoicing application.
- * All data is isolated within a user-specific data tree, ensuring that users can
- * only access their own profile information, invoices, and invoice concepts.
- *
- * Core Philosophy:
- * The security model is built on the principle of least privilege. A user is granted
- * full control over the documents they create under their own user ID, but has zero
- * access to any data belonging to other users. Public access is disabled entirely.
- *
- * Data Structure:
- * The data is organized hierarchically to enforce ownership at the path level:
- * - /users/{userId}: Stores the user's profile and serves as the root for all their data.
- * - /users/{userId}/invoices/{invoiceId}: A subcollection containing all invoices created by the user.
- * - /users/{userId}/invoices/{invoiceId}/concepts/{conceptId}: A nested subcollection for items on an invoice.
- *
- * Key Security Decisions:
- * - User Enumeration Disabled: Listing documents from the top-level '/users' collection is prohibited to protect user privacy.
- * - Path-Based Security: Access to subcollections (like invoices) is primarily controlled by the `{userId}` wildcard in the path, ensuring a user can only query their own data.
- * - Denormalization for Authorization: To create performant and secure rules, critical IDs (like `userId` and `invoiceId`) are denormalized (copied) into child documents. This avoids slow and costly `get()` calls in the rules. For example, an invoice document contains a `userId` field, which is validated against the path to ensure integrity.
- * - Prototyping Flexibility: These rules focus strictly on authorization (who can access what) and relational integrity (ensuring `userId` matches). They do not validate the shape or data types of other fields (like `clientName` or `total`), allowing for rapid development and schema changes on the client-side.
- */
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --------------------------------------------------------------------------------
     // Helper Functions
-    // --------------------------------------------------------------------------------
-
-    /**
-     * Checks if the user is authenticated.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * Checks if the currently authenticated user's UID matches the provided userId.
-     * This is the foundation of the user-ownership model.
-     */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /**
-     * Checks if a user is the owner of an *existing* document.
-     * Used for update and delete operations to prevent modifying non-existent data.
-     */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
-
-    /**
-     * Validates that the user document being created has an 'id' field that matches
-     * the document's ID (which is the user's UID).
-     */
-    function hasValidNewUserData(userId) {
-      return request.resource.data.id == userId;
-    }
-
-    /**
-     * Ensures the 'id' field of a user document cannot be changed after creation.
-     */
-    function hasValidUpdatedUserData() {
-      return request.resource.data.id == resource.data.id;
-    }
-
-    /**
-     * On invoice creation, validates that the denormalized 'userId' field inside the
-     * document matches the owner's UID from the path.
-     */
-    function hasValidNewInvoiceData(userId) {
-      return request.resource.data.userId == userId;
-    }
-
-    /**
-     * Ensures the 'userId' field of an invoice document is immutable.
-     */
-    function hasValidUpdatedInvoiceData() {
-      return request.resource.data.userId == resource.data.userId;
-    }
-
-    /**
-     * On concept creation, validates that the denormalized 'userId' and 'invoiceId'
-     * fields inside the document match the IDs from the path.
-     */
-    function hasValidNewConceptData(userId, invoiceId) {
-      // Assumes 'userId' is denormalized onto the concept as per security best practices.
-      return request.resource.data.userId == userId &&
-             request.resource.data.invoiceId == invoiceId;
-    }
-
-    /**
-     * Ensures the relational IDs ('userId' and 'invoiceId') of a concept are immutable.
-     */
-    function hasValidUpdatedConceptData() {
-      // Assumes 'userId' is denormalized onto the concept.
-      return request.resource.data.userId == resource.data.userId &&
-             request.resource.data.invoiceId == resource.data.invoiceId;
-    }
-
-
-    // --------------------------------------------------------------------------------
-    // Collection Rules
-    // --------------------------------------------------------------------------------
-
-    /**
-     * @description Controls access to a user's own profile document.
-     * @path /users/{userId}
-     * @allow (create) A new user can create their own user profile document.
-     * @deny (list) Listing all users is forbidden to prevent user enumeration.
-     * @deny (get) An authenticated user cannot read another user's profile.
-     * @principle Restricts access to a user's own data tree and allows self-creation of a profile.
-     */
+    // /users/{userId}
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false;
-      allow create: if isOwner(userId) && hasValidNewUserData(userId);
-      allow update: if isExistingOwner(userId) && hasValidUpdatedUserData();
-      allow delete: if isExistingOwner(userId);
+      // Users can read and update their own profile.
+      allow read, update: if isOwner(userId);
+      // New users can create their own profile document.
+      allow create: if isSignedIn() && request.auth.uid == userId;
 
-      /**
-       * @description Controls access to a user's invoices.
-       * @path /users/{userId}/invoices/{invoiceId}
-       * @allow (create) An authenticated user can create an invoice for themselves.
-       * @allow (list) An authenticated user can list all of their own invoices.
-       * @deny (get) An authenticated user cannot read an invoice belonging to another user.
-       * @principle Enforces document ownership for all operations and validates relational integrity.
-       */
+      // /users/{userId}/invoices/{invoiceId}
       match /invoices/{invoiceId} {
-        allow get: if isOwner(userId);
-        allow list: if isOwner(userId);
-        allow create: if isOwner(userId) && hasValidNewInvoiceData(userId);
-        allow update: if isExistingOwner(userId) && hasValidUpdatedInvoiceData();
-        allow delete: if isExistingOwner(userId);
-
-        /**
-         * @description Controls access to the concepts (line items) of an invoice.
-         * @path /users/{userId}/invoices/{invoiceId}/concepts/{conceptId}
-         * @allow (create) The invoice owner can add a new concept to their own invoice.
-         * @allow (list) The invoice owner can list all concepts for their own invoice.
-         * @deny (update) A user cannot modify a concept on an invoice owned by someone else.
-         * @principle Inherits ownership from the parent path and validates relational integrity.
-         */
-        match /concepts/{conceptId} {
-          allow get: if isOwner(userId);
-          allow list: if isOwner(userId);
-          allow create: if isOwner(userId) && hasValidNewConceptData(userId, invoiceId);
-          allow update: if isExistingOwner(userId) && hasValidUpdatedConceptData();
-          allow delete: if isExistingOwner(userId);
-        }
+        // Only the owner can manage their invoices.
+        allow read, list, create, update, delete: if isOwner(userId) && request.resource.data.userId == userId;
+      }
+      
+      // /users/{userId}/clients/{clientId}
+      match /clients/{clientId} {
+        // Only the owner can manage their clients.
+        allow read, list, create, update, delete: if isOwner(userId);
       }
     }
   }

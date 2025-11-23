@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { LogOut, User as UserIcon } from 'lucide-react';
+import { LogOut, User as UserIcon, Loader2 } from 'lucide-react';
 import { logout } from '@/lib/actions';
-import { fetchUser } from '@/lib/data';
-import type { User } from '@/lib/definitions';
+import { useUser, useFirebase } from '@/firebase';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -19,24 +18,30 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function UserProfileButton() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadUser() {
-      try {
-        const userData = await fetchUser();
-        setUser(userData);
-      } catch (error) {
-        console.error("Failed to fetch user:", error);
-      } finally {
-        setLoading(false);
-      }
+  const { user, isUserLoading } = useUser();
+  const { firestore } = useFirebase(); // Assuming you need firestore for user profile
+  const [userProfile, setUserProfile] = React.useState<any>(null);
+  const [profileLoading, setProfileLoading] = React.useState(true);
+  
+  React.useEffect(() => {
+    if (user && firestore) {
+      const { doc, onSnapshot } = require('firebase/firestore');
+      const userDocRef = doc(firestore, 'users', user.uid);
+      const unsubscribe = onSnapshot(userDocRef, (doc) => {
+        if (doc.exists()) {
+          setUserProfile(doc.data());
+        }
+        setProfileLoading(false);
+      });
+      return () => unsubscribe();
+    } else if (!isUserLoading) {
+      setProfileLoading(false);
     }
-    loadUser();
-  }, []);
+  }, [user, isUserLoading, firestore]);
 
-  if (loading) {
+  const isLoading = isUserLoading || profileLoading;
+
+  if (isLoading) {
     return (
       <div className="flex items-center gap-3 p-2 h-[52px]">
         <Skeleton className="h-9 w-9 rounded-full" />
@@ -47,13 +52,18 @@ export function UserProfileButton() {
       </div>
     );
   }
+  
+  if (!user || !userProfile) {
+    return null; // Or a login button
+  }
 
   const getInitials = (name: string) => {
+    if (!name) return '??';
     const names = name.split(' ');
     if (names.length > 1) {
       return `${names[0][0]}${names[1][0]}`;
     }
-    return names[0].substring(0, 2);
+    return name.substring(0, 2);
   };
 
   return (
@@ -61,16 +71,16 @@ export function UserProfileButton() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="h-auto w-full justify-start p-2 text-left">
           <Avatar className="h-9 w-9">
-            {user?.logoUrl ? (
-                <AvatarImage src={user.logoUrl} alt="Logo de la empresa" data-ai-hint="company logo" />
+            {userProfile?.logoUrl ? (
+                <AvatarImage src={userProfile.logoUrl} alt="Logo de la empresa" data-ai-hint="company logo" />
             ): (
                 <AvatarImage src="https://picsum.photos/seed/avatar/40/40" alt="Avatar" data-ai-hint="person avatar" />
             )}
-            <AvatarFallback>{user ? getInitials(user.name) : '...'}</AvatarFallback>
+            <AvatarFallback>{getInitials(userProfile.name)}</AvatarFallback>
           </Avatar>
           <div className='text-left ml-2'>
-            <p className="text-sm font-medium text-sidebar-foreground truncate">{user?.name || 'Cargando...'}</p>
-            <p className="text-xs text-sidebar-foreground/70 truncate">{user?.email || '...'}</p>
+            <p className="text-sm font-medium text-sidebar-foreground truncate">{userProfile.name}</p>
+            <p className="text-xs text-sidebar-foreground/70 truncate">{userProfile.email}</p>
           </div>
         </Button>
       </DropdownMenuTrigger>

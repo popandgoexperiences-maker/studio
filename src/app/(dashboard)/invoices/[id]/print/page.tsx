@@ -5,19 +5,28 @@ import { useParams } from 'next/navigation';
 import { fetchInvoices, fetchUser } from '@/lib/data';
 import { formatCurrency } from '@/lib/utils';
 import type { Invoice, User } from '@/lib/definitions';
+import { useUser } from '@/firebase';
 
 export default function InvoicePrintPage() {
   const params = useParams();
   const id = params.id as string;
-
+  const { user: authUser, isUserLoading } = useUser();
+  
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (isUserLoading) return;
+    if (!authUser) {
+        // redirect or handle unauthenticated user
+        return;
+    }
+
     async function loadData() {
       if (!id) return;
       try {
+        // Assuming fetchInvoices now fetches based on the logged-in user
         const [invoicesData, userData] = await Promise.all([
           fetchInvoices(),
           fetchUser(),
@@ -33,14 +42,14 @@ export default function InvoicePrintPage() {
     }
 
     loadData();
-  }, [id]);
+  }, [id, authUser, isUserLoading]);
 
   useEffect(() => {
     if (!loading && invoice) {
         // Automatically trigger print dialog when component is ready
         setTimeout(() => window.print(), 500);
     }
-  }, [loading, invoice])
+  }, [loading, invoice]);
 
   if (loading) {
     return <div>Cargando factura...</div>;
@@ -52,8 +61,6 @@ export default function InvoicePrintPage() {
 
   const vatRate = user.vatRate ?? 0.1;
 
-  // The <html> and <body> tags are removed as this page will be rendered inside its own empty layout,
-  // making this component the root of the document.
   return (
     <>
       <style>

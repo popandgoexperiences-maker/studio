@@ -17,13 +17,6 @@ import { formatCurrency } from '@/lib/utils';
 import { StatusBadge } from './status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { InvoiceActions } from './invoice-actions';
-import dynamic from 'next/dynamic';
-
-const DynamicInvoiceActions = dynamic(() => import('./invoice-actions').then(mod => mod.InvoiceActions), {
-  ssr: false,
-  loading: () => <Skeleton className="h-8 w-8" />,
-});
-
 
 export function InvoicesTable({ invoices, user }: { invoices: Invoice[], user: User }) {
   if (invoices.length === 0) {
@@ -65,7 +58,7 @@ export function InvoicesTable({ invoices, user }: { invoices: Invoice[], user: U
                   <StatusBadge status={invoice.status} />
                 </TableCell>
                 <TableCell>
-                  <DynamicInvoiceActions invoice={invoice} />
+                  <InvoiceActions invoice={invoice} />
                 </TableCell>
               </TableRow>
             ))}

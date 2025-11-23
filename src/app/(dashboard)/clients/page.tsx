@@ -1,4 +1,5 @@
-import { Suspense } from 'react';
+'use client';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { PlusCircle } from 'lucide-react';
 import { fetchClients, fetchInvoices } from '@/lib/data';
@@ -20,9 +21,39 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-
+import type { Client, Invoice } from '@/lib/definitions';
+import { useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
 
 export default function ClientsPage() {
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isUserLoading, router]);
+  
+  if (isUserLoading || !user) {
+      return (
+        <div className="p-4 sm:p-6 lg:p-8">
+            <PageHeader
+                title="Clientes"
+                description="Consulta la lista de tus clientes y sus facturas."
+            >
+                <Button asChild>
+                    <Link href="/clients/new">
+                        <PlusCircle />
+                        <span>Nuevo Cliente</span>
+                    </Link>
+                </Button>
+            </PageHeader>
+            <ClientsTableSkeleton />
+        </div>
+      )
+  }
+
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <PageHeader
@@ -43,11 +74,32 @@ export default function ClientsPage() {
   );
 }
 
-async function ClientsTableWrapper() {
-  const [clients, invoices] = await Promise.all([
-    fetchClients(),
-    fetchInvoices(),
-  ]);
+function ClientsTableWrapper() {
+  const [clients, setClients] = useState<Client[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [clientsData, invoicesData] = await Promise.all([
+          fetchClients(),
+          fetchInvoices(),
+        ]);
+        setClients(clientsData);
+        setInvoices(invoicesData);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  if (loading) {
+    return <ClientsTableSkeleton />;
+  }
 
   const clientsWithInvoiceCount = clients.map((client) => ({
     ...client,
