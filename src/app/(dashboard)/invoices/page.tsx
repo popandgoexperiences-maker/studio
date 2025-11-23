@@ -2,7 +2,7 @@
 import { PlusCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/page-header';
@@ -12,12 +12,7 @@ import { Search } from '@/components/search';
 import { useUser } from '@/firebase';
 import type { Invoice, User } from '@/lib/definitions';
 
-export default function InvoicesPage({
-  searchParams,
-}: {
-  searchParams?: { query?: string };
-}) {
-  const query = searchParams?.query || '';
+export default function InvoicesPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
 
@@ -66,14 +61,17 @@ export default function InvoicesPage({
         </div>
       </PageHeader>
       
-      <Suspense key={query} fallback={<InvoicesTableSkeleton />}>
-        <InvoicesTableWrapper query={query} />
+      <Suspense fallback={<InvoicesTableSkeleton />}>
+        <InvoicesTableWrapper />
       </Suspense>
     </div>
   );
 }
 
-function InvoicesTableWrapper({ query }: { query: string }) {
+function InvoicesTableWrapper() {
+  const searchParams = useSearchParams();
+  const query = searchParams.get('query') || '';
+  
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);

@@ -11,6 +11,8 @@ import {
   where,
   limit,
   orderBy,
+  getDoc,
+  updateDoc,
 } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
@@ -53,7 +55,7 @@ export async function fetchInvoices(): Promise<Invoice[]> {
 export async function fetchUser(): Promise<User> {
   const userId = getUserId();
   const userDocRef = doc(firestore, 'users', userId);
-  const userDoc = await (await getDocs(query(collection(firestore, 'users'), where('id', '==', userId)))).docs[0];
+  const userDoc = await getDoc(userDocRef);
 
   if (userDoc.exists()) {
     return { id: userDoc.id, ...userDoc.data() } as User;
@@ -88,10 +90,10 @@ export function saveInvoice(invoiceData: Omit<Invoice, 'id'>) {
 }
 
 export function saveClient(clientData: Omit<Client, 'id'>) {
-    const userId = getUserId();
-    const clientsCol = collection(firestore, 'users', userId, 'clients');
-    // Use non-blocking add
-    addDocumentNonBlocking(clientsCol, clientData);
+  const userId = getUserId();
+  const clientsCol = collection(firestore, 'users', userId, 'clients');
+  // Use non-blocking add
+  addDocumentNonBlocking(clientsCol, clientData);
 }
 
 export function updateUserProfile(userData: Partial<User>) {
@@ -102,6 +104,6 @@ export function updateUserProfile(userData: Partial<User>) {
 }
 
 export function createUserProfile(user: User) {
-    const userDocRef = doc(firestore, 'users', user.id);
-    setDocumentNonBlocking(userDocRef, user, { merge: true });
+  const userDocRef = doc(firestore, 'users', user.id);
+  setDocumentNonBlocking(userDocRef, user, { merge: true });
 }
