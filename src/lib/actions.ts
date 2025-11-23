@@ -35,19 +35,22 @@ export async function login(prevState: any, formData: FormData) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
       message: 'Error de validación.',
+      success: false,
     };
   }
   const { auth } = getFirebaseAuth();
   const { email, password } = validatedFields.data;
 
   try {
-    // We don't await this, the auth state change will be handled by the provider
     await signInWithEmailAndPassword(auth, email, password);
   } catch (e: any) {
-    return { message: 'Credenciales incorrectas.' };
+    return { message: 'Credenciales incorrectas.', success: false };
   }
 
-  redirect('/invoices');
+  // Instead of redirecting here, we return a success state.
+  // The client will handle the redirect.
+  revalidatePath('/');
+  return { success: true, message: 'Login successful' };
 }
 
 const SignupSchema = z.object({
@@ -65,6 +68,7 @@ export async function signup(prevState: any, formData: FormData) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
       message: 'Error de validación. Revisa los campos.',
+      success: false,
     };
   }
   const { auth } = getFirebaseAuth();
@@ -78,27 +82,28 @@ export async function signup(prevState: any, formData: FormData) {
     );
     const firebaseUser = userCredential.user;
 
-    // Create user profile in Firestore
     const newUserProfile: User = {
       id: firebaseUser.uid,
       name,
       email,
-      vatRate: 0.21, // Default VAT rate
+      vatRate: 0.21,
     };
     await createUserProfile(newUserProfile);
   } catch (e: any) {
     if (e.code === 'auth/email-already-in-use') {
-      return { message: 'Este email ya está en uso.' };
+      return { message: 'Este email ya está en uso.', success: false };
     }
-    return { message: 'Error al crear la cuenta.' };
+    return { message: 'Error al crear la cuenta.', success: false };
   }
-
-  redirect('/invoices');
+  
+  revalidatePath('/');
+  return { success: true, message: 'Signup successful' };
 }
 
 export async function logout() {
   const { auth } = getFirebaseAuth();
   await signOut(auth);
+  revalidatePath('/');
   redirect('/login');
 }
 
@@ -165,7 +170,7 @@ export async function createInvoice(prevState: any, formData: FormData) {
       subtotal,
       vat,
       total,
-      status: 'pending', // Or 'draft'
+      status: 'pending',
     });
   } catch (e) {
     console.error(e);
@@ -186,6 +191,13 @@ const ClientSchema = z.object({
 });
 
 export async function createClient(prevState: any, formData: FormData) {
+    const { auth } = getFirebaseAuth();
+    const userId = auth.currentUser?.uid;
+
+    if (!userId) {
+        return { message: 'User not authenticated.' };
+    }
+
   const validatedFields = ClientSchema.safeParse(
     Object.fromEntries(formData.entries())
   );
@@ -198,7 +210,7 @@ export async function createClient(prevState: any, formData: FormData) {
   }
 
   try {
-    await saveClient(validatedFields.data);
+    await saveClient(userId, validatedFields.data);
   } catch (e) {
     return { message: 'Error al guardar el cliente.' };
   }
@@ -232,6 +244,13 @@ async function fileToDataUrl(file: File): Promise<string> {
 }
 
 export async function updateSettings(prevState: any, formData: FormData) {
+    const { auth } = getFirebaseAuth();
+    const userId = auth.currentUser?.uid;
+
+    if (!userId) {
+        return { message: 'User not authenticated.' };
+    }
+
   try {
     const rawData = Object.fromEntries(formData.entries());
 
@@ -267,7 +286,7 @@ export async function updateSettings(prevState: any, formData: FormData) {
       updatedUserData.sealUrl = await fileToDataUrl(sealFile);
     }
 
-    await updateUserProfile(updatedUserData);
+    await updateUserProfile(userId, updatedUserData);
   } catch (e) {
     console.error('Error updating settings:', e);
     return { message: 'Error al actualizar el perfil.' };

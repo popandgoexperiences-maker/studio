@@ -1,8 +1,11 @@
 'use client';
 
+import React, { useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
 import { useActionState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
 import { signup } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +16,13 @@ import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 export function SignupForm() {
   const [state, dispatch] = useActionState(signup, undefined);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state?.success) {
+      router.push('/invoices');
+    }
+  }, [state, router]);
 
   return (
     <form action={dispatch}>
@@ -39,7 +49,7 @@ export function SignupForm() {
             <Input id="password" name="password" type="password" required />
             {state?.errors?.password && <p className="text-sm text-destructive">{state.errors.password}</p>}
           </div>
-           {state?.message && !state.errors && (
+           {state?.message && !state.errors && !state.success && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Error</AlertTitle>
