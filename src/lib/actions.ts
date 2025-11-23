@@ -5,7 +5,6 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import {
   fetchNextInvoiceNumber,
-  fetchUser,
   saveInvoice,
   updateUserProfile,
   saveClient,
@@ -13,11 +12,12 @@ import {
 } from '@/lib/data';
 import type { User } from './definitions';
 import {
-  initiateEmailSignIn,
-  initiateEmailSignUp,
-} from '@/firebase/non-blocking-login';
-import { getAuth, signOut } from 'firebase/auth';
-import { initializeFirebase } from '@/firebase';
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+} from 'firebase/auth';
+import { getFirebaseAuth } from '@/lib/firebase-server';
+
 
 // --- AUTH ACTIONS ---
 
@@ -37,8 +37,7 @@ export async function login(prevState: any, formData: FormData) {
       message: 'Error de validación.',
     };
   }
-
-  const { auth } = initializeFirebase();
+  const { auth } = getFirebaseAuth();
   const { email, password } = validatedFields.data;
 
   try {
@@ -50,11 +49,6 @@ export async function login(prevState: any, formData: FormData) {
 
   redirect('/invoices');
 }
-
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-} from 'firebase/auth';
 
 const SignupSchema = z.object({
   name: z.string().min(2, 'El nombre es requerido.'),
@@ -73,8 +67,7 @@ export async function signup(prevState: any, formData: FormData) {
       message: 'Error de validación. Revisa los campos.',
     };
   }
-
-  const { auth } = initializeFirebase();
+  const { auth } = getFirebaseAuth();
   const { name, email, password } = validatedFields.data;
 
   try {
@@ -92,7 +85,7 @@ export async function signup(prevState: any, formData: FormData) {
       email,
       vatRate: 0.21, // Default VAT rate
     };
-    createUserProfile(newUserProfile);
+    await createUserProfile(newUserProfile);
   } catch (e: any) {
     if (e.code === 'auth/email-already-in-use') {
       return { message: 'Este email ya está en uso.' };
@@ -104,7 +97,7 @@ export async function signup(prevState: any, formData: FormData) {
 }
 
 export async function logout() {
-  const { auth } = initializeFirebase();
+  const { auth } = getFirebaseAuth();
   await signOut(auth);
   redirect('/login');
 }
@@ -135,8 +128,9 @@ const InvoiceSchema = z.object({
 });
 
 export async function createInvoice(prevState: any, formData: FormData) {
-  const { auth } = initializeFirebase();
+  const { auth } = getFirebaseAuth();
   const userId = auth.currentUser?.uid;
+
   if (!userId) {
     return { message: 'Usuario no autenticado.' };
   }
@@ -162,7 +156,7 @@ export async function createInvoice(prevState: any, formData: FormData) {
 
     const invoiceNumber = await fetchNextInvoiceNumber();
 
-    saveInvoice({
+    await saveInvoice({
       userId,
       invoiceNumber,
       client: validatedFields.data.client,
@@ -204,7 +198,7 @@ export async function createClient(prevState: any, formData: FormData) {
   }
 
   try {
-    saveClient(validatedFields.data);
+    await saveClient(validatedFields.data);
   } catch (e) {
     return { message: 'Error al guardar el cliente.' };
   }
@@ -273,7 +267,7 @@ export async function updateSettings(prevState: any, formData: FormData) {
       updatedUserData.sealUrl = await fileToDataUrl(sealFile);
     }
 
-    updateUserProfile(updatedUserData);
+    await updateUserProfile(updatedUserData);
   } catch (e) {
     console.error('Error updating settings:', e);
     return { message: 'Error al actualizar el perfil.' };
