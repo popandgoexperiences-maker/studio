@@ -1,5 +1,4 @@
 import {
-  getFirestore,
   doc,
   collection,
   getDocs,
@@ -9,52 +8,28 @@ import {
   limit,
   orderBy,
   getDoc,
+  where,
 } from 'firebase/firestore';
 import { getFirebaseAuth } from './firebase-server';
 import type { User, Invoice, Client } from '@/lib/definitions';
 
-// Helper to get the current user's UID safely on the server
-const getUserId = async () => {
-    const { auth } = getFirebaseAuth();
-    const user = auth.currentUser;
-    if (!user) {
-      // This part might need to be more robust, e.g., by checking session state
-      // For now, it relies on the server-side auth state which might not be immediately available
-      // after client-side sign-in without a page refresh or re-authentication.
-      return new Promise<string>((resolve, reject) => {
-        const unsubscribe = auth.onAuthStateChanged(user => {
-          unsubscribe();
-          if (user) {
-            resolve(user.uid);
-          } else {
-            reject(new Error('User is not authenticated.'));
-          }
-        });
-      });
-    }
-    return user.uid;
-};
-
 // --- DATA FETCHING (SERVER-SIDE) ---
-export async function fetchClients(): Promise<Client[]> {
-  const userId = await getUserId();
+export async function fetchClients(userId: string): Promise<Client[]> {
   const { firestore } = getFirebaseAuth();
   const clientsCol = collection(firestore, 'users', userId, 'clients');
   const snapshot = await getDocs(clientsCol);
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Client));
 }
 
-export async function fetchInvoices(): Promise<Invoice[]> {
-  const userId = await getUserId();
+export async function fetchInvoices(userId: string): Promise<Invoice[]> {
   const { firestore } = getFirebaseAuth();
   const invoicesCol = collection(firestore, 'users', userId, 'invoices');
-  const q = query(invoicesCol, orderBy('date', 'desc'));
+  const q = query(invoicesCol, where('userId', '==', userId), orderBy('date', 'desc'));
   const snapshot = await getDocs(q);
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Invoice));
 }
 
-export async function fetchUser(): Promise<User> {
-  const userId = await getUserId();
+export async function fetchUser(userId: string): Promise<User | null> {
   const { firestore } = getFirebaseAuth();
   const userDocRef = doc(firestore, 'users', userId);
   const userDoc = await getDoc(userDocRef);
@@ -62,14 +37,13 @@ export async function fetchUser(): Promise<User> {
   if (userDoc.exists()) {
     return { id: userDoc.id, ...userDoc.data() } as User;
   }
-  throw new Error('User profile not found.');
+  return null;
 }
 
-export async function fetchNextInvoiceNumber(): Promise<string> {
-  const userId = await getUserId();
+export async function fetchNextInvoiceNumber(userId: string): Promise<string> {
   const { firestore } = getFirebaseAuth();
   const invoicesCol = collection(firestore, 'users', userId, 'invoices');
-  const q = query(invoicesCol, orderBy('invoiceNumber', 'desc'), limit(1));
+  const q = query(invoicesCol, where('userId', '==', userId), orderBy('invoiceNumber', 'desc'), limit(1));
   const snapshot = await getDocs(q);
 
   if (snapshot.empty) {
@@ -83,29 +57,26 @@ export async function fetchNextInvoiceNumber(): Promise<string> {
 }
 
 // --- DATA SAVING (SERVER-SIDE) ---
-export async function saveInvoice(invoiceData: Omit<Invoice, 'id'>) {
-  const userId = await getUserId();
+export async function saveInvoice(userId: string, invoiceData: Omit<Invoice, 'id'>) {
   const { firestore } = getFirebaseAuth();
   const invoicesCol = collection(firestore, 'users', userId, 'invoices');
   await addDoc(invoicesCol, invoiceData);
 }
 
-export async function saveClient(clientData: Omit<Client, 'id'>) {
-  const userId = await getUserId();
+export async function saveClient(userId: string, clientData: Omit<Client, 'id'>) {
   const { firestore } = getFirebaseAuth();
   const clientsCol = collection(firestore, 'users', userId, 'clients');
   await addDoc(clientsCol, clientData);
 }
 
-export async function updateUserProfile(userData: Partial<User>) {
-  const userId = await getUserId();
+export async function updateUserProfile(userId: string, userData: Partial<User>) {
   const { firestore } = getFirebaseAuth();
   const userDocRef = doc(firestore, 'users', userId);
   await setDoc(userDocRef, userData, { merge: true });
 }
 
-export async function createUserProfile(user: User) {
+export async function createUserProfile(userId: string, user: User) {
   const { firestore } = getFirebaseAuth();
-  const userDocRef = doc(firestore, 'users', user.id);
+  const userDocRef = doc(firestore, 'users', userId);
   await setDoc(userDocRef, user, { merge: true });
 }

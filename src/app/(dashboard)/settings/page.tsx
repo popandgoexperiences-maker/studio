@@ -17,7 +17,7 @@ export default function SettingsPage() {
         if(authUser) {
             async function loadUser() {
                 try {
-                    const userData = await fetchUser();
+                    const userData = await fetchUser(authUser!.uid);
                     setUser(userData);
                 } catch (error) {
                     console.error("Failed to fetch user settings:", error);

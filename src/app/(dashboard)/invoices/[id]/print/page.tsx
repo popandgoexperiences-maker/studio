@@ -26,10 +26,9 @@ export default function InvoicePrintPage() {
     async function loadData() {
       if (!id) return;
       try {
-        // Assuming fetchInvoices now fetches based on the logged-in user
         const [invoicesData, userData] = await Promise.all([
-          fetchInvoices(),
-          fetchUser(),
+          fetchInvoices(authUser!.uid),
+          fetchUser(authUser!.uid),
         ]);
         const foundInvoice = invoicesData.find((inv) => inv.id === id);
         setInvoice(foundInvoice || null);

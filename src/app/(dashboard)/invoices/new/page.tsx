@@ -19,8 +19,8 @@ export default function NewInvoicePage() {
       async function loadData() {
         try {
           const [clientsData, userData] = await Promise.all([
-            fetchClients(),
-            fetchUser(),
+            fetchClients(authUser!.uid),
+            fetchUser(authUser!.uid),
           ]);
           setClients(clientsData);
           setUser(userData);

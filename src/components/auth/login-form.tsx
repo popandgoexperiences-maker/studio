@@ -20,8 +20,9 @@ export function LoginForm() {
 
   useEffect(() => {
     if (state?.success) {
-      // Redirect to dashboard on successful login
-      router.push('/invoices');
+      // On successful login, just reload the page.
+      // The root layout's logic will handle redirection to the dashboard.
+      router.refresh();
     }
   }, [state, router]);
 

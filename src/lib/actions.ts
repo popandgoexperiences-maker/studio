@@ -88,7 +88,7 @@ export async function signup(prevState: any, formData: FormData) {
       email,
       vatRate: 0.21,
     };
-    await createUserProfile(newUserProfile);
+    await createUserProfile(firebaseUser.uid, newUserProfile);
   } catch (e: any) {
     if (e.code === 'auth/email-already-in-use') {
       return { message: 'Este email ya está en uso.', success: false };
@@ -159,9 +159,9 @@ export async function createInvoice(prevState: any, formData: FormData) {
 
     const { subtotal, vat, total } = validatedFields.data;
 
-    const invoiceNumber = await fetchNextInvoiceNumber();
+    const invoiceNumber = await fetchNextInvoiceNumber(userId);
 
-    await saveInvoice({
+    await saveInvoice(userId, {
       userId,
       invoiceNumber,
       client: validatedFields.data.client,

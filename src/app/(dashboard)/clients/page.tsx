@@ -60,13 +60,13 @@ export default function ClientsPage() {
         </Button>
       </PageHeader>
       <Suspense fallback={<ClientsTableSkeleton />}>
-        <ClientsTableWrapper />
+        <ClientsTableWrapper userId={user.uid} />
       </Suspense>
     </div>
   );
 }
 
-function ClientsTableWrapper() {
+function ClientsTableWrapper({ userId }: { userId: string }) {
   const [clients, setClients] = useState<Client[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,8 +75,8 @@ function ClientsTableWrapper() {
     async function loadData() {
       try {
         const [clientsData, invoicesData] = await Promise.all([
-          fetchClients(),
-          fetchInvoices(),
+          fetchClients(userId),
+          fetchInvoices(userId),
         ]);
         setClients(clientsData);
         setInvoices(invoicesData);
@@ -87,7 +87,7 @@ function ClientsTableWrapper() {
       }
     }
     loadData();
-  }, []);
+  }, [userId]);
 
   if (loading) {
     return <ClientsTableSkeleton />;

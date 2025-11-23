@@ -20,7 +20,7 @@ export function SignupForm() {
 
   useEffect(() => {
     if (state?.success) {
-      router.push('/invoices');
+      router.refresh();
     }
   }, [state, router]);
 

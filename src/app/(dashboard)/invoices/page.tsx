@@ -55,13 +55,13 @@ export default function InvoicesPage() {
       </PageHeader>
       
       <Suspense fallback={<InvoicesTableSkeleton />}>
-        <InvoicesTableWrapper />
+        <InvoicesTableWrapper userId={user.uid} />
       </Suspense>
     </div>
   );
 }
 
-function InvoicesTableWrapper() {
+function InvoicesTableWrapper({ userId }: { userId: string }) {
   const searchParams = useSearchParams();
   const query = searchParams.get('query') || '';
   
@@ -73,8 +73,8 @@ function InvoicesTableWrapper() {
     async function loadData() {
         try {
             const [invoicesData, userData] = await Promise.all([
-                fetchInvoices(),
-                fetchUser()
+                fetchInvoices(userId),
+                fetchUser(userId)
             ]);
             setInvoices(invoicesData);
             setUser(userData);
@@ -85,7 +85,7 @@ function InvoicesTableWrapper() {
         }
     }
     loadData();
-  }, []);
+  }, [userId]);
 
   if (loading || !user) {
     return <InvoicesTableSkeleton />;
