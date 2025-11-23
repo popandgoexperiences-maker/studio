@@ -168,7 +168,8 @@ const SettingsSchema = z.object({
   nif: z.string().optional(),
   address: z.string().optional(),
   phone: z.string().optional(),
-  vatRate: z.coerce.number().min(0, "El IVA no puede ser negativo.").optional(),
+  vatRate: z.coerce.number({ invalid_type_error: 'El tipo de IVA debe ser un número.'}).min(0, "El IVA no puede ser negativo.").transform(val => val / 100).optional(),
+  signature: z.string().optional(),
 });
 
 // Helper function to convert a File to a Data URL
@@ -183,17 +184,13 @@ export async function updateSettings(prevState: any, formData: FormData) {
   try {
     const rawData = Object.fromEntries(formData.entries());
     
-    const dataToValidate = {
-        ...rawData,
-        vatRate: rawData.vatRate ? Number(rawData.vatRate) / 100 : undefined,
-    };
-    
-    const validatedFields = SettingsSchema.safeParse(dataToValidate);
+    const validatedFields = SettingsSchema.safeParse(rawData);
 
     if (!validatedFields.success) {
+      console.log(validatedFields.error.flatten().fieldErrors);
       return {
         errors: validatedFields.error.flatten().fieldErrors,
-        message: 'Error de validación.',
+        message: 'Error de validación. Revisa los campos marcados.',
       };
     }
 
@@ -205,12 +202,8 @@ export async function updateSettings(prevState: any, formData: FormData) {
         updatedUserData.logoUrl = await fileToDataUrl(logoFile);
     }
 
-    // Handle signature data URL
-    const signatureDataUrl = formData.get('signature') as string | null;
-    if (signatureDataUrl && signatureDataUrl.startsWith('data:image/png;base64,')) {
-      updatedUserData.signatureUrl = signatureDataUrl;
-    }
-
+    // Handle signature data URL - already in validatedFields.data.signature
+    
     // Handle seal image
     const sealFile = formData.get('seal') as File | null;
     if (sealFile && sealFile.size > 0) {
