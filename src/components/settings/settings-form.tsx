@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useTransition } from 'react';
 import React, { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Save, Upload, Loader2 } from 'lucide-react';
@@ -45,8 +45,9 @@ type SettingsFormValues = z.infer<typeof settingsSchema>;
 export function SettingsForm({ user, images }: SettingsFormProps) {
     const { toast } = useToast();
     const [state, formAction] = useActionState(updateSettings, undefined);
+    const [isPending, startTransition] = useTransition();
     
-    const { register, handleSubmit, control, formState: { errors, isSubmitting } } = useForm<SettingsFormValues>({
+    const { register, handleSubmit, control, formState: { errors } } = useForm<SettingsFormValues>({
         resolver: zodResolver(settingsSchema),
         defaultValues: {
             name: user.name,
@@ -77,10 +78,17 @@ export function SettingsForm({ user, images }: SettingsFormProps) {
                     formData.append(key, value[0]);
                 }
             } else if (value !== undefined && value !== null) {
-                formData.append(key, String(value));
+                if (key === 'signature' && typeof value === 'string' && value.startsWith('data:image')) {
+                    formData.append(key, value);
+                } else if (key !== 'signature') {
+                     formData.append(key, String(value));
+                }
             }
         });
-        formAction(formData);
+        
+        startTransition(() => {
+            formAction(formData);
+        });
     };
 
     return (
@@ -172,9 +180,9 @@ export function SettingsForm({ user, images }: SettingsFormProps) {
                     />
                 </CardContent>
                  <CardFooter>
-                    <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? <Loader2 className="mr-2 animate-spin" /> : <Save className="mr-2" />}
-                        {isSubmitting ? 'Guardando...' : 'Guardar cambios'}
+                    <Button type="submit" disabled={isPending}>
+                        {isPending ? <Loader2 className="mr-2 animate-spin" /> : <Save className="mr-2" />}
+                        {isPending ? 'Guardando...' : 'Guardar cambios'}
                     </Button>
                 </CardFooter>
             </Card>
@@ -239,3 +247,5 @@ function ImageUploadField({ name, label, image, currentImageUrl, register }: { n
         </div>
     );
 }
+
+    
