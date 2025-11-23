@@ -23,18 +23,10 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Client, Invoice } from '@/lib/definitions';
 import { useUser } from '@/firebase';
-import { useRouter } from 'next/navigation';
 
 export default function ClientsPage() {
   const { user, isUserLoading } = useUser();
-  const router = useRouter();
 
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, isUserLoading, router]);
-  
   if (isUserLoading || !user) {
       return (
         <div className="p-4 sm:p-6 lg:p-8">

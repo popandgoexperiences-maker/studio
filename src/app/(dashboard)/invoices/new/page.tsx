@@ -5,22 +5,14 @@ import { CreateInvoiceForm } from '@/components/invoices/create-invoice-form';
 import { fetchClients, fetchUser } from '@/lib/data';
 import type { Client, User } from '@/lib/definitions';
 import { useUser } from '@/firebase';
-import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function NewInvoicePage() {
   const { user: authUser, isUserLoading } = useUser();
-  const router = useRouter();
 
   const [clients, setClients] = useState<Client[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!isUserLoading && !authUser) {
-      router.push('/login');
-    }
-  }, [authUser, isUserLoading, router]);
 
   useEffect(() => {
     if (authUser) {

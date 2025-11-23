@@ -2,7 +2,7 @@
 import { PlusCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/page-header';
@@ -14,13 +14,6 @@ import type { Invoice, User } from '@/lib/definitions';
 
 export default function InvoicesPage() {
   const { user, isUserLoading } = useUser();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, isUserLoading, router]);
 
   if (isUserLoading || !user) {
     return (

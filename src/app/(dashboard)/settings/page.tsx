@@ -6,20 +6,12 @@ import { fetchUser } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import type { User } from '@/lib/definitions';
 import { useUser } from '@/firebase';
-import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function SettingsPage() {
     const { user: authUser, isUserLoading } = useUser();
-    const router = useRouter();
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        if (!isUserLoading && !authUser) {
-            router.push('/login');
-        }
-    }, [authUser, isUserLoading, router]);
 
     useEffect(() => {
         if(authUser) {
