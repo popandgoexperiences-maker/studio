@@ -146,7 +146,7 @@ export async function saveInvoice(invoiceData: Omit<Invoice, 'id' | 'user'> & { 
   const newInvoice: Invoice = {
     ...invoiceData,
     id: String(mockInvoices.length + 4), // simple unique ID
-    status: 'pending', // No longer generating
+    status: 'generating', // Using 'generating' to ensure persistence in dev environment
     pdfUrl: '#',
     client: client,
     user: {
