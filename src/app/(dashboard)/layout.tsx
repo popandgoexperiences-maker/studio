@@ -11,11 +11,14 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
+    // Only redirect if loading is finished and there's no user.
     if (!isUserLoading && !user) {
       router.push('/login');
     }
   }, [user, isUserLoading, router]);
 
+  // While loading, or if there's no user (and the redirect is about to happen),
+  // show a loading screen. This prevents rendering child components prematurely.
   if (isUserLoading || !user) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -24,6 +27,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     );
   }
 
+  // If loading is finished and there IS a user, render the dashboard.
   return (
     <SidebarProvider>
       <div className="relative min-h-screen bg-background">
