@@ -1,23 +1,64 @@
 'use client';
 
-import React from 'react';
-import { useFormStatus } from 'react-dom';
-import { useActionState } from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
+import { useForm, type SubmitHandler } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useRouter } from 'next/navigation';
 
-import { login } from '@/lib/actions';
+import { useAuth } from '@/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AlertCircle, LogIn } from 'lucide-react';
+import { AlertCircle, LogIn, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
+const LoginSchema = z.object({
+  email: z.string().email('Por favor, introduce un email válido.'),
+  password: z.string().min(1, 'La contraseña es requerida.'),
+});
+
+type LoginValues = z.infer<typeof LoginSchema>;
+
 export function LoginForm() {
-  const [state, dispatch] = useActionState(login, undefined);
+  const [loading, setLoading] = React.useState(false);
+  const [serverError, setServerError] = React.useState<string | null>(null);
+  const auth = useAuth();
+  const router = useRouter();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginValues>({
+    resolver: zodResolver(LoginSchema),
+  });
+
+  const onSubmit: SubmitHandler<LoginValues> = async (data) => {
+    setLoading(true);
+    setServerError(null);
+
+    try {
+      await signInWithEmailAndPassword(auth, data.email, data.password);
+      // onAuthStateChanged in FirebaseProvider will handle the user state update.
+      // The layout will automatically redirect to the dashboard.
+      router.push('/invoices'); 
+    } catch (e: any) {
+      if (e.code === 'auth/invalid-credential' || e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password') {
+        setServerError('Credenciales incorrectas. Por favor, revisa tu email y contraseña.');
+      } else {
+        setServerError('Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo.');
+      }
+      setLoading(false);
+    }
+  };
 
   return (
-    <form action={dispatch}>
+    <form onSubmit={handleSubmit(onSubmit)}>
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Iniciar Sesión</CardTitle>
@@ -28,24 +69,31 @@ export function LoginForm() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" placeholder="tu@email.com" required />
-             {state?.errors?.email && <p className="text-sm text-destructive">{state.errors.email}</p>}
+            <Input id="email" type="email" placeholder="tu@email.com" {...register('email')} />
+             {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Contraseña</Label>
-            <Input id="password" name="password" type="password" required />
-            {state?.errors?.password && <p className="text-sm text-destructive">{state.errors.password}</p>}
+            <Input id="password" type="password" {...register('password')} />
+            {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
           </div>
-          {state?.message && (
+          {serverError && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Error de inicio de sesión</AlertTitle>
-              <AlertDescription>{state.message}</AlertDescription>
+              <AlertDescription>{serverError}</AlertDescription>
             </Alert>
           )}
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
-          <LoginButton />
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <LogIn className="mr-2 h-4 w-4" />
+              )}
+              {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+            </Button>
           <p className="text-sm text-muted-foreground">
             ¿No tienes cuenta?{' '}
             <Link href="/signup" className="font-semibold text-primary hover:underline">
@@ -55,15 +103,5 @@ export function LoginForm() {
         </CardFooter>
       </Card>
     </form>
-  );
-}
-
-function LoginButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" className="w-full" disabled={pending}>
-      <LogIn className="mr-2 h-4 w-4" />
-      {pending ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-    </Button>
   );
 }

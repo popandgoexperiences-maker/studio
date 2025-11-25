@@ -21,34 +21,12 @@ import { getFirebaseAuth } from '@/lib/firebase-server';
 
 // --- AUTH ACTIONS ---
 
-const LoginSchema = z.object({
-  email: z.string().email('Por favor, introduce un email válido.'),
-  password: z.string().min(1, 'La contraseña es requerida.'),
-});
-
+// Note: The login action is now handled on the client-side in login-form.tsx to prevent race conditions.
+// This server action can be removed or kept for other server-side login logic if needed in the future.
 export async function login(prevState: any, formData: FormData) {
-  const validatedFields = LoginSchema.safeParse(
-    Object.fromEntries(formData.entries())
-  );
-
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-      message: 'Error de validación.',
-    };
-  }
-  const { auth } = getFirebaseAuth();
-  const { email, password } = validatedFields.data;
-
-  try {
-    await signInWithEmailAndPassword(auth, email, password);
-  } catch (e: any) {
-    return { message: 'Credenciales incorrectas.' };
-  }
-
-  // Force a full page refresh on the client to ensure the auth state is synced.
-  revalidatePath('/', 'layout');
-  redirect('/invoices');
+  // This is intentionally left blank as login logic has moved to the client.
+  // You can add server-side validation here if you still want it.
+  return { message: "This action is no longer used for login." };
 }
 
 const SignupSchema = z.object({
