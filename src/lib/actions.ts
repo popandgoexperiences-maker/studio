@@ -46,7 +46,8 @@ export async function login(prevState: any, formData: FormData) {
     return { message: 'Credenciales incorrectas.' };
   }
 
-  revalidatePath('/');
+  // Force a full page refresh on the client to ensure the auth state is synced.
+  revalidatePath('/', 'layout');
   redirect('/invoices');
 }
 
@@ -92,6 +93,7 @@ export async function signup(prevState: any, formData: FormData) {
     return { message: 'Error al crear la cuenta.' };
   }
 
+  revalidatePath('/', 'layout');
   redirect('/invoices');
 }
 
