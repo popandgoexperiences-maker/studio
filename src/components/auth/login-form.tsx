@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useFormStatus } from 'react-dom';
 import { useActionState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 import { login } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
@@ -16,15 +15,6 @@ import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 export function LoginForm() {
   const [state, dispatch] = useActionState(login, undefined);
-  const router = useRouter();
-
-  useEffect(() => {
-    if (state?.success) {
-      // On successful login, just reload the page.
-      // The root layout's logic will handle redirection to the dashboard.
-      router.refresh();
-    }
-  }, [state, router]);
 
   return (
     <form action={dispatch}>
@@ -46,10 +36,10 @@ export function LoginForm() {
             <Input id="password" name="password" type="password" required />
             {state?.errors?.password && <p className="text-sm text-destructive">{state.errors.password}</p>}
           </div>
-          {state?.message && !state.errors && !state.success && (
+          {state?.message && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
+              <AlertTitle>Error de inicio de sesión</AlertTitle>
               <AlertDescription>{state.message}</AlertDescription>
             </Alert>
           )}

@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useFormStatus } from 'react-dom';
 import { useActionState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 import { signup } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
@@ -16,13 +15,6 @@ import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 export function SignupForm() {
   const [state, dispatch] = useActionState(signup, undefined);
-  const router = useRouter();
-
-  useEffect(() => {
-    if (state?.success) {
-      router.refresh();
-    }
-  }, [state, router]);
 
   return (
     <form action={dispatch}>
@@ -49,10 +41,10 @@ export function SignupForm() {
             <Input id="password" name="password" type="password" required />
             {state?.errors?.password && <p className="text-sm text-destructive">{state.errors.password}</p>}
           </div>
-           {state?.message && !state.errors && !state.success && (
+           {state?.message && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
+              <AlertTitle>Error al crear la cuenta</AlertTitle>
               <AlertDescription>{state.message}</AlertDescription>
             </Alert>
           )}

@@ -35,7 +35,6 @@ export async function login(prevState: any, formData: FormData) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
       message: 'Error de validación.',
-      success: false,
     };
   }
   const { auth } = getFirebaseAuth();
@@ -44,13 +43,11 @@ export async function login(prevState: any, formData: FormData) {
   try {
     await signInWithEmailAndPassword(auth, email, password);
   } catch (e: any) {
-    return { message: 'Credenciales incorrectas.', success: false };
+    return { message: 'Credenciales incorrectas.' };
   }
 
-  // Instead of redirecting here, we return a success state.
-  // The client will handle the redirect.
   revalidatePath('/');
-  return { success: true, message: 'Login successful' };
+  redirect('/invoices');
 }
 
 const SignupSchema = z.object({
@@ -68,7 +65,6 @@ export async function signup(prevState: any, formData: FormData) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
       message: 'Error de validación. Revisa los campos.',
-      success: false,
     };
   }
   const { auth } = getFirebaseAuth();
@@ -91,13 +87,12 @@ export async function signup(prevState: any, formData: FormData) {
     await createUserProfile(firebaseUser.uid, newUserProfile);
   } catch (e: any) {
     if (e.code === 'auth/email-already-in-use') {
-      return { message: 'Este email ya está en uso.', success: false };
+      return { message: 'Este email ya está en uso.' };
     }
-    return { message: 'Error al crear la cuenta.', success: false };
+    return { message: 'Error al crear la cuenta.' };
   }
-  
-  revalidatePath('/');
-  return { success: true, message: 'Signup successful' };
+
+  redirect('/invoices');
 }
 
 export async function logout() {
