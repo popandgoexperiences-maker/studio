@@ -25,22 +25,28 @@ export function UserProfileButton() {
   
   React.useEffect(() => {
     // Only run if the user is loaded and firestore instance is available
-    if (user && firestore) {
-      const { doc, onSnapshot } = require('firebase/firestore');
-      const userDocRef = doc(firestore, 'users', user.uid);
-      const unsubscribe = onSnapshot(userDocRef, (doc) => {
-        if (doc.exists()) {
-          setUserProfile(doc.data());
-        }
+    if (!user || !firestore) {
+      // If there's no user or firestore hasn't initialized, do nothing.
+      // If loading is finished and there's no user, stop the profile loading indicator.
+      if (!isUserLoading && !user) {
         setProfileLoading(false);
-      }, () => {
-        setProfileLoading(false); // Handle potential errors
-      });
-      return () => unsubscribe();
-    } else if (!isUserLoading) {
-      // If user loading is finished and there's no user or firestore, stop loading.
-      setProfileLoading(false);
+      }
+      return;
     }
+    
+    // At this point, user and firestore are guaranteed to be available.
+    const { doc, onSnapshot } = require('firebase/firestore');
+    const userDocRef = doc(firestore, 'users', user.uid);
+    const unsubscribe = onSnapshot(userDocRef, (doc) => {
+      if (doc.exists()) {
+        setUserProfile(doc.data());
+      }
+      setProfileLoading(false);
+    }, () => {
+      setProfileLoading(false); // Handle potential errors
+    });
+    
+    return () => unsubscribe();
   }, [user, isUserLoading, firestore]);
 
   const isLoading = isUserLoading || profileLoading;
