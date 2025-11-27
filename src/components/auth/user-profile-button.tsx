@@ -25,7 +25,7 @@ export function UserProfileButton() {
   
   React.useEffect(() => {
     // If the main user object is still loading, or if the firestore instance isn't ready,
-    // we should wait.
+    // we should wait. This prevents calling Firestore functions with a null instance.
     if (isUserLoading || !firestore) {
       setProfileLoading(true); // Ensure we show loading state
       return;
