@@ -24,7 +24,7 @@ export function UserProfileButton() {
   const [profileLoading, setProfileLoading] = React.useState(true);
   
   React.useEffect(() => {
-    // If loading or services aren't ready, wait. This is the fix.
+    // If loading, or services aren't ready, wait. This is the fix.
     if (isUserLoading || !firestore || !user) {
       setProfileLoading(true);
       if (!isUserLoading && !user) {
