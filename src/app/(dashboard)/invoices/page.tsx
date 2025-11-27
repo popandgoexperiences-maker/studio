@@ -3,7 +3,7 @@ import { PlusCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, where, orderBy, doc } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/page-header';
