@@ -26,12 +26,13 @@ export function UserProfileButton() {
   React.useEffect(() => {
     // If loading, or services aren't ready, wait. This is the fix.
     if (isUserLoading || !firestore || !user) {
-      setProfileLoading(true);
+      setProfileLoading(true); // Keep showing skeleton while we wait
       if (!isUserLoading && !user) {
+        // If loading is done and there's no user, stop loading UI.
         setProfileLoading(false);
         setUserProfile(null);
       }
-      return;
+      return; // Stop execution until everything is ready
     }
     
     // At this point, user and firestore are guaranteed to be available.
