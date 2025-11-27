@@ -21,8 +21,10 @@ service cloud.firestore {
 
       // /users/{userId}/invoices/{invoiceId}
       match /invoices/{invoiceId} {
-        // Only the owner can manage their invoices.
-        allow read, list, create, update, delete: if isOwner(userId) && request.resource.data.userId == userId;
+        // Allow owner to read their own list of invoices and individual invoices.
+        allow read, list: if isOwner(userId);
+        // Allow owner to write/update/delete only if the invoice's userId field matches.
+        allow create, update, delete: if isOwner(userId) && request.resource.data.userId == userId;
       }
       
       // /users/{userId}/clients/{clientId}
