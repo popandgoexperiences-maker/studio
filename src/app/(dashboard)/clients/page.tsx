@@ -71,11 +71,11 @@ function ClientsTableWrapper({ userId }: { userId: string }) {
   const { user: authUser } = useUser();
 
   const clientsQuery = useMemoFirebase(
-    () => authUser ? collection(firestore, 'users', authUser.uid, 'clients') : null,
+    () => (authUser ? collection(firestore, 'users', authUser.uid, 'clients') : null),
     [firestore, authUser]
   );
   const invoicesQuery = useMemoFirebase(
-    () => authUser ? collection(firestore, 'users', authUser.uid, 'invoices') : null,
+    () => (authUser ? collection(firestore, 'users', authUser.uid, 'invoices') : null),
     [firestore, authUser]
   );
 

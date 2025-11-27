@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { LogOut, User as UserIcon, Loader2 } from 'lucide-react';
 import { logout } from '@/lib/actions';
-import { useUser, useFirebase } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -16,44 +16,19 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { doc } from 'firebase/firestore';
+import type { User } from '@/lib/definitions';
 
 export function UserProfileButton() {
-  const { user, isUserLoading } = useUser();
-  const { firestore } = useFirebase();
-  const [userProfile, setUserProfile] = React.useState<any>(null);
-  const [profileLoading, setProfileLoading] = React.useState(true);
-  
-  React.useEffect(() => {
-    // CORRECCIÓN: Esta es la guarda robusta. Se detiene si los servicios de Firebase no están listos
-    // o si el usuario no se ha cargado. Esto previene la condición de carrera.
-    if (isUserLoading || !firestore || !user) {
-      setProfileLoading(true); // Muestra el esqueleto mientras se espera
-      if (!isUserLoading && !user) {
-        // Si la carga ha terminado y no hay usuario, deja de mostrar el esqueleto.
-        setProfileLoading(false);
-        setUserProfile(null);
-      }
-      return; // Detiene la ejecución del efecto hasta que todo esté listo.
-    }
-    
-    // A partir de aquí, 'user' y 'firestore' están garantizados.
-    const { doc, onSnapshot } = require('firebase/firestore');
-    const userDocRef = doc(firestore, 'users', user.uid);
+  const { user: authUser, isUserLoading } = useUser();
+  const firestore = useFirestore();
 
-    const unsubscribe = onSnapshot(userDocRef, (doc) => {
-      if (doc.exists()) {
-        setUserProfile(doc.data());
-      } else {
-        setUserProfile(null);
-      }
-      setProfileLoading(false);
-    }, (error) => {
-      console.error("Error fetching user profile:", error);
-      setProfileLoading(false);
-    });
-    
-    return () => unsubscribe();
-  }, [user, isUserLoading, firestore]);
+  const userDocRef = useMemoFirebase(
+    () => (authUser ? doc(firestore, 'users', authUser.uid) : null),
+    [firestore, authUser]
+  );
+  
+  const { data: userProfile, isLoading: profileLoading } = useDoc<User>(userDocRef);
 
   const isLoading = isUserLoading || profileLoading;
 
@@ -69,7 +44,7 @@ export function UserProfileButton() {
     );
   }
   
-  if (!user || !userProfile) {
+  if (!authUser || !userProfile) {
     return null; // O un botón de login
   }
 

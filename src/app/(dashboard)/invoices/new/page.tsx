@@ -11,11 +11,11 @@ export default function NewInvoicePage() {
   const firestore = useFirestore();
 
   const clientsQuery = useMemoFirebase(
-    () => authUser ? collection(firestore, 'users', authUser.uid, 'clients') : null,
+    () => (authUser ? collection(firestore, 'users', authUser.uid, 'clients') : null),
     [firestore, authUser]
   );
   const userRef = useMemoFirebase(
-    () => authUser ? doc(firestore, 'users', authUser.uid) : null,
+    () => (authUser ? doc(firestore, 'users', authUser.uid) : null),
     [firestore, authUser]
   );
 

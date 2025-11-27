@@ -14,11 +14,11 @@ export default function InvoicePrintPage() {
   const firestore = useFirestore();
 
   const invoiceRef = useMemoFirebase(
-    () => authUser ? doc(firestore, 'users', authUser.uid, 'invoices', id) : null,
+    () => (authUser ? doc(firestore, 'users', authUser.uid, 'invoices', id) : null),
     [firestore, authUser, id]
   );
   const userRef = useMemoFirebase(
-    () => authUser ? doc(firestore, 'users', authUser.uid) : null,
+    () => (authUser ? doc(firestore, 'users', authUser.uid) : null),
     [firestore, authUser]
   );
   

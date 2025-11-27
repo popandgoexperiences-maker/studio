@@ -12,7 +12,7 @@ export default function SettingsPage() {
     const firestore = useFirestore();
 
     const userRef = useMemoFirebase(
-        () => authUser ? doc(firestore, 'users', authUser.uid) : null,
+        () => (authUser ? doc(firestore, 'users', authUser.uid) : null),
         [firestore, authUser]
     );
     
