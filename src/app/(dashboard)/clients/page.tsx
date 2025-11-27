@@ -68,14 +68,15 @@ export default function ClientsPage() {
 
 function ClientsTableWrapper({ userId }: { userId: string }) {
   const firestore = useFirestore();
+  const { user: authUser } = useUser();
 
   const clientsQuery = useMemoFirebase(
-    () => collection(firestore, 'users', userId, 'clients'),
-    [firestore, userId]
+    () => authUser ? collection(firestore, 'users', authUser.uid, 'clients') : null,
+    [firestore, authUser]
   );
   const invoicesQuery = useMemoFirebase(
-    () => collection(firestore, 'users', userId, 'invoices'),
-    [firestore, userId]
+    () => authUser ? collection(firestore, 'users', authUser.uid, 'invoices') : null,
+    [firestore, authUser]
   );
 
   const { data: clients, isLoading: isLoadingClients } = useCollection<Client>(clientsQuery);
