@@ -19,31 +19,39 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function UserProfileButton() {
   const { user, isUserLoading } = useUser();
-  const { firestore } = useFirebase(); // Assuming you need firestore for user profile
+  const { firestore } = useFirebase();
   const [userProfile, setUserProfile] = React.useState<any>(null);
   const [profileLoading, setProfileLoading] = React.useState(true);
   
   React.useEffect(() => {
-    // Only run if the user is loaded and firestore instance is available
-    if (!user || !firestore) {
-      // If there's no user or firestore hasn't initialized, do nothing.
-      // If loading is finished and there's no user, stop the profile loading indicator.
-      if (!isUserLoading && !user) {
-        setProfileLoading(false);
-      }
+    // If the main user object is still loading, or if the firestore instance isn't ready,
+    // we should wait.
+    if (isUserLoading || !firestore) {
+      setProfileLoading(true); // Ensure we show loading state
+      return;
+    }
+
+    // If loading is finished but there's no authenticated user, stop and don't fetch a profile.
+    if (!user) {
+      setProfileLoading(false);
+      setUserProfile(null);
       return;
     }
     
     // At this point, user and firestore are guaranteed to be available.
     const { doc, onSnapshot } = require('firebase/firestore');
     const userDocRef = doc(firestore, 'users', user.uid);
+
     const unsubscribe = onSnapshot(userDocRef, (doc) => {
       if (doc.exists()) {
         setUserProfile(doc.data());
+      } else {
+        setUserProfile(null); // Handle case where profile doc might not exist
       }
       setProfileLoading(false);
-    }, () => {
-      setProfileLoading(false); // Handle potential errors
+    }, (error) => {
+      console.error("Error fetching user profile:", error);
+      setProfileLoading(false); // Handle potential errors during fetch
     });
     
     return () => unsubscribe();
