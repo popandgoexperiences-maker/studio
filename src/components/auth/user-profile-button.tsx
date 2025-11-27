@@ -24,18 +24,19 @@ export function UserProfileButton() {
   const [profileLoading, setProfileLoading] = React.useState(true);
   
   React.useEffect(() => {
-    // If loading, or services aren't ready, wait. This is the fix.
+    // CORRECCIÓN: Esta es la guarda robusta. Se detiene si los servicios de Firebase no están listos
+    // o si el usuario no se ha cargado. Esto previene la condición de carrera.
     if (isUserLoading || !firestore || !user) {
-      setProfileLoading(true); // Keep showing skeleton while we wait
+      setProfileLoading(true); // Muestra el esqueleto mientras se espera
       if (!isUserLoading && !user) {
-        // If loading is done and there's no user, stop loading UI.
+        // Si la carga ha terminado y no hay usuario, deja de mostrar el esqueleto.
         setProfileLoading(false);
         setUserProfile(null);
       }
-      return; // Stop execution until everything is ready
+      return; // Detiene la ejecución del efecto hasta que todo esté listo.
     }
     
-    // At this point, user and firestore are guaranteed to be available.
+    // A partir de aquí, 'user' y 'firestore' están garantizados.
     const { doc, onSnapshot } = require('firebase/firestore');
     const userDocRef = doc(firestore, 'users', user.uid);
 
@@ -43,12 +44,12 @@ export function UserProfileButton() {
       if (doc.exists()) {
         setUserProfile(doc.data());
       } else {
-        setUserProfile(null); // Handle case where profile doc might not exist
+        setUserProfile(null);
       }
       setProfileLoading(false);
     }, (error) => {
       console.error("Error fetching user profile:", error);
-      setProfileLoading(false); // Handle potential errors during fetch
+      setProfileLoading(false);
     });
     
     return () => unsubscribe();
@@ -69,7 +70,7 @@ export function UserProfileButton() {
   }
   
   if (!user || !userProfile) {
-    return null; // Or a login button
+    return null; // O un botón de login
   }
 
   const getInitials = (name: string) => {
