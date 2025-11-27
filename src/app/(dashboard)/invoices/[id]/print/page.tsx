@@ -1,47 +1,31 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { fetchInvoices, fetchUser } from '@/lib/data';
 import { formatCurrency } from '@/lib/utils';
 import type { Invoice, User } from '@/lib/definitions';
-import { useUser } from '@/firebase';
+import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 export default function InvoicePrintPage() {
   const params = useParams();
   const id = params.id as string;
-  const { user: authUser, isUserLoading } = useUser();
+  const { user: authUser, isUserLoading: isAuthUserLoading } = useUser();
+  const firestore = useFirestore();
+
+  const invoiceRef = useMemoFirebase(
+    () => authUser ? doc(firestore, 'users', authUser.uid, 'invoices', id) : null,
+    [firestore, authUser, id]
+  );
+  const userRef = useMemoFirebase(
+    () => authUser ? doc(firestore, 'users', authUser.uid) : null,
+    [firestore, authUser]
+  );
   
-  const [invoice, setInvoice] = useState<Invoice | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: invoice, isLoading: isInvoiceLoading } = useDoc<Invoice>(invoiceRef);
+  const { data: user, isLoading: isUserLoading } = useDoc<User>(userRef);
 
-  useEffect(() => {
-    if (isUserLoading) return;
-    if (!authUser) {
-        // redirect or handle unauthenticated user
-        return;
-    }
-
-    async function loadData() {
-      if (!id) return;
-      try {
-        const [invoicesData, userData] = await Promise.all([
-          fetchInvoices(authUser!.uid),
-          fetchUser(authUser!.uid),
-        ]);
-        const foundInvoice = invoicesData.find((inv) => inv.id === id);
-        setInvoice(foundInvoice || null);
-        setUser(userData);
-      } catch (error) {
-        console.error('Failed to load invoice data:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadData();
-  }, [id, authUser, isUserLoading]);
+  const loading = isAuthUserLoading || isInvoiceLoading || isUserLoading;
 
   useEffect(() => {
     if (!loading && invoice) {

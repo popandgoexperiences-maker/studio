@@ -1,8 +1,7 @@
 'use client';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useMemo } from 'react';
 import Link from 'next/link';
 import { PlusCircle } from 'lucide-react';
-import { fetchClients, fetchInvoices } from '@/lib/data';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,41 +21,42 @@ import {
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Client, Invoice } from '@/lib/definitions';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query } from 'firebase/firestore';
 
 export default function ClientsPage() {
   const { user, isUserLoading } = useUser();
 
   if (isUserLoading || !user) {
-      return (
-        <div className="p-4 sm:p-6 lg:p-8">
-            <PageHeader
-                title="Clientes"
-                description="Consulta la lista de tus clientes y sus facturas."
-            >
-                <Button asChild>
-                    <Link href="/clients/new">
-                        <PlusCircle />
-                        <span>Nuevo Cliente</span>
-                    </Link>
-                </Button>
-            </PageHeader>
-            <ClientsTableSkeleton />
-        </div>
-      )
+    return (
+      <div className="p-4 sm:p-6 lg:p-8">
+        <PageHeader
+          title="Clientes"
+          description="Consulta la lista de tus clientes y sus facturas."
+        >
+          <Button asChild>
+            <Link href="/clients/new">
+              <PlusCircle />
+              <span>Nuevo Cliente</span>
+            </Link>
+          </Button>
+        </PageHeader>
+        <ClientsTableSkeleton />
+      </div>
+    );
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div className="p-4 smp-6 lg:p-8">
       <PageHeader
         title="Clientes"
         description="Consulta la lista de tus clientes y sus facturas."
       >
         <Button asChild>
-            <Link href="/clients/new">
-                <PlusCircle />
-                <span>Nuevo Cliente</span>
-            </Link>
+          <Link href="/clients/new">
+            <PlusCircle />
+            <span>Nuevo Cliente</span>
+          </Link>
         </Button>
       </PageHeader>
       <Suspense fallback={<ClientsTableSkeleton />}>
@@ -67,36 +67,29 @@ export default function ClientsPage() {
 }
 
 function ClientsTableWrapper({ userId }: { userId: string }) {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [loading, setLoading] = useState(true);
+  const firestore = useFirestore();
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [clientsData, invoicesData] = await Promise.all([
-          fetchClients(userId),
-          fetchInvoices(userId),
-        ]);
-        setClients(clientsData);
-        setInvoices(invoicesData);
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, [userId]);
+  const clientsQuery = useMemoFirebase(
+    () => collection(firestore, 'users', userId, 'clients'),
+    [firestore, userId]
+  );
+  const invoicesQuery = useMemoFirebase(
+    () => collection(firestore, 'users', userId, 'invoices'),
+    [firestore, userId]
+  );
 
-  if (loading) {
+  const { data: clients, isLoading: isLoadingClients } = useCollection<Client>(clientsQuery);
+  const { data: invoices, isLoading: isLoadingInvoices } = useCollection<Invoice>(invoicesQuery);
+
+  if (isLoadingClients || isLoadingInvoices) {
     return <ClientsTableSkeleton />;
   }
 
-  const clientsWithInvoiceCount = clients.map((client) => ({
+  const clientsWithInvoiceCount = (clients || []).map((client) => ({
     ...client,
-    invoiceCount: invoices.filter((invoice) => invoice.client.id === client.id)
-      .length,
+    invoiceCount: (invoices || []).filter(
+      (invoice) => invoice.client.id === client.id
+    ).length,
   }));
 
   return (

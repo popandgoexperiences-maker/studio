@@ -1,38 +1,27 @@
 'use client';
-import { useEffect, useState } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { SettingsForm } from '@/components/settings/settings-form';
-import { fetchUser } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import type { User } from '@/lib/definitions';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
+import { doc } from 'firebase/firestore';
 
 export default function SettingsPage() {
-    const { user: authUser, isUserLoading } = useUser();
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { user: authUser, isUserLoading: isAuthUserLoading } = useUser();
+    const firestore = useFirestore();
 
-    useEffect(() => {
-        if(authUser) {
-            async function loadUser() {
-                try {
-                    const userData = await fetchUser(authUser!.uid);
-                    setUser(userData);
-                } catch (error) {
-                    console.error("Failed to fetch user settings:", error);
-                } finally {
-                    setLoading(false);
-                }
-            }
-            loadUser();
-        }
-    }, [authUser]);
+    const userRef = useMemoFirebase(
+        () => authUser ? doc(firestore, 'users', authUser.uid) : null,
+        [firestore, authUser]
+    );
+    
+    const { data: user, isLoading: isUserLoading } = useDoc<User>(userRef);
     
     const logo = PlaceHolderImages.find(img => img.id === 'default-logo');
     const seal = PlaceHolderImages.find(img => img.id === 'default-seal');
 
-    const showLoading = isUserLoading || loading;
+    const showLoading = isAuthUserLoading || isUserLoading;
 
     return (
         <div className="p-4 sm:p-6 lg:p-8">
@@ -40,12 +29,12 @@ export default function SettingsPage() {
                 title="Configuración"
                 description="Gestiona la información de tu empresa y tus datos personales."
             />
-            {showLoading ? (
+            {showLoading || !user ? (
                 <div className="space-y-8">
                     <Skeleton className="h-64 w-full" />
                     <Skeleton className="h-96 w-full" />
                 </div>
-            ) : user && (
+            ) : (
                 <SettingsForm user={user} images={{ logo, seal }} />
             )}
         </div>
