@@ -24,17 +24,13 @@ export function UserProfileButton() {
   const [profileLoading, setProfileLoading] = React.useState(true);
   
   React.useEffect(() => {
-    // If the main user object is still loading, or if the firestore instance isn't ready,
-    // we should wait. This prevents calling Firestore functions with a null instance.
-    if (isUserLoading || !firestore) {
-      setProfileLoading(true); // Ensure we show loading state
-      return;
-    }
-
-    // If loading is finished but there's no authenticated user, stop and don't fetch a profile.
-    if (!user) {
-      setProfileLoading(false);
-      setUserProfile(null);
+    // If loading or services aren't ready, wait. This is the fix.
+    if (isUserLoading || !firestore || !user) {
+      setProfileLoading(true);
+      if (!isUserLoading && !user) {
+        setProfileLoading(false);
+        setUserProfile(null);
+      }
       return;
     }
     
