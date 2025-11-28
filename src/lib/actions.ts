@@ -17,11 +17,10 @@ import { cookies } from 'next/headers';
 
 // --- AUTH ACTIONS ---
 
-// Note: The login action is now handled on the client-side in login-form.tsx to prevent race conditions.
-// This server action can be removed or kept for other server-side login logic if needed in the future.
+// Note: The login action is now handled on the client-side in login-form.tsx.
+// This server action is kept for potential future server-side validation.
 export async function login(prevState: any, formData: FormData) {
   // This is intentionally left blank as login logic has moved to the client.
-  // You can add server-side validation here if you still want it.
   return { message: "This action is no longer used for login." };
 }
 
@@ -141,7 +140,11 @@ export async function createInvoice(prevState: any, formData: FormData) {
       invoiceNumber,
       client: validatedFields.data.client,
       date: new Date().toISOString(),
-      lineItems: validatedFields.data.lineItems,
+      lineItems: validatedFields.data.lineItems.map(item => ({
+          description: item.descripcion,
+          quantity: item.cantidad,
+          unitPrice: item.precioUnitario
+      })),
       subtotal,
       vat,
       total,

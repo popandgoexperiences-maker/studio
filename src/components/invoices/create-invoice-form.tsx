@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useTransition, useActionState } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, Trash2, Loader2, Save, UserPlus } from 'lucide-react';
@@ -21,6 +21,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ClientAutocomplete } from './client-autocomplete';
+import { Textarea } from '../ui/textarea';
 
 const lineItemSchema = z.object({
   descripcion: z.string().min(1, "La descripción es requerida."),
@@ -199,7 +200,11 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
                                 {fields.map((field, index) => (
                                     <TableRow key={field.id}>
                                         <TableCell>
-                                            <Input {...register(`lineItems.${index}.descripcion`)} placeholder="Ej: Diseño web" />
+                                            <Controller
+                                                name={`lineItems.${index}.descripcion`}
+                                                control={control}
+                                                render={({ field }) => <Textarea {...field} placeholder="Ej: Diseño web" />}
+                                            />
                                         </TableCell>
                                         <TableCell>
                                             <Input type="number" step="1" {...register(`lineItems.${index}.cantidad`)} />
