@@ -12,19 +12,19 @@ export async function POST(request: NextRequest) {
     if (!idToken) {
       return NextResponse.json({ error: 'Missing idToken' }, { status: 400 });
     }
-    
+
     // The session cookie will be valid for 5 days.
     const expiresIn = 60 * 60 * 24 * 5 * 1000;
 
     // Validate the ID token and create the session cookie.
     const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
-    
+
     const options = {
       name: 'session',
       value: sessionCookie,
       maxAge: expiresIn / 1000,
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       path: '/',
     };
 
