@@ -4,11 +4,21 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 /**
  * Handles POST requests to create a session cookie.
- * Expects the Firebase ID token in the request body.
+ * Expects the Firebase ID token in the Authorization header.
  */
 export async function POST(request: NextRequest) {
   const { auth } = getFirebaseAuth();
-  const idToken = await request.text();
+  const authorization = request.headers.get('Authorization');
+  
+  if (!authorization?.startsWith('Bearer ')) {
+    return NextResponse.json({ status: 'error', message: 'Missing or invalid Authorization header.' }, { status: 401 });
+  }
+
+  const idToken = authorization.split('Bearer ')[1];
+
+  if (!idToken) {
+    return NextResponse.json({ status: 'error', message: 'ID token is missing.' }, { status: 401 });
+  }
 
   try {
     // Verify the ID token and create a session cookie.
@@ -31,7 +41,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: 'success' });
   } catch (error) {
     console.error('Error creating session cookie:', error);
-    return NextResponse.json({ status: 'error' }, { status: 401 });
+    return NextResponse.json({ status: 'error', message: 'Failed to create session.' }, { status: 401 });
   }
 }
 
