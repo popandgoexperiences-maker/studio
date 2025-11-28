@@ -80,7 +80,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
               'Content-Type': 'application/json',
               Authorization: `Bearer ${idToken}`,
             },
-            body: idToken,
           });
         } else {
           // User is logged out. Tell the server to clear the session cookie.
