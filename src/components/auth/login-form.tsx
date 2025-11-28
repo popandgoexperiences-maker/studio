@@ -55,8 +55,9 @@ export function LoginForm() {
       const response = await fetch('/api/auth/session', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${idToken}`,
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ idToken }),
       });
       
       if (!response.ok) {

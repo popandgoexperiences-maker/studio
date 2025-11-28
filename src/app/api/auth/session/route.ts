@@ -1,32 +1,20 @@
-import { auth } from '@/lib/firebase-server';
 import { type NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/firebase-server';
 
 /**
  * Handles POST requests to create a session cookie.
- * Expects the Firebase ID token in the Authorization header.
+ * Expects the Firebase ID token in the request body.
  */
 export async function POST(request: NextRequest) {
-  const authorization = request.headers.get('Authorization');
-  
-  if (!authorization?.startsWith('Bearer ')) {
-    return new NextResponse(
-      JSON.stringify({ status: 'error', message: 'Missing or invalid Authorization header.' }), 
-      { status: 401, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
-
-  const idToken = authorization.split('Bearer ')[1];
-
-  if (!idToken) {
-    return new NextResponse(
-      JSON.stringify({ status: 'error', message: 'ID token is missing.' }),
-      { status: 401, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
-
   try {
-    // Verify the ID token and create a session cookie.
-    await auth.verifyIdToken(idToken);
+    const { idToken } = await request.json();
+
+    if (!idToken) {
+      return new NextResponse(
+        JSON.stringify({ status: 'error', message: 'ID token is missing.' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
     
     // The session cookie will be valid for 5 days.
     const expiresIn = 60 * 60 * 24 * 5 * 1000;
@@ -37,6 +25,7 @@ export async function POST(request: NextRequest) {
       maxAge: expiresIn,
       httpOnly: true,
       secure: true,
+      path: '/',
     };
 
     // Create a response and set the cookie on it.
