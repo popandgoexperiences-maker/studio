@@ -1,4 +1,4 @@
-import { getFirebaseAuth } from '@/lib/firebase-server';
+import { auth } from '@/lib/firebase-server';
 import { type NextRequest, NextResponse } from 'next/server';
 
 /**
@@ -6,7 +6,6 @@ import { type NextRequest, NextResponse } from 'next/server';
  * Expects the Firebase ID token in the Authorization header.
  */
 export async function POST(request: NextRequest) {
-  const { auth } = getFirebaseAuth();
   const authorization = request.headers.get('Authorization');
   
   if (!authorization?.startsWith('Bearer ')) {

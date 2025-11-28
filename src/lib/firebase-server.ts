@@ -7,7 +7,7 @@ import { cookies } from 'next/headers';
 
 // This file is intended for server-side use ONLY.
 
-// Initialize Firebase once
+// Initialize Firebase once and export the instances.
 let firebaseApp: App;
 if (!getApps().length) {
   firebaseApp = initializeApp();
@@ -17,10 +17,6 @@ if (!getApps().length) {
 
 export const auth: Auth = getAuth(firebaseApp);
 export const firestore: Firestore = getFirestore(firebaseApp);
-
-export async function getFirebaseAuth() {
-  return { firebaseApp, auth, firestore };
-}
 
 export async function deleteUserSession() {
   const sessionCookieName = '__session';
