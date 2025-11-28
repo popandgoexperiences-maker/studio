@@ -11,7 +11,7 @@ import {
   createUserProfile,
 } from '@/lib/data';
 import type { User } from './definitions';
-import { getFirebaseAuth, deleteUserSession } from '@/lib/firebase-server';
+import { auth, deleteUserSession } from '@/lib/firebase-server';
 import { cookies } from 'next/headers';
 
 
@@ -42,7 +42,7 @@ export async function signup(prevState: any, formData: FormData) {
       message: 'Error de validación. Revisa los campos.',
     };
   }
-  const { auth } = await getFirebaseAuth();
+  
   const { name, email, password } = validatedFields.data;
 
   try {
@@ -106,7 +106,7 @@ const InvoiceSchema = z.object({
 });
 
 export async function createInvoice(prevState: any, formData: FormData) {
-  const { auth } = await getFirebaseAuth();
+  
   const sessionCookie = cookies().get('__session')?.value;
   const decodedToken = sessionCookie ? await auth.verifySessionCookie(sessionCookie) : null;
   const userId = decodedToken?.uid;
@@ -166,7 +166,7 @@ const ClientSchema = z.object({
 });
 
 export async function createClient(prevState: any, formData: FormData) {
-    const { auth } = await getFirebaseAuth();
+    
     const sessionCookie = cookies().get('__session')?.value;
     const decodedToken = sessionCookie ? await auth.verifySessionCookie(sessionCookie) : null;
     const userId = decodedToken?.uid;
@@ -221,7 +221,7 @@ async function fileToDataUrl(file: File): Promise<string> {
 }
 
 export async function updateSettings(prevState: any, formData: FormData) {
-    const { auth } = await getFirebaseAuth();
+    
     const sessionCookie = cookies().get('__session')?.value;
     const decodedToken = sessionCookie ? await auth.verifySessionCookie(sessionCookie) : null;
     const userId = decodedToken?.uid;
