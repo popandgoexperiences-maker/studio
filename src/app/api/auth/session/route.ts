@@ -1,6 +1,5 @@
 import { getFirebaseAuth } from '@/lib/firebase-server';
 import { type NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 
 /**
  * Handles POST requests to create a session cookie.
@@ -42,10 +41,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Create a response and set the cookie on it.
-    const response = new NextResponse(
-      JSON.stringify({ status: 'success' }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    const response = NextResponse.json({ status: 'success' }, { status: 200 });
     response.cookies.set(options);
 
     return response;
@@ -64,10 +60,7 @@ export async function POST(request: NextRequest) {
 export async function DELETE() {
   try {
     // Clear the session cookie by setting its maxAge to 0.
-    const response = new NextResponse(
-      JSON.stringify({ status: 'success' }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    const response = NextResponse.json({ status: 'success' }, { status: 200 });
     response.cookies.set('__session', '', { maxAge: 0 });
     return response;
 

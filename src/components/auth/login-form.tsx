@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -43,6 +43,9 @@ export function LoginForm() {
     setServerError(null);
 
     try {
+      if (!auth) {
+        throw new Error("El servicio de autenticación no está disponible.");
+      }
       // 1. Sign in the user on the client
       const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;

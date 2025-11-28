@@ -1,5 +1,6 @@
+'use server';
 
-import { initializeApp, getApp, App } from 'firebase-admin/app';
+import { initializeApp, getApp, getApps, App } from 'firebase-admin/app';
 import { getAuth, Auth } from 'firebase-admin/auth';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import { cookies } from 'next/headers';
@@ -7,21 +8,15 @@ import { cookies } from 'next/headers';
 // This file is intended for server-side use ONLY.
 
 let firebaseApp: App;
-let auth: Auth;
-let firestore: Firestore;
 
-try {
-    // If the app is already initialized, use it.
-    firebaseApp = getApp();
-} catch (e) {
-    // Otherwise, initialize the app using Application Default Credentials.
-    // This is the recommended approach for server-side environments like Cloud Run.
-    console.log("Initializing Firebase Admin SDK...");
-    firebaseApp = initializeApp();
+if (!getApps().length) {
+  firebaseApp = initializeApp();
+} else {
+  firebaseApp = getApp();
 }
 
-auth = getAuth(firebaseApp);
-firestore = getFirestore(firebaseApp);
+const auth = getAuth(firebaseApp);
+const firestore = getFirestore(firebaseApp);
 
 export function getFirebaseAuth() {
   return { firebaseApp, auth, firestore };
