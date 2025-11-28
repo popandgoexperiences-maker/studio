@@ -1,41 +1,23 @@
 
-import { config } from 'dotenv';
-config();
-
-import { initializeApp, getApp, App, cert } from 'firebase-admin/app';
+import { initializeApp, getApp, App } from 'firebase-admin/app';
 import { getAuth, Auth } from 'firebase-admin/auth';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import { cookies } from 'next/headers';
 
 // This file is intended for server-side use ONLY.
 
-const firebaseAdminConfig = {
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY,
-};
-
 let firebaseApp: App;
 let auth: Auth;
 let firestore: Firestore;
 
 try {
+    // If the app is already initialized, use it.
     firebaseApp = getApp();
 } catch (e) {
-    const { projectId, clientEmail, privateKey } = firebaseAdminConfig;
-
-    if (projectId && clientEmail && privateKey) {
-        firebaseApp = initializeApp({
-            credential: cert({
-                projectId,
-                clientEmail,
-                privateKey: privateKey.replace(/\\n/g, '\n'),
-            })
-        });
-    } else {
-        console.warn("Firebase Admin SDK config missing or incomplete. Using default application credentials.");
-        firebaseApp = initializeApp();
-    }
+    // Otherwise, initialize the app using Application Default Credentials.
+    // This is the recommended approach for server-side environments like Cloud Run.
+    console.log("Initializing Firebase Admin SDK...");
+    firebaseApp = initializeApp();
 }
 
 auth = getAuth(firebaseApp);
