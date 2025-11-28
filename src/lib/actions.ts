@@ -11,12 +11,8 @@ import {
   createUserProfile,
 } from '@/lib/data';
 import type { User } from './definitions';
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-} from 'firebase/auth';
-import { getFirebaseAuth } from '@/lib/firebase-server';
+import { getFirebaseAuth, deleteUserSession } from '@/lib/firebase-server';
+import { cookies } from 'next/headers';
 
 
 // --- AUTH ACTIONS ---
@@ -50,34 +46,36 @@ export async function signup(prevState: any, formData: FormData) {
   const { name, email, password } = validatedFields.data;
 
   try {
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-    const firebaseUser = userCredential.user;
+    const userRecord = await auth.createUser({
+        email,
+        password,
+        displayName: name,
+    });
 
     const newUserProfile: User = {
-      id: firebaseUser.uid,
+      id: userRecord.uid,
       name,
       email,
       vatRate: 0.21,
     };
-    await createUserProfile(firebaseUser.uid, newUserProfile);
+    await createUserProfile(userRecord.uid, newUserProfile);
+    
+    // Because we are creating the user on the server, we need to sign them in on the client
+    // by creating a custom token and handling it there. For simplicity, we redirect to login.
   } catch (e: any) {
-    if (e.code === 'auth/email-already-in-use') {
+    if (e.code === 'auth/email-already-exists') {
       return { message: 'Este email ya está en uso.' };
     }
-    return { message: 'Error al crear la cuenta.' };
+    return { message: `Error al crear la cuenta: ${e.message}` };
   }
-
-  revalidatePath('/', 'layout');
-  redirect('/invoices');
+  
+  // After server-side signup, redirect to login so the client can properly sign in
+  // and establish a session.
+  redirect('/login');
 }
 
 export async function logout() {
-  const { auth } = getFirebaseAuth();
-  await signOut(auth);
+  await deleteUserSession();
   revalidatePath('/');
   redirect('/login');
 }
@@ -109,7 +107,9 @@ const InvoiceSchema = z.object({
 
 export async function createInvoice(prevState: any, formData: FormData) {
   const { auth } = getFirebaseAuth();
-  const userId = auth.currentUser?.uid;
+  const sessionCookie = cookies().get('__session')?.value;
+  const decodedToken = sessionCookie ? await auth.verifySessionCookie(sessionCookie) : null;
+  const userId = decodedToken?.uid;
 
   if (!userId) {
     return { message: 'Usuario no autenticado.' };
@@ -167,7 +167,9 @@ const ClientSchema = z.object({
 
 export async function createClient(prevState: any, formData: FormData) {
     const { auth } = getFirebaseAuth();
-    const userId = auth.currentUser?.uid;
+    const sessionCookie = cookies().get('__session')?.value;
+    const decodedToken = sessionCookie ? await auth.verifySessionCookie(sessionCookie) : null;
+    const userId = decodedToken?.uid;
 
     if (!userId) {
         return { message: 'User not authenticated.' };
@@ -220,7 +222,9 @@ async function fileToDataUrl(file: File): Promise<string> {
 
 export async function updateSettings(prevState: any, formData: FormData) {
     const { auth } = getFirebaseAuth();
-    const userId = auth.currentUser?.uid;
+    const sessionCookie = cookies().get('__session')?.value;
+    const decodedToken = sessionCookie ? await auth.verifySessionCookie(sessionCookie) : null;
+    const userId = decodedToken?.uid;
 
     if (!userId) {
         return { message: 'User not authenticated.' };
