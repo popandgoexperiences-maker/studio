@@ -43,15 +43,31 @@ export function LoginForm() {
     setServerError(null);
 
     try {
-      await signInWithEmailAndPassword(auth, data.email, data.password);
-      // onAuthStateChanged in FirebaseProvider will handle the user state update.
-      // The layout will automatically redirect to the dashboard.
-      router.push('/invoices'); 
+      // 1. Sign in the user on the client
+      const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
+      const user = userCredential.user;
+      const idToken = await user.getIdToken();
+
+      // 2. Explicitly create the session cookie on the server
+      const response = await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${idToken}`,
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('No se pudo crear la sesión en el servidor.');
+      }
+
+      // 3. Only redirect after the session is created
+      router.push('/invoices');
+
     } catch (e: any) {
       if (e.code === 'auth/invalid-credential' || e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password') {
         setServerError('Credenciales incorrectas. Por favor, revisa tu email y contraseña.');
       } else {
-        setServerError('Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo.');
+        setServerError(`Ha ocurrido un error inesperado: ${e.message}`);
       }
       setLoading(false);
     }
