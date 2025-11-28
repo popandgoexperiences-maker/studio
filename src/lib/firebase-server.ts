@@ -8,7 +8,7 @@ import { cookies } from 'next/headers';
 const firebaseAdminConfig = {
     projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    privateKey: process.env.FIREBASE_PRIVATE_KEY,
 };
 
 let firebaseApp: App;
@@ -16,14 +16,25 @@ let auth: Auth;
 let firestore: Firestore;
 
 try {
+    // Try to get an already-initialized app.
     firebaseApp = getApp();
 } catch (e) {
-    if (firebaseAdminConfig.projectId && firebaseAdminConfig.clientEmail && firebaseAdminConfig.privateKey) {
+    // If no app is initialized, create one.
+    const { projectId, clientEmail, privateKey } = firebaseAdminConfig;
+
+    // Check if all required service account credentials are provided.
+    if (projectId && clientEmail && privateKey) {
         firebaseApp = initializeApp({
-            credential: cert(firebaseAdminConfig)
+            credential: cert({
+                projectId,
+                clientEmail,
+                // Replace escaped newlines from environment variable.
+                privateKey: privateKey.replace(/\\n/g, '\n'),
+            })
         });
     } else {
-        console.warn("Firebase Admin SDK config missing. Using default credentials.");
+        // Fallback for environments where the SDK can auto-discover credentials (like Google Cloud Run).
+        console.warn("Firebase Admin SDK config missing or incomplete. Using default application credentials.");
         firebaseApp = initializeApp();
     }
 }
