@@ -1,3 +1,7 @@
+
+import { config } from 'dotenv';
+config();
+
 import { initializeApp, getApp, App, cert } from 'firebase-admin/app';
 import { getAuth, Auth } from 'firebase-admin/auth';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
@@ -16,24 +20,19 @@ let auth: Auth;
 let firestore: Firestore;
 
 try {
-    // Try to get an already-initialized app.
     firebaseApp = getApp();
 } catch (e) {
-    // If no app is initialized, create one.
     const { projectId, clientEmail, privateKey } = firebaseAdminConfig;
 
-    // Check if all required service account credentials are provided.
     if (projectId && clientEmail && privateKey) {
         firebaseApp = initializeApp({
             credential: cert({
                 projectId,
                 clientEmail,
-                // Replace escaped newlines from environment variable.
                 privateKey: privateKey.replace(/\\n/g, '\n'),
             })
         });
     } else {
-        // Fallback for environments where the SDK can auto-discover credentials (like Google Cloud Run).
         console.warn("Firebase Admin SDK config missing or incomplete. Using default application credentials.");
         firebaseApp = initializeApp();
     }
