@@ -12,9 +12,9 @@ if (!process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
   // It's a critical error because the server-side Firebase services cannot be initialized without it.
   // We throw an error here to prevent the application from running in a broken state.
   // The error message is intended to be informative for the developer to fix the configuration.
-  // console.error(
-  //   'FIREBASE_SERVICE_ACCOUNT_KEY is not set. Please add it to your .env file.'
-  // );
+  console.error(
+    'FIREBASE_SERVICE_ACCOUNT_KEY is not set. Please add it to your .env file.'
+  );
 }
 
 const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY

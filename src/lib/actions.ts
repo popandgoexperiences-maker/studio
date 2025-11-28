@@ -107,11 +107,15 @@ const InvoiceSchema = z.object({
 export async function createInvoice(prevState: any, formData: FormData) {
   
   const sessionCookie = cookies().get('__session')?.value;
-  const decodedToken = sessionCookie ? await auth.verifySessionCookie(sessionCookie) : null;
+  if (!sessionCookie) {
+    return { message: 'Usuario no autenticado.' };
+  }
+
+  const decodedToken = await auth.verifySessionCookie(sessionCookie);
   const userId = decodedToken?.uid;
 
   if (!userId) {
-    return { message: 'Usuario no autenticado.' };
+    return { message: 'Token de sesión inválido.' };
   }
 
   try {
@@ -171,11 +175,14 @@ const ClientSchema = z.object({
 export async function createClient(prevState: any, formData: FormData) {
     
     const sessionCookie = cookies().get('__session')?.value;
-    const decodedToken = sessionCookie ? await auth.verifySessionCookie(sessionCookie) : null;
+    if (!sessionCookie) {
+        return { message: 'User not authenticated.' };
+    }
+    const decodedToken = await auth.verifySessionCookie(sessionCookie);
     const userId = decodedToken?.uid;
 
     if (!userId) {
-        return { message: 'User not authenticated.' };
+        return { message: 'Invalid session token.' };
     }
 
   const validatedFields = ClientSchema.safeParse(
@@ -226,11 +233,14 @@ async function fileToDataUrl(file: File): Promise<string> {
 export async function updateSettings(prevState: any, formData: FormData) {
     
     const sessionCookie = cookies().get('__session')?.value;
-    const decodedToken = sessionCookie ? await auth.verifySessionCookie(sessionCookie) : null;
+    if (!sessionCookie) {
+        return { message: 'User not authenticated.' };
+    }
+    const decodedToken = await auth.verifySessionCookie(sessionCookie);
     const userId = decodedToken?.uid;
 
     if (!userId) {
-        return { message: 'User not authenticated.' };
+        return { message: 'Invalid session token.' };
     }
 
   try {
