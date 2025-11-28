@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/firebase-server';
+import { adminAuth } from '@/lib/firebase-server';
 
 /**
  * Handles POST requests to create a session cookie.
@@ -10,19 +10,19 @@ export async function POST(request: NextRequest) {
     const { idToken } = await request.json();
 
     if (!idToken) {
-      return new NextResponse(
-        JSON.stringify({ status: 'error', message: 'ID token is missing.' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      return NextResponse.json({ error: 'Missing idToken' }, { status: 400 });
     }
     
     // The session cookie will be valid for 5 days.
     const expiresIn = 60 * 60 * 24 * 5 * 1000;
-    const sessionCookie = await auth.createSessionCookie(idToken, { expiresIn });
+
+    // Validate the ID token and create the session cookie.
+    const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
+    
     const options = {
-      name: '__session',
+      name: 'session',
       value: sessionCookie,
-      maxAge: expiresIn,
+      maxAge: expiresIn / 1000,
       httpOnly: true,
       secure: true,
       path: '/',
@@ -34,29 +34,10 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error('Error creating session cookie:', error);
-    return new NextResponse(
-        JSON.stringify({ status: 'error', message: 'Failed to create session.' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
-}
-
-/**
- * Handles DELETE requests to clear the session cookie upon user logout.
- */
-export async function DELETE() {
-  try {
-    // Clear the session cookie by setting its maxAge to 0.
-    const response = NextResponse.json({ status: 'success' }, { status: 200 });
-    response.cookies.set('__session', '', { maxAge: 0 });
-    return response;
-
-  } catch (error) {
-    console.error('Error deleting session cookie:', error);
-    return new NextResponse(
-        JSON.stringify({ status: 'error' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+    console.error('SESSION API ERROR:', error);
+    return NextResponse.json(
+      { error: 'Session creation failed' },
+      { status: 401 }
     );
   }
 }

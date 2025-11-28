@@ -11,7 +11,7 @@ import {
   createUserProfile,
 } from '@/lib/data';
 import type { User } from './definitions';
-import { auth, deleteUserSession } from '@/lib/firebase-server';
+import { adminAuth } from '@/lib/firebase-server';
 import { cookies } from 'next/headers';
 
 
@@ -45,7 +45,7 @@ export async function signup(prevState: any, formData: FormData) {
   const { name, email, password } = validatedFields.data;
 
   try {
-    const userRecord = await auth.createUser({
+    const userRecord = await adminAuth.createUser({
         email,
         password,
         displayName: name,
@@ -74,7 +74,7 @@ export async function signup(prevState: any, formData: FormData) {
 }
 
 export async function logout() {
-  await deleteUserSession();
+  cookies().delete('session');
   revalidatePath('/');
   redirect('/login');
 }
@@ -106,12 +106,12 @@ const InvoiceSchema = z.object({
 
 export async function createInvoice(prevState: any, formData: FormData) {
   
-  const sessionCookie = cookies().get('__session')?.value;
+  const sessionCookie = cookies().get('session')?.value;
   if (!sessionCookie) {
     return { message: 'Usuario no autenticado.' };
   }
 
-  const decodedToken = await auth.verifySessionCookie(sessionCookie);
+  const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
   const userId = decodedToken?.uid;
 
   if (!userId) {
@@ -174,11 +174,11 @@ const ClientSchema = z.object({
 
 export async function createClient(prevState: any, formData: FormData) {
     
-    const sessionCookie = cookies().get('__session')?.value;
+    const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) {
         return { message: 'User not authenticated.' };
     }
-    const decodedToken = await auth.verifySessionCookie(sessionCookie);
+    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
     const userId = decodedToken?.uid;
 
     if (!userId) {
@@ -232,11 +232,11 @@ async function fileToDataUrl(file: File): Promise<string> {
 
 export async function updateSettings(prevState: any, formData: FormData) {
     
-    const sessionCookie = cookies().get('__session')?.value;
+    const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) {
         return { message: 'User not authenticated.' };
     }
-    const decodedToken = await auth.verifySessionCookie(sessionCookie);
+    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
     const userId = decodedToken?.uid;
 
     if (!userId) {
