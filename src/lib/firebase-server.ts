@@ -7,18 +7,17 @@ import { cookies } from 'next/headers';
 
 // This file is intended for server-side use ONLY.
 
-let firebaseApp: App;
-
-if (!getApps().length) {
-  firebaseApp = initializeApp();
-} else {
-  firebaseApp = getApp();
-}
-
-const auth = getAuth(firebaseApp);
-const firestore = getFirestore(firebaseApp);
-
 export function getFirebaseAuth() {
+  let firebaseApp: App;
+  if (!getApps().length) {
+    firebaseApp = initializeApp();
+  } else {
+    firebaseApp = getApp();
+  }
+
+  const auth = getAuth(firebaseApp);
+  const firestore = getFirestore(firebaseApp);
+  
   return { firebaseApp, auth, firestore };
 }
 
