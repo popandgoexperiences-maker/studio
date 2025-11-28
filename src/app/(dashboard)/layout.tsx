@@ -2,7 +2,7 @@
 
 import { SidebarNav } from "@/components/sidebar-nav";
 import { SidebarProvider, Sidebar } from "@/components/ui/sidebar";
-import { FirebaseClientProvider, useUser } from "@/firebase";
+import { useUser } from "@/firebase";
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
@@ -49,8 +49,6 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <FirebaseClientProvider>
-      <DashboardContent>{children}</DashboardContent>
-    </FirebaseClientProvider>
+    <DashboardContent>{children}</DashboardContent>
   );
 }
