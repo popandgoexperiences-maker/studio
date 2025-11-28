@@ -67,8 +67,32 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     userError: null,
   });
 
-  // Effect to subscribe to Firebase auth state changes
+  // This effect synchronizes the client-side auth state with a server-side session cookie.
   useEffect(() => {
+    const handleAuthChange = async (firebaseUser: User | null) => {
+      try {
+        if (firebaseUser) {
+          // User is logged in. Get the ID token and send it to the server to create a session cookie.
+          const idToken = await firebaseUser.getIdToken();
+          await fetch('/api/auth/session', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${idToken}`,
+            },
+            body: idToken,
+          });
+        } else {
+          // User is logged out. Tell the server to clear the session cookie.
+          await fetch('/api/auth/session', {
+            method: 'DELETE',
+          });
+        }
+      } catch (error) {
+        console.error('Failed to manage session:', error);
+      }
+    };
+    
     if (!auth) { // If no Auth service instance, cannot determine user state
       setUserAuthState({ user: null, isUserLoading: false, userError: new Error("Auth service not provided.") });
       return;
@@ -80,6 +104,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       auth,
       (firebaseUser) => { // Auth state determined
         setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
+        handleAuthChange(firebaseUser); // Sync session with server
       },
       (error) => { // Auth listener error
         console.error("FirebaseProvider: onAuthStateChanged error:", error);
