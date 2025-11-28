@@ -1,7 +1,7 @@
 'use client';
 import { PlusCircle } from 'lucide-react';
 import Link from 'next/link';
-import { Suspense, useMemo } from 'react';
+import { Suspense, useMemo, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { collection, query, where, orderBy, doc, getDocs } from 'firebase/firestore';
 
@@ -48,10 +48,8 @@ export default function InvoicesPage() {
           <Search placeholder="Buscar facturas..." />
           <Button asChild>
             <Link href="/invoices/new">
-              <Link href="/invoices/new">
-                <PlusCircle />
-                <span>Nueva Factura</span>
-              </Link>
+              <PlusCircle />
+              <span>Nueva Factura</span>
             </Link>
           </Button>
         </div>
@@ -70,7 +68,7 @@ function InvoicesTableWrapper({ userId }: { userId: string }) {
   const firestore = useFirestore();
 
   const invoicesCollectionRef = useMemoFirebase(
-    () => collection(firestore, 'users', userId, 'invoices'),
+    () => (firestore ? collection(firestore, 'users', userId, 'invoices') : null),
     [firestore, userId]
   );
   
@@ -89,8 +87,8 @@ function InvoicesTableWrapper({ userId }: { userId: string }) {
 
   const { data: initialInvoices, isLoading: isLoadingInitial } = useCollection<Invoice>(invoicesQuery);
 
-  const [searchedInvoices, setSearchedInvoices] = React.useState<Invoice[] | null>(null);
-  const [isSearching, setIsSearching] = React.useState(false);
+  const [searchedInvoices, setSearchedInvoices] = useState<Invoice[] | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
 
   const performSearch = useDebouncedCallback(async (queryTerm: string) => {
     if (!invoicesCollectionRef) return;
@@ -125,7 +123,7 @@ function InvoicesTableWrapper({ userId }: { userId: string }) {
     }
   }, 300);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (searchQuery) {
       performSearch(searchQuery);
     } else {
@@ -133,7 +131,7 @@ function InvoicesTableWrapper({ userId }: { userId: string }) {
     }
   }, [searchQuery, performSearch]);
 
-  const userRef = useMemoFirebase(() => doc(firestore, 'users', userId), [firestore, userId]);
+  const userRef = useMemoFirebase(() => (firestore ? doc(firestore, 'users', userId) : null), [firestore, userId]);
   const { data: user, isLoading: isUserLoading } = useDoc<User>(userRef);
 
   const isLoading = isLoadingInitial || isUserLoading || isSearching;
