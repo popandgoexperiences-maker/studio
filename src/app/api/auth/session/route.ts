@@ -1,6 +1,6 @@
 import { getFirebaseAuth } from '@/lib/firebase-server';
-import { cookies } from 'next/headers';
 import { type NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 /**
  * Handles POST requests to create a session cookie.
@@ -11,13 +11,19 @@ export async function POST(request: NextRequest) {
   const authorization = request.headers.get('Authorization');
   
   if (!authorization?.startsWith('Bearer ')) {
-    return NextResponse.json({ status: 'error', message: 'Missing or invalid Authorization header.' }, { status: 401 });
+    return new NextResponse(
+      JSON.stringify({ status: 'error', message: 'Missing or invalid Authorization header.' }), 
+      { status: 401, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 
   const idToken = authorization.split('Bearer ')[1];
 
   if (!idToken) {
-    return NextResponse.json({ status: 'error', message: 'ID token is missing.' }, { status: 401 });
+    return new NextResponse(
+      JSON.stringify({ status: 'error', message: 'ID token is missing.' }),
+      { status: 401, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 
   try {
@@ -35,13 +41,20 @@ export async function POST(request: NextRequest) {
       secure: true,
     };
 
-    // Set the session cookie on the client.
-    cookies().set(options);
+    // Create a response and set the cookie on it.
+    const response = new NextResponse(
+      JSON.stringify({ status: 'success' }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+    response.cookies.set(options);
 
-    return NextResponse.json({ status: 'success' });
+    return response;
   } catch (error) {
     console.error('Error creating session cookie:', error);
-    return NextResponse.json({ status: 'error', message: 'Failed to create session.' }, { status: 401 });
+    return new NextResponse(
+        JSON.stringify({ status: 'error', message: 'Failed to create session.' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 }
 
@@ -51,10 +64,18 @@ export async function POST(request: NextRequest) {
 export async function DELETE() {
   try {
     // Clear the session cookie by setting its maxAge to 0.
-    cookies().set('__session', '', { maxAge: 0 });
-    return NextResponse.json({ status: 'success' });
+    const response = new NextResponse(
+      JSON.stringify({ status: 'success' }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+    response.cookies.set('__session', '', { maxAge: 0 });
+    return response;
+
   } catch (error) {
     console.error('Error deleting session cookie:', error);
-    return NextResponse.json({ status: 'error' }, { status: 500 });
+    return new NextResponse(
+        JSON.stringify({ status: 'error' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 }
