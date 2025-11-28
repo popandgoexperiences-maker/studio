@@ -7,7 +7,7 @@ import { cookies } from 'next/headers';
 
 // This file is intended for server-side use ONLY.
 
-export function getFirebaseAuth() {
+export async function getFirebaseAuth() {
   let firebaseApp: App;
   if (!getApps().length) {
     firebaseApp = initializeApp();
