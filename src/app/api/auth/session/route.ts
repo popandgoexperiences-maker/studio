@@ -1,8 +1,31 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { adminAuth } from '@/lib/firebase-server';
+import { getAuth } from 'firebase-admin/auth';
+import admin from 'firebase-admin';
+
+// Helper para asegurar la inicialización de admin
+function ensureAdminInitialized() {
+  if (!admin.apps.length) {
+    console.log("Session Route: Initializing Firebase Admin SDK...");
+    const serviceAccount = {
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    };
+    if (serviceAccount.projectId && serviceAccount.clientEmail && serviceAccount.privateKey) {
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+        });
+    } else {
+        console.warn("Session Route: Firebase Admin env variables not set.");
+    }
+  }
+  return getAuth();
+}
+
 
 export async function POST(request: NextRequest) {
   try {
+    const adminAuth = ensureAdminInitialized();
     const { idToken } = await request.json();
 
     if (!idToken) {
