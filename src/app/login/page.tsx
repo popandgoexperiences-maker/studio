@@ -69,7 +69,7 @@ function CustomLoginTester() {
       
       // Manejo específico para errores de Firebase para dar pistas claras.
       if (error.name === 'FirebaseError') {
-          if (error.code === 'permission-denied' || error.code === 'storage/unauthorized') {
+          if (error.code === 'permission-denied' || error.code?.includes('permission-denied')) {
                console.error("Detalle del Error: La lectura fue denegada por las reglas de seguridad de Firestore. Verifica que el UID del usuario autenticado coincida con el del documento y que las reglas lo permitan.");
                alert(`Error de Firebase: Permiso denegado (Missing or insufficient permissions).\n\nRevisa la consola para más detalles.`);
           } else {
