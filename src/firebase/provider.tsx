@@ -2,7 +2,7 @@
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
-import { Firestore } from 'firebase/firestore';
+import { Firestore, doc, getDoc } from 'firebase/firestore'; // Importar doc y getDoc
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
 
@@ -54,6 +54,7 @@ export const FirebaseContext = createContext<FirebaseContextState | undefined>(u
 
 // --- DEBUG: Flag para asegurar que el log se ejecute una sola vez ---
 let hasLoggedClientInit = false;
+let hasRunDirectReadTest = false;
 // --- FIN DEBUG ---
 
 /**
@@ -91,6 +92,35 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     );
     return () => unsubscribe(); // Cleanup
   }, [auth]); // Depends on the auth instance
+
+
+  // --- DEBUG: Prueba de lectura directa al montar el provider ---
+  useEffect(() => {
+    if (firestore && !hasRunDirectReadTest) {
+      hasRunDirectReadTest = true;
+
+      const testDirectRead = async () => {
+        console.log("--- INICIO PRUEBA LECTURA DIRECTA ---");
+        const testDocRef = doc(firestore, "users", "test-uid");
+        console.log("Intentando leer documento:", testDocRef.path);
+        try {
+          const docSnap = await getDoc(testDocRef);
+          if (docSnap.exists()) {
+            console.log("Prueba Lectura Directa - ÉXITO:", docSnap.data());
+          } else {
+            console.log("Prueba Lectura Directa - Documento NO existe.");
+          }
+        } catch (err) {
+          console.error("Prueba Lectura Directa - ERROR:", err);
+        }
+        console.log("--- FIN PRUEBA LECTURA DIRECTA ---");
+      };
+      
+      testDirectRead();
+    }
+  }, [firestore]);
+  // --- FIN DEBUG ---
+
 
   // Memoize the context value
   const contextValue = useMemo((): FirebaseContextState => {
