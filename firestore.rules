@@ -3,59 +3,54 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- REGLAS DE DEPURACIÓN Y PRODUCCIÓN PARA LA COLECCIÓN 'users' ---
+    // --- Funciones de ayuda para las reglas ---
 
-    // La función isSignedIn verifica si el usuario que hace la petición está autenticado.
-    // Es la base para cualquier regla de seguridad que requiera un usuario logueado.
+    // Comprueba si el usuario que realiza la solicitud está autenticado.
     function isSignedIn() {
       return request.auth != null;
     }
 
-    // La función isOwner es la regla clave para la seguridad por usuario.
-    // Compara el UID del usuario autenticado (request.auth.uid) con el ID del documento
-    // que se está intentando acceder (el 'userId' en el path).
-    // Para depuración: si esto falla, significa que el UID del token con el que te logueaste
-    // no coincide con el ID del documento que intentas leer.
+    // Comprueba si el usuario autenticado es el propietario del documento.
+    // Esta es la función clave para la seguridad por usuario.
+    // Para depurar: Si esta función falla, significa que el UID del usuario que ha iniciado sesión
+    // (request.auth.uid) no coincide con el ID del documento al que se intenta acceder (userId).
+    // Ejemplo de depuración:
+    //   - request.auth.uid (UID del token del usuario): "abc-123"
+    //   - userId (ID del documento en el path): "xyz-789"
+    //   - Resultado: false (acceso denegado)
     function isOwner(userId) {
-      // DEBUG LOG SIMULADO:
-      // En el emulador de Firestore, puedes ver los detalles de esta evaluación.
-      // Compara: request.auth.uid (ej: "test-uid")
-      // Con:     userId (ej: "test-uid")
-      // Resultado: true si son iguales.
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // Reglas para la colección 'users'.
-    // El comodín {userId} captura el ID del documento, que debe ser el UID del usuario.
+    // --- Reglas para la colección 'users' ---
+
+    // El comodín {userId} captura el ID del documento, que debe coincidir con el UID del usuario.
     match /users/{userId} {
 
-      // REGLA DE LECTURA Y ESCRITURA:
-      // Solo permite la lectura (get) y escritura (update) si la función isOwner devuelve 'true'.
-      // Esto asegura que un usuario solo pueda ver y modificar su propio perfil.
+      // REGLA DE LECTURA Y ACTUALIZACIÓN:
+      // Solo permite la lectura (get) y actualización (update) si la función isOwner(userId) devuelve 'true'.
+      // Esto garantiza que un usuario solo pueda leer y modificar su propio perfil.
       allow read, update: if isOwner(userId);
       
       // REGLA DE CREACIÓN:
-      // Permite la creación (create) de un documento si el usuario está autenticado y el UID
-      // del usuario que crea el documento coincide con el ID del documento a crear.
-      // Esencial para que un nuevo usuario pueda crear su propio perfil.
+      // Permite a un nuevo usuario crear su propio perfil.
+      // La condición asegura que el UID del usuario que crea el documento
+      // coincida con el ID del documento que se va a crear.
       allow create: if isSignedIn() && request.auth.uid == userId;
 
-      // NOTA: Se deniega 'delete' y 'list' por defecto para mayor seguridad.
-      // 'list' (leer la colección entera) se bloquea para evitar que un usuario
-      // pueda listar todos los UIDs de la base de datos.
+      // Se deniega 'delete' y 'list' por defecto para mayor seguridad.
+      // 'list' se bloquea para evitar que un usuario pueda listar todos los UIDs de la base de datos.
 
-      // --- Sub-colecciones (Ejemplo para mantener la estructura) ---
-      // Si tienes sub-colecciones, las reglas deben anidarse aquí.
-      // Por ejemplo, para las facturas, el acceso también depende de la propiedad.
-      
+      // --- Reglas para sub-colecciones ---
+
+      // Un usuario puede gestionar sus propias facturas dentro de su perfil.
       match /invoices/{invoiceId} {
-        // El propietario del perfil de usuario puede gestionar sus propias facturas.
-        allow read, list, create, update, delete: if isOwner(userId);
+        allow read, write, delete: if isOwner(userId);
       }
       
+      // Un usuario puede gestionar sus propios clientes dentro de su perfil.
       match /clients/{clientId} {
-        // El propietario del perfil de usuario puede gestionar sus propios clientes.
-        allow read, list, create, update, delete: if isOwner(userId);
+        allow read, write, delete: if isOwner(userId);
       }
     }
   }
