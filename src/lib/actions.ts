@@ -13,6 +13,7 @@ import {
 import type { User } from './definitions';
 import { adminAuth } from '@/lib/firebase-server';
 import { cookies } from 'next/headers';
+import { getAuth } from 'firebase/auth';
 
 
 // --- AUTH ACTIONS ---
@@ -63,9 +64,8 @@ export async function signup(prevState: any, formData: FormData) {
 }
 
 export async function logout() {
-  cookies().delete('session');
-  revalidatePath('/');
-  redirect('/login');
+    cookies().delete('session');
+    redirect('/login');
 }
 
 // --- INVOICE ACTIONS ---
