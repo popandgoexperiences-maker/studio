@@ -1,3 +1,4 @@
+
 rules_version = '2';
 
 service cloud.firestore {
@@ -27,28 +28,25 @@ service cloud.firestore {
     // El comodín {userId} captura el ID del documento, que debe coincidir con el UID del usuario.
     match /users/{userId} {
 
-      // REGLA DE LECTURA Y ACTUALIZACIÓN:
-      // Solo permite la lectura (get) y actualización (update) si la función isOwner(userId) devuelve 'true'.
-      // Esto garantiza que un usuario solo pueda leer y modificar su propio perfil.
-      allow read, update: if isOwner(userId);
-      
-      // REGLA DE CREACIÓN:
-      // Permite a un nuevo usuario crear su propio perfil.
-      // La condición asegura que el UID del usuario que crea el documento
-      // coincida con el ID del documento que se va a crear.
-      allow create: if isSignedIn() && request.auth.uid == userId;
+      // REGLA DE LECTURA (TEMPORALMENTE RELAJADA PARA DEPURACIÓN):
+      // Permite a CUALQUIER usuario autenticado LEER CUALQUIER perfil.
+      // Esto es útil durante el desarrollo para verificar datos sin restricciones.
+      // En producción, esto debería cambiarse a: allow read: if isOwner(userId);
+      allow read: if isSignedIn();
 
-      // Se deniega 'delete' y 'list' por defecto para mayor seguridad.
-      // 'list' se bloquea para evitar que un usuario pueda listar todos los UIDs de la base de datos.
+      // REGLA DE ESCRITURA (SEGURA):
+      // Solo permite crear, actualizar o borrar si el usuario es el propietario del documento.
+      // La función isOwner(userId) asegura que request.auth.uid coincida con el {userId} del path.
+      allow write: if isOwner(userId);
 
       // --- Reglas para sub-colecciones ---
 
-      // Un usuario puede gestionar sus propias facturas dentro de su perfil.
+      // Un usuario puede gestionar sus propias facturas y clientes.
+      // La regla isOwner(userId) del path padre se aplica aquí también.
       match /invoices/{invoiceId} {
         allow read, write, delete: if isOwner(userId);
       }
       
-      // Un usuario puede gestionar sus propios clientes dentro de su perfil.
       match /clients/{clientId} {
         allow read, write, delete: if isOwner(userId);
       }
