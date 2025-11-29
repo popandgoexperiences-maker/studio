@@ -52,6 +52,10 @@ export interface UserHookResult {
 // React Context
 export const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
 
+// --- DEBUG: Flag para asegurar que el log se ejecute una sola vez ---
+let hasLoggedClientInit = false;
+// --- FIN DEBUG ---
+
 /**
  * FirebaseProvider manages and provides Firebase services and user authentication state.
  */
@@ -91,6 +95,14 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   // Memoize the context value
   const contextValue = useMemo((): FirebaseContextState => {
     const servicesAvailable = !!(firebaseApp && firestore && auth);
+    
+    // --- DEBUG: Verificar inicialización del cliente de Firebase ---
+    if (servicesAvailable && typeof window !== 'undefined' && !hasLoggedClientInit) {
+        console.log("Firebase Client Initialized. ProjectID:", firebaseApp.options.projectId);
+        hasLoggedClientInit = true; // Marcar como registrado
+    }
+    // --- FIN DEBUG ---
+
     return {
       areServicesAvailable: servicesAvailable,
       firebaseApp: servicesAvailable ? firebaseApp : null,
