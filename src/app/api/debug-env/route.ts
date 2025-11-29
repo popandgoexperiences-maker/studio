@@ -1,25 +1,55 @@
+'use server';
+
 import { NextResponse } from "next/server";
+import admin from "firebase-admin";
 
 export async function GET() {
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || null;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL || null;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY || null;
 
-  if (!raw) {
-    return NextResponse.json({ error: "❌ Variable no encontrada" }, { status: 500 });
+  const response = {
+    env: {
+      FIREBASE_PROJECT_ID: projectId,
+      FIREBASE_CLIENT_EMAIL: clientEmail,
+      FIREBASE_PRIVATE_KEY_present: !!privateKey,
+    },
+    adminInit: "failed" as "success" | "failed",
+    error: "Not attempted" as any,
+  };
+
+  if (!projectId || !clientEmail || !privateKey) {
+    response.error = "Una o más variables de entorno de Firebase no están definidas.";
+    return NextResponse.json(response);
   }
 
   try {
-    const parsed = JSON.parse(raw);
+    const serviceAccount = {
+      projectId: projectId,
+      clientEmail: clientEmail,
+      privateKey: privateKey.replace(/\\n/g, '\n'),
+    };
+    
+    // Intenta inicializar una app temporal para no interferir con la principal
+    if (admin.apps.find(app => app?.name === 'debug-check')) {
+        // No hacer nada si ya existe
+    } else {
+         admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+        }, 'debug-check');
+    }
 
-    return NextResponse.json({
-      status: "✔ JSON válido",
-      project_id: parsed.project_id,
-      private_key_preview: parsed.private_key?.slice(0, 50) + "...",
-    });
+    response.adminInit = "success";
+    response.error = null;
+
   } catch (error: any) {
-    return NextResponse.json({
-      status: "❌ JSON inválido",
-      error: error.message,
-      rawSample: raw.slice(0, 200)
-    }, { status: 500 });
+    response.adminInit = "failed";
+    response.error = {
+        message: error.message,
+        code: error.code,
+        stack: error.stack.substring(0, 300) + '...', // Acortar el stack trace
+    };
   }
+
+  return NextResponse.json(response);
 }
