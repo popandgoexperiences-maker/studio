@@ -230,6 +230,7 @@ function ImageUploadField({ name, label, image, currentImageUrl, register }: { n
                           fill 
                           className="object-contain" 
                           data-ai-hint={imageHint} 
+                          sizes="12rem"
                         />
                     ) : (
                         <span className="text-xs text-muted-foreground">Sin imagen</span>
