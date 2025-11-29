@@ -4,21 +4,20 @@ import admin from "firebase-admin";
 
 // This file is intended for server-side use ONLY.
 
-if (!process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-  // This error is thrown when the service account key is not set in the environment variables.
-  // We throw an error here to prevent the application from running in a broken state.
-  throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY is not set. Please add it to your .env file.');
+if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_PRIVATE_KEY) {
+  throw new Error('Firebase server environment variables are not set. Please add them to your .env file.');
 }
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+const serviceAccount = {
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+  // The private key must have its newlines escaped as \n to be parsed correctly.
+  privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+};
 
 if (!admin.apps.length) {
   admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: serviceAccount.project_id,
-      clientEmail: serviceAccount.client_email,
-      privateKey: serviceAccount.private_key,
-    }),
+    credential: admin.credential.cert(serviceAccount),
   });
 }
 

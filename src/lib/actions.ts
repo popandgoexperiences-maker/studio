@@ -17,13 +17,6 @@ import { cookies } from 'next/headers';
 
 // --- AUTH ACTIONS ---
 
-// Note: The login action is now handled on the client-side in login-form.tsx.
-// This server action is kept for potential future server-side validation.
-export async function login(prevState: any, formData: FormData) {
-  // This is intentionally left blank as login logic has moved to the client.
-  return { message: "This action is no longer used for login." };
-}
-
 const SignupSchema = z.object({
   name: z.string().min(2, 'El nombre es requerido.'),
   email: z.string().email('Por favor, introduce un email válido.'),
@@ -59,8 +52,6 @@ export async function signup(prevState: any, formData: FormData) {
     };
     await createUserProfile(userRecord.uid, newUserProfile);
     
-    // Because we are creating the user on the server, we need to sign them in on the client
-    // by creating a custom token and handling it there. For simplicity, we redirect to login.
   } catch (e: any) {
     if (e.code === 'auth/email-already-exists') {
       return { message: 'Este email ya está en uso.' };
@@ -68,8 +59,6 @@ export async function signup(prevState: any, formData: FormData) {
     return { message: `Error al crear la cuenta: ${e.message}` };
   }
   
-  // After server-side signup, redirect to login so the client can properly sign in
-  // and establish a session.
   redirect('/login');
 }
 

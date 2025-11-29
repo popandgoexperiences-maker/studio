@@ -7,6 +7,7 @@ import {
   limit,
   orderBy,
   getDoc,
+  doc,
   where,
 } from 'firebase/firestore';
 import { firestore } from './firebase-server';

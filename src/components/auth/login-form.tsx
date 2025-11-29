@@ -62,7 +62,7 @@ export function LoginForm() {
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'No se pudo crear la sesión en el servidor.');
+        throw new Error(errorData.error || 'No se pudo crear la sesión en el servidor.');
       }
 
       // 3. Only redirect after the session is created
