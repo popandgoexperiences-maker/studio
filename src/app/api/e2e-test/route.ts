@@ -1,44 +1,73 @@
+
 import { NextResponse } from "next/server";
 import { adminAuth } from "@/lib/firebase-server";
 
 export async function GET() {
-  const response: Record<string, any> = {
-    tokenCreated: null,
-    idTokenVerified: null,
-    sessionResult: null,
-    setCookie: null,
+  const out: Record<string, any> = {
+    customTokenCreated: false,
+    idTokenExchanged: false,
+    idTokenMasked: null,
+    verifyUid: null,
+    sessionCookieCreated: false,
+    sessionEndpointStatus: null,
+    sessionEndpointBody: null,
+    sessionEndpointSetCookie: null,
     error: null,
   };
 
   try {
-    // 1. Crear token personalizado para test-uid
+    const apiKey = process.env.FIREBASE_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+    if (!apiKey) throw new Error("Missing FIREBASE_API_KEY / NEXT_PUBLIC_FIREBASE_API_KEY in environment");
+
+    // 1) Crear custom token para test-uid
     const customToken = await adminAuth.createCustomToken("test-uid");
-    response.tokenCreated = customToken ? "success" : "failed";
+    out.customTokenCreated = !!customToken;
 
-    // 2. Verificar el token en el servidor
-    const decoded = await adminAuth.verifyIdToken(
-      (await adminAuth.createSessionCookie(customToken, { expiresIn: 60_000 }))
-        .catch(() => customToken)
-    );
-
-    response.idTokenVerified = decoded?.uid || "failed";
-
-    // 3. Enviar petición al endpoint de sesión (como si fuera el cliente)
-    const sessionRes = await fetch(
-      `${process.env.NEXT_PUBLIC_URL || "http://localhost:3000"}/api/auth/session`,
+    // 2) Intercambiar customToken por idToken usando Identity Toolkit REST API
+    const signInRes = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken: customToken }),
+        body: JSON.stringify({ token: customToken, returnSecureToken: true })
       }
     );
 
-    response.sessionResult = await sessionRes.text();
-    response.setCookie = sessionRes.headers.get("set-cookie") || null;
+    const signInJson = await signInRes.json();
+    if (!signInRes.ok) {
+      throw new Error("signInWithCustomToken failed: " + JSON.stringify(signInJson));
+    }
 
+    const idToken = signInJson.idToken;
+    out.idTokenExchanged = !!idToken;
+    // no devuelvas el idToken completo, solo máscara los últimos 4 caracteres para diagnóstico
+    out.idTokenMasked = idToken ? (`***${idToken.slice(-4)}`) : null;
+
+    // 3) Verificar idToken en Admin
+    const decoded = await adminAuth.verifyIdToken(idToken);
+    out.verifyUid = decoded?.uid ?? null;
+
+    // 4) Crear session cookie (opcional del propio admin)
+    const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 días
+    const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
+    out.sessionCookieCreated = !!sessionCookie;
+
+    // 5) Llamar al endpoint /api/auth/session del servidor para comprobar Set-Cookie y respuesta
+    const serverUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
+    const sessionRes = await fetch(`${serverUrl.replace(/\/+$/,"")}/api/auth/session`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken }),
+    });
+
+    out.sessionEndpointStatus = sessionRes.status;
+    // texto plano porque puede venir HTML o JSON
+    out.sessionEndpointBody = await sessionRes.text();
+    out.sessionEndpointSetCookie = sessionRes.headers.get("set-cookie");
+
+    return NextResponse.json(out);
   } catch (err: any) {
-    response.error = err.message;
+    out.error = err?.message ?? String(err);
+    return NextResponse.json(out, { status: 500 });
   }
-
-  return NextResponse.json(response);
 }
