@@ -7,10 +7,18 @@ import { useAuth, useFirestore } from '@/firebase';
 import { signInWithCustomToken } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 
+/**
+ * Componente de prueba para depurar el flujo completo de autenticación
+ * con token personalizado y lectura de datos en Firestore.
+ */
 function CustomLoginTester() {
+  // Obtenemos las instancias de Auth y Firestore del contexto de Firebase.
   const auth = useAuth();
   const firestore = useFirestore();
 
+  /**
+   * Ejecuta el flujo completo de prueba al hacer clic en el botón.
+   */
   const handleCustomLoginAndRead = async () => {
     if (!auth || !firestore) {
       console.error('Error en Test: Servicios de Auth o Firestore no disponibles.');
@@ -33,8 +41,8 @@ function CustomLoginTester() {
 
       // --- PASO 2: Iniciar sesión en el frontend ---
       console.log('Paso 2: Intentando iniciar sesión con signInWithCustomToken...');
-      await signInWithCustomToken(auth, token);
-      const user = auth.currentUser;
+      const userCredential = await signInWithCustomToken(auth, token);
+      const user = userCredential.user;
 
       if (!user || user.uid !== 'test-uid') {
         throw new Error('El inicio de sesión no devolvió el usuario esperado.');
@@ -49,18 +57,24 @@ function CustomLoginTester() {
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
-        console.log('Paso 3: ÉXITO. Documento leído correctamente:', docSnap.data());
-        alert(`¡Flujo completo exitoso! Documento de 'test-uid' leído.`);
+        console.log('Paso 3: ¡ÉXITO! Documento leído correctamente:', docSnap.data());
+        alert(`¡Flujo completo exitoso! Documento de '${user.uid}' leído. Revisa la consola para ver los detalles.`);
       } else {
         console.warn('Paso 3: Lectura completada, pero el documento no existe en Firestore.');
-        alert(`Login exitoso, pero el documento /users/test-uid no existe en Firestore.`);
+        alert(`Login exitoso, pero el documento /users/${user.uid} no existe en Firestore.`);
       }
 
     } catch (error: any) {
       console.error("--- ERROR EN EL FLUJO DE PRUEBA ---", error);
       
+      // Manejo específico para errores de Firebase para dar pistas claras.
       if (error.name === 'FirebaseError') {
-          alert(`Error de Firebase: ${error.code}\n\nMira la consola para más detalles.`);
+          if (error.code === 'permission-denied' || error.code === 'storage/unauthorized') {
+               console.error("Detalle del Error: La lectura fue denegada por las reglas de seguridad de Firestore. Verifica que el UID del usuario autenticado coincida con el del documento y que las reglas lo permitan.");
+               alert(`Error de Firebase: Permiso denegado (Missing or insufficient permissions).\n\nRevisa la consola para más detalles.`);
+          } else {
+            alert(`Error de Firebase: ${error.code}\n\nMira la consola para más detalles.`);
+          }
       } else {
           alert(`Error en el flujo: ${error.message}\n\nMira la consola para más detalles.`);
       }
@@ -86,6 +100,7 @@ export default function LoginPage() {
           <Logo />
         </div>
         <LoginForm />
+        {/* Componente de prueba añadido al final de la página de login */}
         <CustomLoginTester />
       </div>
     </main>
