@@ -222,9 +222,15 @@ function ImageUploadField({ name, label, image, currentImageUrl, register }: { n
                 <p className="text-sm text-muted-foreground mt-1">Sube una imagen para tu {label.toLowerCase()}.</p>
             </div>
             <div className="w-full sm:w-2/3 flex items-center gap-4">
-                <div className="w-48 h-24 rounded-md border border-dashed flex items-center justify-center bg-muted/50 p-2">
+                <div className="w-48 h-24 relative rounded-md border border-dashed flex items-center justify-center bg-muted/50 p-2">
                     {previewUrl ? (
-                        <Image src={previewUrl} alt={label} width={160} height={80} className="object-contain" data-ai-hint={imageHint} />
+                        <Image 
+                          src={previewUrl} 
+                          alt={label} 
+                          fill 
+                          className="object-contain" 
+                          data-ai-hint={imageHint} 
+                        />
                     ) : (
                         <span className="text-xs text-muted-foreground">Sin imagen</span>
                     )}
@@ -247,5 +253,3 @@ function ImageUploadField({ name, label, image, currentImageUrl, register }: { n
         </div>
     );
 }
-
-    
