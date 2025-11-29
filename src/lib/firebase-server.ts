@@ -38,3 +38,14 @@ if (!admin.apps.length) {
 export const adminAuth = admin.auth();
 export const firestore = admin.firestore();
 
+// --- Bloque de depuración de token ---
+(async () => {
+  if (admin.apps.length) { // Solo ejecutar si admin está inicializado
+    try {
+      await adminAuth.createCustomToken("test-uid");
+      console.log("Token de prueba creado correctamente.");
+    } catch (error) {
+      console.error("Error creando token de prueba:", error);
+    }
+  }
+})();
