@@ -20,8 +20,8 @@ function CustomLoginTester() {
 
     try {
       // --- PASO 1: Obtener token del backend ---
-      console.log('Paso 1: Solicitando token personalizado del endpoint /api/auth/custom-token...');
-      const response = await fetch('/api/auth/custom-token');
+      console.log('Paso 1: Solicitando token personalizado del endpoint /api/test-token...');
+      const response = await fetch('/api/test-token');
       
       if (!response.ok) {
         const errorData = await response.json();
