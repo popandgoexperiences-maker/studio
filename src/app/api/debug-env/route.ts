@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import admin from "firebase-admin";
 
 export async function GET() {
-  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || null;
+  const projectId = process.env.FIREBASE_PROJECT_ID || null;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL || null;
   const privateKey = process.env.FIREBASE_PRIVATE_KEY || null;
 
