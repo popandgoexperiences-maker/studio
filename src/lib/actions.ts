@@ -13,7 +13,6 @@ import {
 import type { User } from './definitions';
 import { adminAuth } from '@/lib/firebase-server';
 import { cookies } from 'next/headers';
-import { getAuth } from 'firebase/auth';
 
 
 // --- AUTH ACTIONS ---
