@@ -3,36 +3,14 @@ import admin from "firebase-admin";
 
 // This file is intended for server-side use ONLY.
 
-console.log("--- Depuración de Firebase Admin ---");
-console.log("ID del Proyecto (FIREBASE_PROJECT_ID):", process.env.FIREBASE_PROJECT_ID ? 'Cargado' : 'No encontrado');
-console.log("Email del Cliente (FIREBASE_CLIENT_EMAIL):", process.env.FIREBASE_CLIENT_EMAIL ? 'Cargado' : 'No encontrado');
-
-const privateKey = process.env.FIREBASE_PRIVATE_KEY;
-console.log(
-  "Clave Privada (FIREBASE_PRIVATE_KEY):",
-  privateKey
-    ? `Cargada (termina en ...${privateKey.slice(-4)})`
-    : "No encontrada"
-);
-
-console.log("------------------------------------");
-
-if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_PRIVATE_KEY) {
-  throw new Error('Firebase server environment variables are not set. Please add them to your .env file.');
-}
-
-const serviceAccount = {
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-  // The private key must have its newlines escaped as \n to be parsed correctly.
-  privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-};
+// The initialization logic is now handled in `next.config.ts` to ensure it runs only once.
+// This file now simply exports the already-initialized services.
 
 if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
-  console.log("Firebase Admin inicializado correctamente");
+  console.error("Firebase Admin SDK not initialized. Please check your next.config.ts file.");
+  // In a real scenario, you might want to throw an error or have a more robust fallback.
+} else {
+  console.log("Firebase Admin SDK already initialized, re-using existing instance.");
 }
 
 export const adminAuth = admin.auth();
@@ -64,17 +42,3 @@ export const firestore = admin.firestore();
     }
   }
 })();
-
-
-// --- Bloque de depuración de token ---
-(async () => {
-  if (admin.apps.length) { // Solo ejecutar si admin está inicializado
-    try {
-      await adminAuth.createCustomToken("test-uid");
-      console.log("Token de prueba creado correctamente.");
-    } catch (error) {
-      console.error("Error creando token de prueba:", error);
-    }
-  }
-})();
-
