@@ -1,3 +1,5 @@
+'use server';
+
 import { type NextRequest, NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
 import admin from 'firebase-admin';
@@ -32,16 +34,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing idToken' }, { status: 400 });
     }
 
-    // **PASO OBLIGATORIO**
+    // Verificar el idToken para asegurarse de que es válido.
     await adminAuth.verifyIdToken(idToken);
 
     const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 días
 
+    // Crear la cookie de sesión.
     const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
 
     const response = NextResponse.json({ status: 'success' });
 
     // Configuración de la cookie para entornos sandboxed (iframes, cross-site)
+    // Esto es CRUCIAL para que Firebase Studio funcione correctamente.
     response.cookies.set({
       name: 'session',
       value: sessionCookie,
