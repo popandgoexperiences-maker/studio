@@ -12,7 +12,7 @@ import {
   SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
-import { Settings, FileText, Users } from 'lucide-react';
+import { Settings, FileText, Users, ClipboardList } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -32,6 +32,7 @@ export function SidebarNav() {
 
   const navItems = [
     { href: '/invoices', label: 'Facturas', icon: FileText },
+    { href: '/quotes', label: 'Presupuestos', icon: ClipboardList },
     { href: '/clients', label: 'Clientes', icon: Users },
     { href: '/settings', label: 'Configuración', icon: Settings },
   ];
@@ -63,7 +64,7 @@ export function SidebarNav() {
       <SidebarContent className="p-2">
         <SidebarMenu>
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = pathname.startsWith(item.href);
             return (
               <SidebarMenuItem key={item.href}>
                 <TooltipProvider>

@@ -1,5 +1,5 @@
 import { getFirestoreSafe } from "./firebase-server";
-import type { User, Invoice, Client } from '@/lib/definitions';
+import type { User, Invoice, Client, Quote } from '@/lib/definitions';
 
 // --- DATA FETCHING (SERVER-SIDE) ---
 export async function fetchClients(userId: string): Promise<Client[]> {
@@ -31,7 +31,7 @@ export async function fetchUser(userId: string): Promise<User | null> {
 export async function fetchNextInvoiceNumber(userId: string): Promise<string> {
   const db = getFirestoreSafe();
   const invoicesCol = db.collection('users').doc(userId).collection('invoices');
-  const q = invoicesCol.where('userId', '==', userId).orderBy('invoiceNumber', 'desc').limit(1);
+  const q = invoicesCol.orderBy('invoiceNumber', 'desc').limit(1);
   const snapshot = await q.get();
 
   if (snapshot.empty) {
@@ -44,11 +44,50 @@ export async function fetchNextInvoiceNumber(userId: string): Promise<string> {
   return `F-${String(nextNumber).padStart(3, '0')}`;
 }
 
+export async function fetchNextQuoteNumber(userId: string): Promise<string> {
+  const db = getFirestoreSafe();
+  const quotesCol = db.collection('users').doc(userId).collection('quotes');
+  const q = quotesCol.orderBy('quoteNumber', 'desc').limit(1);
+  const snapshot = await q.get();
+
+  if (snapshot.empty) {
+    return 'P-001';
+  }
+
+  const lastQuoteNumber = snapshot.docs[0].data().quoteNumber;
+  const lastNumber = parseInt(lastQuoteNumber.split('-')[1]);
+  const nextNumber = lastNumber + 1;
+  return `P-${String(nextNumber).padStart(3, '0')}`;
+}
+
+export async function getQuote(userId: string, quoteId: string): Promise<Quote | null> {
+    const db = getFirestoreSafe();
+    const docRef = db.collection('users').doc(userId).collection('quotes').doc(quoteId);
+    const doc = await docRef.get();
+    if (!doc.exists) {
+        return null;
+    }
+    return { id: doc.id, ...doc.data() } as Quote;
+}
+
 // --- DATA SAVING (SERVER-SIDE) ---
-export async function saveInvoice(userId: string, invoiceData: Omit<Invoice, 'id'>) {
+export async function saveInvoice(userId: string, invoiceData: Omit<Invoice, 'id'>): Promise<string> {
   const db = getFirestoreSafe();
   const invoicesCol = db.collection('users').doc(userId).collection('invoices');
-  await invoicesCol.add(invoiceData);
+  const docRef = await invoicesCol.add(invoiceData);
+  return docRef.id;
+}
+
+export async function saveQuote(userId: string, quoteData: Omit<Quote, 'id'>) {
+  const db = getFirestoreSafe();
+  const quotesCol = db.collection('users').doc(userId).collection('quotes');
+  await quotesCol.add(quoteData);
+}
+
+export async function updateQuote(userId: string, quoteId: string, data: Partial<Quote>) {
+    const db = getFirestoreSafe();
+    const quoteRef = db.collection('users').doc(userId).collection('quotes').doc(quoteId);
+    await quoteRef.update(data);
 }
 
 export async function saveClient(userId: string, clientData: Omit<Client, 'id'>) {

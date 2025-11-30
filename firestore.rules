@@ -50,6 +50,10 @@ service cloud.firestore {
       match /clients/{clientId} {
         allow read, write, delete: if isOwner(userId);
       }
+
+      match /quotes/{quoteId} {
+        allow read, write, delete: if isOwner(userId);
+      }
     }
   }
 }

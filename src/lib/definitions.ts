@@ -37,3 +37,18 @@ export type Invoice = {
   pdfUrl?: string;
   status: 'draft' | 'pending' | 'paid' | 'generating';
 };
+
+export type Quote = {
+  id: string;
+  userId: string; // Foreign key to User
+  quoteNumber: string;
+  client: Client;
+  date: string; // ISO 8601 format
+  lineItems: LineItem[];
+  subtotal: number;
+  vat: number;
+  total: number;
+  pdfUrl?: string;
+  status: 'draft' | 'sent' | 'accepted' | 'rejected';
+  invoiceId?: string; // ID of the invoice created from this quote
+};

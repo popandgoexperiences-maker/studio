@@ -9,6 +9,10 @@ import {
   updateUserProfile,
   saveClient,
   createUserProfile,
+  fetchNextQuoteNumber,
+  saveQuote,
+  getQuote,
+  updateQuote,
 } from '@/lib/data';
 import type { User } from './definitions';
 import { getAuthSafe } from '@/lib/firebase-server';
@@ -167,6 +171,117 @@ export async function createInvoice(prevState: any, formData: FormData) {
   redirect('/invoices');
 }
 
+// --- QUOTE ACTIONS ---
+
+const QuoteSchema = z.object({
+  client: ClientSchemaForInvoice,
+  lineItems: z.array(LineItemSchema).min(1, "Debe haber al menos un concepto."),
+  subtotal: z.coerce.number(),
+  vat: z.coerce.number(),
+  total: z.coerce.number(),
+});
+
+
+export async function createQuote(prevState: any, formData: FormData) {
+  const cookieStore = cookies();
+  const sessionCookie = cookieStore.get('__session')?.value;
+  if (!sessionCookie) {
+    return { message: 'Usuario no autenticado.' };
+  }
+  const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
+  const userId = decodedToken.uid;
+
+  try {
+    const lineItems = JSON.parse(formData.get('lineItems') as string);
+    const client = JSON.parse(formData.get('client') as string);
+
+    const validatedFields = QuoteSchema.safeParse({
+      ...Object.fromEntries(formData.entries()),
+      lineItems,
+      client,
+    });
+
+    if (!validatedFields.success) {
+      return {
+        errors: validatedFields.error.flatten().fieldErrors,
+        message: 'Error de validación. Faltan campos.',
+      };
+    }
+    
+    const { subtotal, vat, total } = validatedFields.data;
+
+    const quoteNumber = await fetchNextQuoteNumber(userId);
+
+    await saveQuote(userId, {
+      userId,
+      quoteNumber,
+      client: validatedFields.data.client,
+      date: new Date().toISOString(),
+      lineItems: validatedFields.data.lineItems.map(item => ({
+          description: item.descripcion,
+          quantity: item.cantidad,
+          unitPrice: item.precioUnitario
+      })),
+      subtotal,
+      vat,
+      total,
+      status: 'draft',
+    });
+
+  } catch (e: any) {
+    return { message: `Error al crear el presupuesto: ${e.message}` };
+  }
+
+  revalidatePath('/quotes');
+  redirect('/quotes');
+}
+
+export async function convertQuoteToInvoice(quoteId: string) {
+  const cookieStore = cookies();
+  const sessionCookie = cookieStore.get('__session')?.value;
+  if (!sessionCookie) {
+    return { message: 'Usuario no autenticado.' };
+  }
+  const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
+  const userId = decodedToken.uid;
+
+  try {
+    const quote = await getQuote(userId, quoteId);
+    if (!quote || quote.userId !== userId) {
+      throw new Error('Presupuesto no encontrado o no pertenece al usuario.');
+    }
+    if (quote.invoiceId) {
+      throw new Error('Este presupuesto ya ha sido convertido en factura.');
+    }
+
+    const invoiceNumber = await fetchNextInvoiceNumber(userId);
+    
+    const newInvoiceId = await saveInvoice(userId, {
+      userId,
+      invoiceNumber,
+      client: quote.client,
+      date: new Date().toISOString(),
+      lineItems: quote.lineItems,
+      subtotal: quote.subtotal,
+      vat: quote.vat,
+      total: quote.total,
+      status: 'pending',
+    });
+
+    await updateQuote(userId, quoteId, { 
+      status: 'accepted',
+      invoiceId: newInvoiceId 
+    });
+
+  } catch (e: any) {
+    return { message: `Error al convertir el presupuesto: ${e.message}` };
+  }
+
+  revalidatePath('/quotes');
+  revalidatePath('/invoices');
+  redirect('/invoices');
+}
+
 // --- CLIENT ACTIONS ---
 
 const ClientSchema = z.object({
@@ -225,6 +340,7 @@ export async function createClient(prevState: any, formData: FormData) {
 
   revalidatePath('/clients');
   revalidatePath('/invoices/new');
+  revalidatePath('/quotes/new');
   redirect('/clients');
 }
 
