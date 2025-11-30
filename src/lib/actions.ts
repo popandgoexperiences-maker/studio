@@ -219,61 +219,81 @@ async function fileToDataUrl(file: File): Promise<string> {
 }
 
 export async function updateSettings(prevState: any, formData: FormData) {
-    
+  console.log('--- Iniciando updateSettings ---');
+
+  try {
+    // 1. Verificación de Autenticación
     const sessionCookie = cookies().get('__session')?.value;
     if (!sessionCookie) {
-        return { message: 'User not authenticated.' };
+      console.error('Error de autenticación: No se encontró la cookie de sesión.');
+      return { message: 'Usuario no autenticado. Por favor, inicia sesión de nuevo.' };
     }
+
     const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
     const userId = decodedToken?.uid;
 
     if (!userId) {
-        return { message: 'Invalid session token.' };
+      console.error('Error de autenticación: El token de sesión es inválido o ha expirado.');
+      return { message: 'Token de sesión inválido.' };
     }
+    console.log(`Paso 1: Usuario autenticado correctamente. UID: ${userId}`);
 
-  try {
+    // 2. Validación de Datos del Formulario
     const rawData = Object.fromEntries(formData.entries());
+    console.log('Paso 2: Validando datos del formulario...', rawData);
 
     const validatedFields = SettingsSchema.safeParse(rawData);
 
     if (!validatedFields.success) {
-      console.log(validatedFields.error.flatten().fieldErrors);
+      const validationErrors = validatedFields.error.flatten().fieldErrors;
+      console.error('Error de validación:', validationErrors);
       return {
-        errors: validatedFields.error.flatten().fieldErrors,
+        errors: validationErrors,
         message: 'Error de validación. Revisa los campos marcados.',
       };
     }
+    console.log('Paso 2: Validación de datos exitosa.', validatedFields.data);
 
+    // 3. Procesamiento de Archivos y Datos
+    console.log('Paso 3: Procesando datos y archivos para la actualización...');
     let updatedUserData: Partial<User> = { ...validatedFields.data };
 
-    // Handle logo image
     const logoFile = formData.get('logo') as File | null;
     if (logoFile && logoFile.size > 0) {
+      console.log(`- Procesando archivo de logo: ${logoFile.name} (${logoFile.size} bytes)`);
       updatedUserData.logoUrl = await fileToDataUrl(logoFile);
     }
 
-    // Handle signature data URL
-    if (
-      validatedFields.data.signature &&
-      validatedFields.data.signature.startsWith('data:image')
-    ) {
+    if (validatedFields.data.signature && validatedFields.data.signature.startsWith('data:image')) {
+      console.log('- Procesando datos de firma (data URL).');
       updatedUserData.signatureUrl = validatedFields.data.signature;
     }
 
-    // Handle seal image
     const sealFile = formData.get('seal') as File | null;
     if (sealFile && sealFile.size > 0) {
+      console.log(`- Procesando archivo de sello: ${sealFile.name} (${sealFile.size} bytes)`);
       updatedUserData.sealUrl = await fileToDataUrl(sealFile);
     }
+    console.log('Paso 3: Objeto de datos final a guardar:', updatedUserData);
 
+    // 4. Actualización en Base de Datos
+    console.log(`Paso 4: Intentando actualizar el perfil para el usuario ${userId} en Firestore.`);
     await updateUserProfile(userId, updatedUserData);
-  } catch (e) {
-    console.error('Error updating settings:', e);
-    return { message: 'Error al actualizar el perfil.' };
+    console.log(`Paso 4: Perfil de usuario ${userId} actualizado con éxito en Firestore.`);
+
+  } catch (e: any) {
+    console.error('--- ERROR INESPERADO en updateSettings ---');
+    console.error('Mensaje:', e.message);
+    console.error('Stack:', e.stack);
+    return { message: `Error del servidor: ${e.message}` };
   }
 
+  // 5. Revalidación y Finalización
+  console.log('Paso 5: Revalidando rutas y finalizando la operación.');
   revalidatePath('/settings');
   revalidatePath('/invoices/new');
   revalidatePath('/(dashboard)/layout.tsx');
+  
+  console.log('--- updateSettings finalizado con éxito ---');
   return { message: 'Perfil actualizado con éxito.' };
 }
