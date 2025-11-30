@@ -1,34 +1,11 @@
 'use server';
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { getAuth } from 'firebase-admin/auth';
-import admin from 'firebase-admin';
-import { adminAuth as adminAuthGetter } from '@/lib/firebase-server';
-
-// Helper para asegurar la inicialización de admin
-function ensureAdminInitialized() {
-  if (!admin.apps.length) {
-    console.log("Session Route: Initializing Firebase Admin SDK...");
-    const serviceAccount = {
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    };
-    if (serviceAccount.projectId && serviceAccount.clientEmail && serviceAccount.privateKey) {
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount)
-        });
-    } else {
-        console.warn("Session Route: Firebase Admin env variables not set.");
-    }
-  }
-  return adminAuthGetter();
-}
-
+import { getAuthSafe } from '@/lib/firebase-server';
 
 export async function POST(request: NextRequest) {
   try {
-    const adminAuth = ensureAdminInitialized();
+    const auth = getAuthSafe();
     const { idToken } = await request.json();
 
     if (!idToken) {
@@ -36,12 +13,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar el idToken para asegurarse de que es válido.
-    await adminAuth.verifyIdToken(idToken);
+    // Esto es manejado implícitamente por createSessionCookie en la mayoría de los casos,
+    // pero una verificación explícita puede ser útil para la depuración.
+    // const decodedToken = await auth.verifyIdToken(idToken);
 
     const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 días
 
     // Crear la cookie de sesión.
-    const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
+    const sessionCookie = await auth.createSessionCookie(idToken, { expiresIn });
 
     const response = NextResponse.json({ status: 'success' });
 
