@@ -90,7 +90,7 @@ const InvoiceSchema = z.object({
     .min(1, 'Debe haber al menos un concepto.'),
   subtotal: z.coerce.number(),
   vat: z.coerce.number(),
-  total: zcoerce.number(),
+  total: z.coerce.number(),
 });
 
 export async function createInvoice(prevState: any, formData: FormData) {
