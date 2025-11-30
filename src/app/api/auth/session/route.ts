@@ -3,6 +3,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
 import admin from 'firebase-admin';
+import { adminAuth as adminAuthGetter } from '@/lib/firebase-server';
 
 // Helper para asegurar la inicialización de admin
 function ensureAdminInitialized() {
@@ -21,7 +22,7 @@ function ensureAdminInitialized() {
         console.warn("Session Route: Firebase Admin env variables not set.");
     }
   }
-  return getAuth();
+  return adminAuthGetter();
 }
 
 

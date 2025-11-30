@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     console.log(`Backend: Creando token personalizado para UID: ${testUid}`);
     
     // Genera el token personalizado usando Firebase Admin.
-    const customToken = await adminAuth.createCustomToken(testUid);
+    const customToken = await adminAuth().createCustomToken(testUid);
     
     console.log("Backend: Token personalizado creado con éxito.");
     

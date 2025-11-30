@@ -38,7 +38,7 @@ export async function signup(prevState: any, formData: FormData) {
   const { name, email, password } = validatedFields.data;
 
   try {
-    const userRecord = await adminAuth.createUser({
+    const userRecord = await adminAuth().createUser({
         email,
         password,
         displayName: name,
@@ -99,7 +99,7 @@ export async function createInvoice(prevState: any, formData: FormData) {
     return { message: 'Usuario no autenticado.' };
   }
 
-  const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
+  const decodedToken = await adminAuth().verifySessionCookie(sessionCookie);
   const userId = decodedToken?.uid;
 
   if (!userId) {
@@ -166,7 +166,7 @@ export async function createClient(prevState: any, formData: FormData) {
     if (!sessionCookie) {
         return { message: 'User not authenticated.' };
     }
-    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
+    const decodedToken = await adminAuth().verifySessionCookie(sessionCookie);
     const userId = decodedToken?.uid;
 
     if (!userId) {
@@ -229,7 +229,7 @@ export async function updateSettings(prevState: any, formData: FormData) {
       return { message: 'Usuario no autenticado. Por favor, inicia sesión de nuevo.' };
     }
 
-    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
+    const decodedToken = await adminAuth().verifySessionCookie(sessionCookie);
     const userId = decodedToken?.uid;
 
     if (!userId) {

@@ -20,7 +20,7 @@ export async function GET() {
     if (!apiKey) throw new Error("Missing FIREBASE_API_KEY / NEXT_PUBLIC_FIREBASE_API_KEY in environment");
 
     // 1) Crear custom token para test-uid
-    const customToken = await adminAuth.createCustomToken("test-uid");
+    const customToken = await adminAuth().createCustomToken("test-uid");
     out.customTokenCreated = !!customToken;
 
     // 2) Intercambiar customToken por idToken usando Identity Toolkit REST API
@@ -44,12 +44,12 @@ export async function GET() {
     out.idTokenMasked = idToken ? (`***${idToken.slice(-4)}`) : null;
 
     // 3) Verificar idToken en Admin
-    const decoded = await adminAuth.verifyIdToken(idToken);
+    const decoded = await adminAuth().verifyIdToken(idToken);
     out.verifyUid = decoded?.uid ?? null;
 
     // 4) Crear session cookie (opcional del propio admin)
     const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 días
-    const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
+    const sessionCookie = await adminAuth().createSessionCookie(idToken, { expiresIn });
     out.sessionCookieCreated = !!sessionCookie;
 
     // 5) Llamar al endpoint /api/auth/session del servidor para comprobar Set-Cookie y respuesta

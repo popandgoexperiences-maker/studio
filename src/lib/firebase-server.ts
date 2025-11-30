@@ -13,13 +13,13 @@ if (!admin.apps.length) {
   console.log("Firebase Admin SDK already initialized, re-using existing instance.");
 }
 
-export const adminAuth = admin.auth();
-export const firestore = admin.firestore();
+export const adminAuth = () => admin.auth();
+export const firestore = () => admin.firestore();
 
 // --- Bloque de depuración para asegurar que el documento de prueba existe ---
 (async () => {
   if (admin.apps.length) {
-    const testUserDocRef = firestore.doc('users/test-uid');
+    const testUserDocRef = firestore().doc('users/test-uid');
     try {
       const docSnap = await testUserDocRef.get();
       if (docSnap.exists) {
