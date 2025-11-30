@@ -46,14 +46,12 @@ export async function POST(request: NextRequest) {
 
     // Configuración de la cookie para entornos sandboxed (iframes, cross-site)
     // Esto es CRUCIAL para que Firebase Studio funcione correctamente.
-    response.cookies.set({
-      name: 'session',
-      value: sessionCookie,
+    response.cookies.set("__session", sessionCookie, {
       httpOnly: true,
-      secure: true, // Requerido para SameSite=None
-      maxAge: expiresIn / 1000,
-      path: '/',
-      sameSite: 'none', // Permite que la cookie se envíe en contextos cross-site
+      secure: true,
+      sameSite: "none",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 5, // 5 días
     });
 
     return response;

@@ -63,7 +63,7 @@ export async function signup(prevState: any, formData: FormData) {
 }
 
 export async function logout() {
-    cookies().delete('session');
+    cookies().delete('__session');
     redirect('/login');
 }
 
@@ -94,7 +94,7 @@ const InvoiceSchema = z.object({
 
 export async function createInvoice(prevState: any, formData: FormData) {
   
-  const sessionCookie = cookies().get('session')?.value;
+  const sessionCookie = cookies().get('__session')?.value;
   if (!sessionCookie) {
     return { message: 'Usuario no autenticado.' };
   }
@@ -162,7 +162,7 @@ const ClientSchema = z.object({
 
 export async function createClient(prevState: any, formData: FormData) {
     
-    const sessionCookie = cookies().get('session')?.value;
+    const sessionCookie = cookies().get('__session')?.value;
     if (!sessionCookie) {
         return { message: 'User not authenticated.' };
     }
@@ -220,7 +220,7 @@ async function fileToDataUrl(file: File): Promise<string> {
 
 export async function updateSettings(prevState: any, formData: FormData) {
     
-    const sessionCookie = cookies().get('session')?.value;
+    const sessionCookie = cookies().get('__session')?.value;
     if (!sessionCookie) {
         return { message: 'User not authenticated.' };
     }
