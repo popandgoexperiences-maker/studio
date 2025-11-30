@@ -94,7 +94,11 @@ const InvoiceSchema = z.object({
 });
 
 export async function createInvoice(prevState: any, formData: FormData) {
-  
+  console.log('[DEBUG createInvoice] Entrando a createInvoice. Keys:', Array.from(formData.keys()));
+  console.log('[DEBUG createInvoice] Client data:', formData.get('client'));
+  console.log('[DEBUG createInvoice] LineItems data:', formData.get('lineItems'));
+
+
   const cookieStore = cookies();
   const sessionCookie = cookieStore.get('__session')?.value;
   if (!sessionCookie) {
@@ -119,15 +123,20 @@ export async function createInvoice(prevState: any, formData: FormData) {
     });
 
     if (!validatedFields.success) {
+      console.error('[ERROR createInvoice] Zod validation failed:', validatedFields.error.flatten());
       return {
         errors: validatedFields.error.flatten().fieldErrors,
         message: 'Error de validación. Faltan campos requeridos.',
       };
     }
+    
+    console.log('[DEBUG createInvoice] userId:', userId);
+    console.log('[DEBUG createInvoice] Validated data:', validatedFields.data);
 
     const { subtotal, vat, total } = validatedFields.data;
 
     const invoiceNumber = await fetchNextInvoiceNumber(userId);
+    console.log('[DEBUG createInvoice] Next invoice number:', invoiceNumber);
 
     await saveInvoice(userId, {
       userId,
@@ -144,9 +153,18 @@ export async function createInvoice(prevState: any, formData: FormData) {
       total,
       status: 'pending',
     });
-  } catch (e) {
-    console.error(e);
-    return { message: 'Error al crear la factura.' };
+    console.log('[DEBUG createInvoice] saveInvoice completado correctamente.');
+
+  } catch (e: any) {
+    console.error('[ERROR createInvoice] Error al ejecutar la acción:', e);
+    return {
+      message: `Error al crear la factura: ${e?.message || String(e)}`,
+      error: {
+        message: e?.message ?? String(e),
+        stack: e?.stack ?? null,
+        name: e?.name ?? null,
+      },
+    };
   }
 
   revalidatePath('/invoices');
@@ -163,6 +181,8 @@ const ClientSchema = z.object({
 });
 
 export async function createClient(prevState: any, formData: FormData) {
+    console.log('[DEBUG createClient] Entrando en createClient');
+    console.log('[DEBUG createClient] formData keys:', Array.from(formData.keys()));
     
     const cookieStore = cookies();
     const sessionCookie = cookieStore.get('__session')?.value;
@@ -186,11 +206,26 @@ export async function createClient(prevState: any, formData: FormData) {
       message: 'Error de validación.',
     };
   }
+  
+  console.log('[DEBUG createClient] userId before saveClient:', userId);
+  console.log('[DEBUG createClient] validatedFields:', validatedFields.data);
 
   try {
+    console.log('[DEBUG createClient] Llamando a saveClient con userId:', userId);
     await saveClient(userId, validatedFields.data);
-  } catch (e) {
-    return { message: 'Error al guardar el cliente.' };
+    console.log('[DEBUG createClient] saveClient completado correctamente');
+  } catch (e: any) {
+    console.error('[ERROR createClient] Error al ejecutar saveClient:', e);
+    // Devolver el mensaje y la traza para diagnóstico inmediato.
+    // Nota: esto es solo diagnóstico; no modificar la lógica más allá de devolver información.
+    return {
+      message: `Error al guardar el cliente: ${e?.message || String(e)}`,
+      error: {
+        message: e?.message ?? String(e),
+        stack: e?.stack ?? null,
+        name: e?.name ?? null
+      }
+    };
   }
 
   revalidatePath('/clients');
