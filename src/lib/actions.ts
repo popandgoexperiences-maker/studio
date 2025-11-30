@@ -94,7 +94,8 @@ const InvoiceSchema = z.object({
 
 export async function createInvoice(prevState: any, formData: FormData) {
   
-  const sessionCookie = cookies().get('__session')?.value;
+  const cookieStore = cookies();
+  const sessionCookie = cookieStore.get('__session')?.value;
   if (!sessionCookie) {
     return { message: 'Usuario no autenticado.' };
   }
@@ -162,7 +163,8 @@ const ClientSchema = z.object({
 
 export async function createClient(prevState: any, formData: FormData) {
     
-    const sessionCookie = cookies().get('__session')?.value;
+    const cookieStore = cookies();
+    const sessionCookie = cookieStore.get('__session')?.value;
     if (!sessionCookie) {
         return { message: 'User not authenticated.' };
     }
@@ -222,7 +224,8 @@ export async function updateSettings(prevState: any, formData: FormData) {
   console.log('[DEBUG] updateSettings -> Invocada la acción del servidor.');
   try {
     // 1. Verificación de Autenticación
-    const sessionCookie = cookies().get('__session')?.value;
+    const cookieStore = cookies();
+    const sessionCookie = cookieStore.get('__session')?.value;
     if (!sessionCookie) {
       throw new Error('No se encontró la cookie de sesión. El usuario no está autenticado.');
     }
@@ -294,7 +297,8 @@ export async function updateSettings(prevState: any, formData: FormData) {
 
 // New action to handle file uploads via iframe worker
 export async function uploadFile(formData: FormData) {
-  const sessionCookie = cookies().get('__session')?.value;
+  const cookieStore = cookies();
+  const sessionCookie = cookieStore.get('__session')?.value;
   if (!sessionCookie) {
     return { success: false, error: 'User not authenticated.' };
   }
