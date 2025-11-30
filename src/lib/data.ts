@@ -64,8 +64,29 @@ export async function saveClient(userId: string, clientData: Omit<Client, 'id'>)
 }
 
 export async function updateUserProfile(userId: string, userData: Partial<User>) {
-  const userDocRef = doc(firestore(), 'users', userId);
-  await setDoc(userDocRef, userData, { merge: true });
+  console.log(`[DEBUG] updateUserProfile -> Función llamada con userId: ${userId}`);
+  console.log('[DEBUG] updateUserProfile -> Datos a actualizar:', userData);
+  
+  try {
+    const db = firestore();
+    console.log('[DEBUG] updateUserProfile -> Instancia de Firestore obtenida:', db ? 'OK' : 'FALLIDA');
+    
+    if (!db) {
+        throw new Error('La instancia de Firestore no es válida.');
+    }
+
+    const userDocRef = doc(db, 'users', userId);
+    console.log(`[DEBUG] updateUserProfile -> Referencia de documento creada: ${userDocRef.path}`);
+
+    await setDoc(userDocRef, userData, { merge: true });
+    console.log(`[DEBUG] updateUserProfile -> setDoc completado con éxito para userId: ${userId}`);
+
+  } catch (error: any) {
+    console.error('[ERROR] en updateUserProfile:', error);
+    console.error('[ERROR STACK] en updateUserProfile:', error.stack);
+    // Relanzamos el error para que la Server Action que lo llamó lo pueda capturar.
+    throw error;
+  }
 }
 
 export async function createUserProfile(userId: string, user: User) {

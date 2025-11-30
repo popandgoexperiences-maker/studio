@@ -219,81 +219,75 @@ async function fileToDataUrl(file: File): Promise<string> {
 }
 
 export async function updateSettings(prevState: any, formData: FormData) {
-  console.log('--- Iniciando updateSettings ---');
-
+  console.log('[DEBUG] updateSettings -> Invocada la acción del servidor.');
   try {
     // 1. Verificación de Autenticación
     const sessionCookie = cookies().get('__session')?.value;
     if (!sessionCookie) {
-      console.error('Error de autenticación: No se encontró la cookie de sesión.');
-      return { message: 'Usuario no autenticado. Por favor, inicia sesión de nuevo.' };
+      throw new Error('No se encontró la cookie de sesión. El usuario no está autenticado.');
     }
 
     const decodedToken = await adminAuth().verifySessionCookie(sessionCookie);
     const userId = decodedToken?.uid;
 
     if (!userId) {
-      console.error('Error de autenticación: El token de sesión es inválido o ha expirado.');
-      return { message: 'Token de sesión inválido.' };
+      throw new Error('Token de sesión inválido o expirado.');
     }
-    console.log(`Paso 1: Usuario autenticado correctamente. UID: ${userId}`);
+    console.log(`[DEBUG] updateSettings -> Autenticación verificada. userId: ${userId}`);
 
     // 2. Validación de Datos del Formulario
     const rawData = Object.fromEntries(formData.entries());
-    console.log('Paso 2: Validando datos del formulario...', rawData);
+    console.log('[DEBUG] updateSettings -> Raw form data:', rawData);
 
     const validatedFields = SettingsSchema.safeParse(rawData);
 
     if (!validatedFields.success) {
-      const validationErrors = validatedFields.error.flatten().fieldErrors;
-      console.error('Error de validación:', validationErrors);
+      console.error('[DEBUG] updateSettings -> Error de validación de Zod:', validatedFields.error.flatten());
       return {
-        errors: validationErrors,
+        errors: validatedFields.error.flatten().fieldErrors,
         message: 'Error de validación. Revisa los campos marcados.',
       };
     }
-    console.log('Paso 2: Validación de datos exitosa.', validatedFields.data);
+    console.log('[DEBUG] updateSettings -> Datos validados:', validatedFields.data);
 
     // 3. Procesamiento de Archivos y Datos
-    console.log('Paso 3: Procesando datos y archivos para la actualización...');
-    let updatedUserData: Partial<User> = { ...validatedFields.data };
+    const updatedUserData: Partial<User> = { ...validatedFields.data };
+    console.log('[DEBUG] updateSettings -> Objeto de datos inicial:', updatedUserData);
 
     const logoFile = formData.get('logo') as File | null;
     if (logoFile && logoFile.size > 0) {
-      console.log(`- Procesando archivo de logo: ${logoFile.name} (${logoFile.size} bytes)`);
+      console.log(`[DEBUG] updateSettings -> Procesando archivo 'logo': ${logoFile.name}`);
       updatedUserData.logoUrl = await fileToDataUrl(logoFile);
     }
 
     if (validatedFields.data.signature && validatedFields.data.signature.startsWith('data:image')) {
-      console.log('- Procesando datos de firma (data URL).');
+      console.log('[DEBUG] updateSettings -> Procesando data URL de la firma.');
       updatedUserData.signatureUrl = validatedFields.data.signature;
     }
 
     const sealFile = formData.get('seal') as File | null;
     if (sealFile && sealFile.size > 0) {
-      console.log(`- Procesando archivo de sello: ${sealFile.name} (${sealFile.size} bytes)`);
+      console.log(`[DEBUG] updateSettings -> Procesando archivo 'seal': ${sealFile.name}`);
       updatedUserData.sealUrl = await fileToDataUrl(sealFile);
     }
-    console.log('Paso 3: Objeto de datos final a guardar:', updatedUserData);
+    console.log('[DEBUG] updateSettings -> Objeto de datos final para Firestore:', updatedUserData);
 
     // 4. Actualización en Base de Datos
-    console.log(`Paso 4: Intentando actualizar el perfil para el usuario ${userId} en Firestore.`);
+    console.log(`[DEBUG] updateSettings -> Llamando a updateUserProfile para userId: ${userId}`);
     await updateUserProfile(userId, updatedUserData);
-    console.log(`Paso 4: Perfil de usuario ${userId} actualizado con éxito en Firestore.`);
+    console.log(`[DEBUG] updateSettings -> updateUserProfile completado con éxito.`);
 
   } catch (e: any) {
-    console.error('--- ERROR INESPERADO en updateSettings ---');
-    console.error('Mensaje:', e.message);
-    console.error('Stack:', e.stack);
-    return { message: `Error del servidor: ${e.message}` };
+    console.error('[ERROR] en updateSettings:', e);
+    console.error('[ERROR STACK] en updateSettings:', e.stack);
+    return { message: `Error al actualizar perfil: ${e.message}` };
   }
 
   // 5. Revalidación y Finalización
-  console.log('Paso 5: Revalidando rutas y finalizando la operación.');
+  console.log('[DEBUG] updateSettings -> Revalidando rutas y finalizando.');
   revalidatePath('/settings');
   revalidatePath('/invoices/new');
   revalidatePath('/(dashboard)/layout.tsx');
   
-  console.log('--- updateSettings finalizado con éxito ---');
   return { message: 'Perfil actualizado con éxito.' };
 }
