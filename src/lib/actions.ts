@@ -94,11 +94,9 @@ const InvoiceSchema = z.object({
 });
 
 export async function createInvoice(prevState: any, formData: FormData) {
-  console.log('[DEBUG createInvoice] Entrando a createInvoice. Keys:', Array.from(formData.keys()));
-  console.log('[DEBUG createInvoice] Client data:', formData.get('client'));
-  console.log('[DEBUG createInvoice] LineItems data:', formData.get('lineItems'));
-
-
+  console.log('[DEBUG createInvoice] Entrando en createInvoice');
+  console.log('[DEBUG createInvoice] formData keys:', Array.from(formData.keys()));
+  
   const cookieStore = cookies();
   const sessionCookie = cookieStore.get('__session')?.value;
   if (!sessionCookie) {
@@ -130,13 +128,11 @@ export async function createInvoice(prevState: any, formData: FormData) {
       };
     }
     
-    console.log('[DEBUG createInvoice] userId:', userId);
-    console.log('[DEBUG createInvoice] Validated data:', validatedFields.data);
+    console.log('[DEBUG createInvoice] validatedFields:', validatedFields.data);
 
     const { subtotal, vat, total } = validatedFields.data;
 
     const invoiceNumber = await fetchNextInvoiceNumber(userId);
-    console.log('[DEBUG createInvoice] Next invoice number:', invoiceNumber);
 
     await saveInvoice(userId, {
       userId,
@@ -153,7 +149,6 @@ export async function createInvoice(prevState: any, formData: FormData) {
       total,
       status: 'pending',
     });
-    console.log('[DEBUG createInvoice] saveInvoice completado correctamente.');
 
   } catch (e: any) {
     console.error('[ERROR createInvoice] Error al ejecutar la acción:', e);
