@@ -291,3 +291,36 @@ export async function updateSettings(prevState: any, formData: FormData) {
   
   return { message: 'Perfil actualizado con éxito.' };
 }
+
+// New action to handle file uploads via iframe worker
+export async function uploadFile(formData: FormData) {
+  const sessionCookie = cookies().get('__session')?.value;
+  if (!sessionCookie) {
+    return { success: false, error: 'User not authenticated.' };
+  }
+
+  const decodedToken = await adminAuth().verifySessionCookie(sessionCookie);
+  const userId = decodedToken?.uid;
+
+  if (!userId) {
+    return { success: false, error: 'Invalid session token.' };
+  }
+
+  const file = formData.get('file') as File | null;
+  const fieldName = formData.get('fieldName') as 'logoUrl' | 'sealUrl' | 'signatureUrl' | null;
+
+  if (!file || !fieldName) {
+    return { success: false, error: 'Missing file or field name.' };
+  }
+
+  try {
+    const dataUrl = await fileToDataUrl(file);
+    await updateUserProfile(userId, { [fieldName]: dataUrl });
+    revalidatePath('/settings');
+    return { success: true, url: dataUrl };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+    

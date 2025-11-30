@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { SignaturePad } from './signature-pad';
+import { AuthWorkerIframe } from '../auth/auth-worker-iframe';
 
 type SettingsFormProps = {
   user: User;
@@ -92,6 +93,8 @@ export function SettingsForm({ user, images }: SettingsFormProps) {
     };
 
     return (
+        <>
+        <AuthWorkerIframe />
         <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
             <Card>
                 <CardHeader>
@@ -187,6 +190,7 @@ export function SettingsForm({ user, images }: SettingsFormProps) {
                 </CardFooter>
             </Card>
         </form>
+        </>
     );
 }
 
@@ -244,7 +248,7 @@ function ImageUploadField({ name, label, image, currentImageUrl, register }: { n
                     {...rest}
                     ref={(e) => {
                       ref(e)
-                      fileInputRef.current = e
+                      fileInputref.current = e
                     }}
                 />
                 <Button variant="outline" type="button" onClick={handleButtonClick}>
@@ -254,3 +258,5 @@ function ImageUploadField({ name, label, image, currentImageUrl, register }: { n
         </div>
     );
 }
+
+    
