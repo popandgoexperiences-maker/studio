@@ -78,7 +78,15 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
   const clientNameWatch = watch('client.name');
 
   useEffect(() => {
-    const calculateTotals = () => {
+    const subscription = watch((value, { name, type }) => {
+      if (name && (name.startsWith('lineItems') || type === 'change')) {
+        calculateTotals();
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch]);
+  
+  const calculateTotals = () => {
       setIsCalculating(true);
       const lineItems = getValues('lineItems');
       const subtotal = lineItems.reduce((acc, item) => {
@@ -94,10 +102,6 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
       setIsCalculating(false);
     };
 
-    const debounceTimeout = setTimeout(calculateTotals, 300);
-    return () => clearTimeout(debounceTimeout);
-  }, [lineItemsWatch, getValues, vatRate]);
-  
   const onFormSubmit = (data: InvoiceFormValues) => {
     startTransition(() => {
         const formData = new FormData();

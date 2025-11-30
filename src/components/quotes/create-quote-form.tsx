@@ -74,11 +74,18 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
     name: 'lineItems',
   });
 
-  const lineItemsWatch = watch('lineItems');
   const clientNameWatch = watch('client.name');
-
+  
   useEffect(() => {
-    const calculateTotals = () => {
+    const subscription = watch((value, { name, type }) => {
+      if (name && (name.startsWith('lineItems') || type === 'change')) {
+        calculateTotals();
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch]);
+
+  const calculateTotals = () => {
       setIsCalculating(true);
       const lineItems = getValues('lineItems');
       const subtotal = lineItems.reduce((acc, item) => {
@@ -94,10 +101,6 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
       setIsCalculating(false);
     };
 
-    const debounceTimeout = setTimeout(calculateTotals, 300);
-    return () => clearTimeout(debounceTimeout);
-  }, [lineItemsWatch, getValues, vatRate]);
-  
   const onFormSubmit = (data: QuoteFormValues) => {
     startTransition(() => {
         const formData = new FormData();
