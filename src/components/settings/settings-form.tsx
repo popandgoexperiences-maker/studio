@@ -248,7 +248,7 @@ function ImageUploadField({ name, label, image, currentImageUrl, register }: { n
                     {...rest}
                     ref={(e) => {
                       ref(e)
-                      fileInputref.current = e
+                      fileInputRef.current = e
                     }}
                 />
                 <Button variant="outline" type="button" onClick={handleButtonClick}>
