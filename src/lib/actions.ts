@@ -11,7 +11,7 @@ import {
   createUserProfile,
 } from '@/lib/data';
 import type { User } from './definitions';
-import { adminAuth } from '@/lib/firebase-server';
+import { getAuthSafe } from '@/lib/firebase-server';
 import { cookies } from 'next/headers';
 
 
@@ -38,7 +38,7 @@ export async function signup(prevState: any, formData: FormData) {
   const { name, email, password } = validatedFields.data;
 
   try {
-    const userRecord = await adminAuth().createUser({
+    const userRecord = await getAuthSafe().createUser({
         email,
         password,
         displayName: name,
@@ -99,7 +99,7 @@ export async function createInvoice(prevState: any, formData: FormData) {
     return { message: 'Usuario no autenticado.' };
   }
 
-  const decodedToken = await adminAuth().verifySessionCookie(sessionCookie);
+  const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie);
   const userId = decodedToken?.uid;
 
   if (!userId) {
@@ -166,7 +166,7 @@ export async function createClient(prevState: any, formData: FormData) {
     if (!sessionCookie) {
         return { message: 'User not authenticated.' };
     }
-    const decodedToken = await adminAuth().verifySessionCookie(sessionCookie);
+    const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie);
     const userId = decodedToken?.uid;
 
     if (!userId) {
@@ -227,7 +227,7 @@ export async function updateSettings(prevState: any, formData: FormData) {
       throw new Error('No se encontró la cookie de sesión. El usuario no está autenticado.');
     }
 
-    const decodedToken = await adminAuth().verifySessionCookie(sessionCookie);
+    const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie);
     const userId = decodedToken?.uid;
 
     if (!userId) {
@@ -299,7 +299,7 @@ export async function uploadFile(formData: FormData) {
     return { success: false, error: 'User not authenticated.' };
   }
 
-  const decodedToken = await adminAuth().verifySessionCookie(sessionCookie);
+  const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie);
   const userId = decodedToken?.uid;
 
   if (!userId) {
@@ -322,5 +322,3 @@ export async function uploadFile(formData: FormData) {
     return { success: false, error: error.message };
   }
 }
-
-    

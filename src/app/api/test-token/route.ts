@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { adminAuth } from '@/lib/firebase-server';
+import { getAuthSafe } from '@/lib/firebase-server';
 
 /**
  * Endpoint de API para generar un token de autenticación personalizado para depuración.
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     
     // 2. Genera el token personalizado usando el SDK de Firebase Admin.
     // Este token permite a un cliente autenticarse como el usuario con el UID especificado.
-    const customToken = await adminAuth().createCustomToken(testUid);
+    const customToken = await getAuthSafe().createCustomToken(testUid);
     
     console.log("Backend: Token personalizado creado con éxito.");
     
