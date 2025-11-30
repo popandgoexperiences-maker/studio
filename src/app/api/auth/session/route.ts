@@ -41,14 +41,15 @@ export async function POST(request: NextRequest) {
 
     const response = NextResponse.json({ status: 'success' });
 
+    // Configuración de la cookie para entornos sandboxed (iframes, cross-site)
     response.cookies.set({
       name: 'session',
       value: sessionCookie,
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: true, // Requerido para SameSite=None
       maxAge: expiresIn / 1000,
       path: '/',
-      sameSite: 'strict'
+      sameSite: 'none', // Permite que la cookie se envíe en contextos cross-site
     });
 
     return response;
