@@ -7,8 +7,27 @@ import admin from "firebase-admin";
 // This file now simply exports the already-initialized services.
 
 if (!admin.apps.length) {
-  console.error("Firebase Admin SDK not initialized. Please check your next.config.ts file.");
-  // In a real scenario, you might want to throw an error or have a more robust fallback.
+  console.log("Firebase Admin SDK not initialized. Initializing now...");
+  // This initialization should ideally happen only once per server process.
+  // The check in next.config.ts is the primary one, this is a fallback.
+   const serviceAccount = {
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+  };
+
+  if (serviceAccount.projectId && serviceAccount.clientEmail && serviceAccount.privateKey) {
+    try {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      });
+      console.log("Firebase Admin SDK initialized successfully in firebase-server.ts.");
+    } catch (e: any) {
+        console.error("Firebase Admin SDK initialization error in firebase-server.ts:", e.stack);
+    }
+  } else {
+      console.warn("Firebase Admin environment variables are not fully set in firebase-server.ts. Skipping initialization.");
+  }
 } else {
   console.log("Firebase Admin SDK already initialized, re-using existing instance.");
 }
@@ -23,7 +42,7 @@ export const firestore = () => admin.firestore();
     try {
       const docSnap = await testUserDocRef.get();
       if (docSnap.exists) {
-        console.log('Setup de prueba: El documento /users/test-uid ya existe.');
+        // console.log('Setup de prueba: El documento /users/test-uid ya existe.');
       } else {
         console.log('Setup de prueba: Creando documento /users/test-uid...');
         await testUserDocRef.set({
