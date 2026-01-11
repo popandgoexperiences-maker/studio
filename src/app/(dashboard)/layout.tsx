@@ -5,6 +5,7 @@ import { SidebarProvider, Sidebar } from "@/components/ui/sidebar";
 import { useUser } from "@/firebase";
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { Header } from '@/components/header';
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
@@ -34,7 +35,8 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         <Sidebar>
           <SidebarNav />
         </Sidebar>
-        <main className="ml-0 md:ml-[16rem] transition-[margin-left] duration-300 ease-in-out">
+        <Header />
+        <main className="ml-0 md:ml-[16rem] transition-[margin-left] duration-300 ease-in-out pt-14 md:pt-0">
           {children}
         </main>
       </div>
