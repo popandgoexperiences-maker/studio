@@ -22,11 +22,12 @@ import { AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ClientAutocomplete } from './client-autocomplete';
 import { Textarea } from '../ui/textarea';
+import { Switch } from '@/components/ui/switch';
 
 const lineItemSchema = z.object({
   descripcion: z.string().min(1, "La descripción es requerida."),
   cantidad: z.coerce.number().min(0.01, "La cantidad debe ser positiva."),
-  precioUnitario: z.coerce.number().min(0.01, "El precio debe ser positivo."),
+  precioUnitario: z.coerce.number().min(0, "El precio debe ser 0 o mayor."),
 });
 
 const clientSchema = z.object({
@@ -39,6 +40,7 @@ const clientSchema = z.object({
 const invoiceSchema = z.object({
   client: clientSchema,
   lineItems: z.array(lineItemSchema).min(1, "Debe haber al menos un concepto."),
+  priceIncludesVAT: z.boolean(),
 });
 
 type InvoiceFormValues = z.infer<typeof invoiceSchema>;
@@ -65,6 +67,7 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
     defaultValues: {
       client: { id: '', name: '', nif: '', address: '' },
       lineItems: [{ descripcion: '', cantidad: 1, precioUnitario: 0 }],
+      priceIncludesVAT: false,
     },
   });
 
@@ -74,27 +77,39 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
   });
 
   const clientNameWatch = watch('client.name');
+  const lineItemsWatch = watch('lineItems');
+  const priceIncludesVATWatch = watch('priceIncludesVAT');
 
   useEffect(() => {
     const subscription = watch((value, { name, type }) => {
-      if (name && (name.startsWith('lineItems') || name === 'client.name' || name === 'client.nif' || name === 'client.address')) {
-        calculateTotalsFromLineItems();
-      }
+      calculateTotals();
     });
-    calculateTotalsFromLineItems(); // Initial calculation
+    calculateTotals(); // Initial calculation
     return () => subscription.unsubscribe();
   }, [watch, vatRate]);
   
-  const calculateTotalsFromLineItems = () => {
-      const lineItems = getValues('lineItems');
-      const subtotal = lineItems.reduce((acc, item) => {
-        const quantity = Number(item.cantidad) || 0;
-        const unitPrice = Number(item.precioUnitario) || 0;
-        return acc + quantity * unitPrice;
-      }, 0);
+  const calculateTotals = () => {
+      const { lineItems, priceIncludesVAT } = getValues();
+      let subtotal = 0;
+      let total = 0;
+
+      if (priceIncludesVAT) {
+        total = lineItems.reduce((acc, item) => {
+            const quantity = Number(item.cantidad) || 0;
+            const unitPrice = Number(item.precioUnitario) || 0;
+            return acc + quantity * unitPrice;
+        }, 0);
+        subtotal = total / (1 + vatRate);
+      } else {
+        subtotal = lineItems.reduce((acc, item) => {
+            const quantity = Number(item.cantidad) || 0;
+            const unitPrice = Number(item.precioUnitario) || 0;
+            return acc + quantity * unitPrice;
+        }, 0);
+        total = subtotal * (1 + vatRate);
+      }
       
-      const iva = subtotal * vatRate;
-      const total = subtotal + iva;
+      const iva = total - subtotal;
 
       setTotals({ subtotal, iva, total });
     };
@@ -103,14 +118,25 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
     startTransition(() => {
         const formData = new FormData();
         
-        const finalSubtotal = data.lineItems.reduce((acc, item) => {
-            return acc + (item.cantidad * item.precioUnitario);
+        // Recalculate totals on submission to ensure accuracy
+        let finalSubtotal = 0;
+        let finalTotal = 0;
+        const lineItemsForSubmission = data.lineItems.map(item => ({
+            description: item.descripcion,
+            quantity: item.cantidad,
+            unitPrice: data.priceIncludesVAT 
+              ? (item.precioUnitario / (1 + vatRate)) // store base price
+              : item.precioUnitario,
+        }));
+
+        finalSubtotal = lineItemsForSubmission.reduce((acc, item) => {
+            return acc + item.quantity * item.unitPrice;
         }, 0);
         const finalVat = finalSubtotal * vatRate;
-        const finalTotal = finalSubtotal + finalVat;
+        finalTotal = finalSubtotal + finalVat;
 
         formData.append('client', JSON.stringify(data.client));
-        formData.append('lineItems', JSON.stringify(data.lineItems));
+        formData.append('lineItems', JSON.stringify(lineItemsForSubmission));
         formData.append('subtotal', finalSubtotal.toString());
         formData.append('vat', finalVat.toString());
         formData.append('total', finalTotal.toString());
@@ -193,8 +219,24 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
             </Card>
 
             <Card>
-                <CardHeader>
+                <CardHeader className="flex-row items-center justify-between">
                     <CardTitle>Conceptos</CardTitle>
+                     <div className="flex items-center space-x-2">
+                        <Controller
+                            control={control}
+                            name="priceIncludesVAT"
+                            render={({ field }) => (
+                                <Switch
+                                    id="priceIncludesVAT"
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                />
+                            )}
+                        />
+                        <Label htmlFor="priceIncludesVAT" className="text-sm">
+                            Precios con IVA incluido
+                        </Label>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <div className="overflow-x-auto">
@@ -202,42 +244,56 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Descripción</TableHead>
-                                    <TableHead className="w-[100px]">Cantidad</TableHead>
-                                    <TableHead className="w-[150px]">Precio Unit.</TableHead>
+                                    <TableHead className="w-[100px] text-right">Cantidad</TableHead>
+                                    <TableHead className="w-[150px] text-right">
+                                        {priceIncludesVATWatch ? 'Precio (IVA incl.)' : 'Precio Unit.'}
+                                    </TableHead>
                                     <TableHead className="w-[150px] text-right">Importe</TableHead>
                                     <TableHead className="w-[50px]"></TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {fields.map((field, index) => (
+                                {fields.map((field, index) => {
+                                    const quantity = watch(`lineItems.${index}.cantidad`) || 0;
+                                    const unitPrice = watch(`lineItems.${index}.precioUnitario`) || 0;
+                                    const lineTotal = quantity * unitPrice;
+
+                                    return (
                                     <TableRow key={field.id}>
                                         <TableCell>
                                             <Controller
                                                 name={`lineItems.${index}.descripcion`}
                                                 control={control}
-                                                render={({ field }) => <Textarea {...field} placeholder="Ej: Diseño web" />}
+                                                render={({ field }) => <Textarea {...field} placeholder="Ej: Diseño web" className="min-h-[40px]"/>}
                                             />
+                                            {errors.lineItems?.[index]?.descripcion && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.descripcion?.message}</p>}
                                         </TableCell>
                                         <TableCell>
-                                            <Input type="number" step="any" {...register(`lineItems.${index}.cantidad`)} />
+                                            <Input type="number" step="any" {...register(`lineItems.${index}.cantidad`)} className="text-right" />
+                                            {errors.lineItems?.[index]?.cantidad && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.cantidad?.message}</p>}
                                         </TableCell>
                                         <TableCell>
-                                            <Input type="number" step="any" {...register(`lineItems.${index}.precioUnitario`)} />
+                                            <Input type="number" step="any" {...register(`lineItems.${index}.precioUnitario`)} className="text-right" />
+                                            {errors.lineItems?.[index]?.precioUnitario && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.precioUnitario?.message}</p>}
                                         </TableCell>
                                         <TableCell className="text-right font-medium align-top pt-5">
-                                            {formatCurrency((watch(`lineItems.${index}.cantidad`) || 0) * (watch(`lineItems.${index}.precioUnitario`) || 0))}
+                                            {formatCurrency(lineTotal)}
                                         </TableCell>
-                                        <TableCell className="align-top pt-5">
+                                        <TableCell className="align-top pt-3">
                                             <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} disabled={fields.length <= 1}>
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </TableCell>
                                     </TableRow>
-                                ))}
+                                    );
+                                })}
                             </TableBody>
                         </Table>
                     </div>
-                    {errors.lineItems && <p className="text-sm text-destructive mt-2">{errors.lineItems.message || errors.lineItems.root?.message}</p>}
+                    {errors.lineItems && !errors.lineItems.root && (
+                        <p className="text-sm text-destructive mt-2">{errors.lineItems.message}</p>
+                    )}
+
                     <Button type="button" variant="outline" size="sm" onClick={() => append({ descripcion: '', cantidad: 1, precioUnitario: 0 })} className="mt-4">
                         <Plus className="mr-2 h-4 w-4" /> Añadir concepto
                     </Button>

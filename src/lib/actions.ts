@@ -74,10 +74,10 @@ export async function logout() {
 
 // --- INVOICE ACTIONS ---
 
-const LineItemSchema = z.object({
-  descripcion: z.string().min(1, 'La descripción no puede estar vacía.'),
-  cantidad: z.coerce.number().gt(0, 'La cantidad debe ser mayor que 0.'),
-  precioUnitario: z.coerce.number().gte(0, 'El precio debe ser 0 o mayor.'),
+const LineItemSchemaForAction = z.object({
+  description: z.string().min(1, 'La descripción no puede estar vacía.'),
+  quantity: z.coerce.number().gt(0, 'La cantidad debe ser mayor que 0.'),
+  unitPrice: z.coerce.number().gte(0, 'El precio debe ser 0 o mayor.'),
 });
 
 const ClientSchemaForInvoice = z.object({
@@ -90,7 +90,7 @@ const ClientSchemaForInvoice = z.object({
 const InvoiceSchema = z.object({
   client: ClientSchemaForInvoice,
   lineItems: z
-    .array(LineItemSchema)
+    .array(LineItemSchemaForAction)
     .min(1, 'Debe haber al menos un concepto.'),
   subtotal: z.coerce.number(),
   vat: z.coerce.number(),
@@ -143,11 +143,7 @@ export async function createInvoice(prevState: any, formData: FormData) {
       invoiceNumber,
       client: validatedFields.data.client,
       date: new Date().toISOString(),
-      lineItems: validatedFields.data.lineItems.map(item => ({
-          description: item.descripcion,
-          quantity: item.cantidad,
-          unitPrice: item.precioUnitario
-      })),
+      lineItems: validatedFields.data.lineItems,
       subtotal,
       vat,
       total,
@@ -172,6 +168,12 @@ export async function createInvoice(prevState: any, formData: FormData) {
 }
 
 // --- QUOTE ACTIONS ---
+
+const LineItemSchema = z.object({
+  descripcion: z.string().min(1, 'La descripción es requerida.'),
+  cantidad: z.coerce.number().gt(0, 'La cantidad debe ser mayor que 0.'),
+  precioUnitario: z.coerce.number().gte(0, 'El precio debe ser 0 o mayor.'),
+});
 
 const QuoteSchema = z.object({
   client: ClientSchemaForInvoice,
