@@ -22,7 +22,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Client, Invoice } from '@/lib/definitions';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
+import { DeleteClientButton } from '@/components/clients/delete-client-button';
 
 export default function ClientsPage() {
   const { user, isUserLoading } = useUser();
@@ -110,6 +111,9 @@ function ClientsTableWrapper({ userId }: { userId: string }) {
                 <TableHead className="hidden sm:table-cell">NIF/CIF</TableHead>
                 <TableHead className="hidden md:table-cell">Dirección</TableHead>
                 <TableHead className="text-right">Facturas</TableHead>
+                <TableHead className="w-[50px]">
+                  <span className="sr-only">Acciones</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -124,6 +128,9 @@ function ClientsTableWrapper({ userId }: { userId: string }) {
                     <Link href={`/invoices?query=${encodeURIComponent(client.name)}`} className="text-primary hover:underline">
                       {client.invoiceCount}
                     </Link>
+                  </TableCell>
+                  <TableCell>
+                    <DeleteClientButton clientId={client.id} />
                   </TableCell>
                 </TableRow>
               ))}
@@ -158,6 +165,9 @@ function ClientsTableSkeleton() {
               <TableHead className="text-right">
                 <Skeleton className="h-5 w-16" />
               </TableHead>
+               <TableHead className="w-[50px]">
+                <span className="sr-only">Acciones</span>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -174,6 +184,9 @@ function ClientsTableSkeleton() {
                 </TableCell>
                 <TableCell className="text-right">
                   <Skeleton className="h-5 w-8 ml-auto" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-8 w-8" />
                 </TableCell>
               </TableRow>
             ))}

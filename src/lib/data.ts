@@ -96,6 +96,12 @@ export async function saveClient(userId: string, clientData: Omit<Client, 'id'>)
   await clientsCol.add(clientData);
 }
 
+export async function deleteClient(userId: string, clientId: string) {
+  const db = getFirestoreSafe();
+  const clientRef = db.collection('users').doc(userId).collection('clients').doc(clientId);
+  await clientRef.delete();
+}
+
 export async function updateUserProfile(userId: string, data: any) {
   console.log("---- DIAGNÓSTICO updateUserProfile ----");
   console.log("User ID recibido:", userId);

@@ -13,6 +13,7 @@ import {
   saveQuote,
   getQuote,
   updateQuote,
+  deleteClient as deleteClientFromDb,
 } from '@/lib/data';
 import type { User } from './definitions';
 import { getAuthSafe } from '@/lib/firebase-server';
@@ -87,7 +88,7 @@ const ClientSchemaForInvoice = z.object({
   address: z.string().min(1, 'La dirección del cliente es requerida.'),
 });
 
-const InvoiceSchema = z.object({
+const invoiceSchema = z.object({
   client: ClientSchemaForInvoice,
   lineItems: z
     .array(LineItemSchemaForAction)
@@ -118,7 +119,7 @@ export async function createInvoice(prevState: any, formData: FormData) {
     const lineItems = JSON.parse(formData.get('lineItems') as string);
     const client = JSON.parse(formData.get('client') as string);
 
-    const validatedFields = InvoiceSchema.safeParse({
+    const validatedFields = invoiceSchema.safeParse({
       ...Object.fromEntries(formData.entries()),
       lineItems,
       client,
@@ -345,6 +346,26 @@ export async function createClient(prevState: any, formData: FormData) {
   revalidatePath('/quotes/new');
   redirect('/clients');
 }
+
+export async function deleteClient(clientId: string) {
+  const cookieStore = cookies();
+  const sessionCookie = cookieStore.get('__session')?.value;
+  if (!sessionCookie) {
+    return { message: 'Usuario no autenticado.' };
+  }
+  const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
+  const userId = decodedToken.uid;
+
+  try {
+    await deleteClientFromDb(userId, clientId);
+  } catch (e: any) {
+    return { message: `Error al eliminar el cliente: ${e.message}` };
+  }
+
+  revalidatePath('/clients');
+  return { success: true };
+}
+
 
 // --- SETTINGS ACTIONS ---
 
