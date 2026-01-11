@@ -22,6 +22,7 @@ import { AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ClientAutocomplete } from './client-autocomplete';
 import { Textarea } from '../ui/textarea';
+import { SmartCurrencyInput } from '../ui/smart-currency-input';
 
 const lineItemSchema = z.object({
   descripcion: z.string().min(1, "La descripción es requerida."),
@@ -83,7 +84,7 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
     });
     calculateTotalsFromLineItems();
     return () => subscription.unsubscribe();
-  }, [watch]);
+  }, [watch, vatRate]);
   
   const calculateTotalsFromLineItems = () => {
       const lineItems = getValues('lineItems');
@@ -99,8 +100,7 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
       setTotals({ subtotal, iva, total });
     };
     
-  const handleTotalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTotal = parseFloat(e.target.value) || 0;
+  const handleTotalChange = (newTotal: number) => {
     const newSubtotal = newTotal / (1 + vatRate);
     const newVat = newTotal - newSubtotal;
 
@@ -113,7 +113,6 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
     // Si solo hay un concepto, ajustamos su precio unitario.
     const lineItems = getValues('lineItems');
     if(lineItems.length === 1) {
-        // Redondear el subtotal a 2 decimales para el precio unitario.
         const roundedSubtotal = Math.round(newSubtotal * 100) / 100;
         setValue('lineItems.0.precioUnitario', roundedSubtotal, { shouldValidate: true });
         setValue('lineItems.0.cantidad', 1);
@@ -281,13 +280,10 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
                     <Separator />
                     <div className="space-y-2">
                         <Label htmlFor="totalAmount">Total</Label>
-                         <Input 
+                         <SmartCurrencyInput
                             id="totalAmount"
-                            type="number"
-                            step="0.01"
-                            value={totals.total.toFixed(2)}
-                            onChange={handleTotalChange}
-                            className="text-lg font-bold h-auto p-2 text-right"
+                            value={totals.total}
+                            onValueChange={handleTotalChange}
                          />
                     </div>
                 </CardContent>
