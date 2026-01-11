@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Tooltip,
@@ -18,6 +18,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
+
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -196,18 +198,26 @@ const Sidebar = React.forwardRef<
       return (
         <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
           <SheetContent
-            data-sidebar="sidebar"
-            data-mobile="true"
-            className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
-            style={
-              {
-                "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
-              } as React.CSSProperties
-            }
-            side={side}
-          >
-            <div className="flex h-full w-full flex-col pt-14">{children}</div>
-          </SheetContent>
+  data-sidebar="sidebar"
+  data-mobile="true"
+  className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+  style={
+    {
+      "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
+    } as React.CSSProperties
+  }
+  side={side}
+>
+  {/* Título accesible pero oculto */}
+  <VisuallyHidden>
+    <SheetTitle>Sidebar</SheetTitle>
+  </VisuallyHidden>
+
+  {/* Contenido real del sidebar */}
+  <div className="flex h-full w-full flex-col pt-14">
+    {children}
+  </div>
+</SheetContent>
         </Sheet>
       )
     }

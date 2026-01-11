@@ -220,8 +220,8 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Descripción</TableHead>
-                                    <TableHead className="w-[100px] hidden sm:table-cell">Cantidad</TableHead>
-                                    <TableHead className="w-[150px] hidden sm:table-cell">Precio Unit.</TableHead>
+                                    <TableHead className="w-[100px]">Cantidad</TableHead>
+                                    <TableHead className="w-[150px]">Precio Unit.</TableHead>
                                     <TableHead className="w-[150px] text-right">Importe</TableHead>
                                     <TableHead className="w-[50px]"></TableHead>
                                 </TableRow>
@@ -235,15 +235,11 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
                                                 control={control}
                                                 render={({ field }) => <Textarea {...field} placeholder="Ej: Diseño web" />}
                                             />
-                                            <div className="sm:hidden mt-2 space-y-2">
-                                                 <Input type="number" placeholder="Cant." step="1" {...register(`lineItems.${index}.cantidad`)} />
-                                                 <Input type="number" placeholder="Precio" step="0.01" {...register(`lineItems.${index}.precioUnitario`)} />
-                                            </div>
                                         </TableCell>
-                                        <TableCell className="hidden sm:table-cell">
+                                        <TableCell>
                                             <Input type="number" step="1" {...register(`lineItems.${index}.cantidad`)} />
                                         </TableCell>
-                                        <TableCell className="hidden sm:table-cell">
+                                        <TableCell>
                                             <Input type="number" step="0.01" {...register(`lineItems.${index}.precioUnitario`)} />
                                         </TableCell>
                                         <TableCell className="text-right font-medium align-top pt-5">
