@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import {
   Table,
   TableBody,
@@ -51,7 +52,11 @@ export function InvoicesTable({ invoices, user }: { invoices: Invoice[], user: U
             <TableBody>
               {invoices.map((invoice) => (
                 <TableRow key={invoice.id}>
-                  <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
+                  <TableCell className="font-medium">
+                    <Link href={`/invoices/${invoice.id}`} className="text-primary hover:underline">
+                      {invoice.invoiceNumber}
+                    </Link>
+                  </TableCell>
                   <TableCell>{invoice.client.name}</TableCell>
                   <TableCell className="hidden sm:table-cell">{new Date(invoice.date).toLocaleDateString('es-ES')}</TableCell>
                   <TableCell className="text-right">{formatCurrency(invoice.total)}</TableCell>
@@ -103,3 +108,5 @@ export function InvoicesTableSkeleton() {
     </Card>
   );
 }
+
+    
