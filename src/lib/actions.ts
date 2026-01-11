@@ -15,6 +15,7 @@ import {
   getQuote,
   updateQuote,
   deleteClient as deleteClientFromDb,
+  deleteInvoice as deleteInvoiceFromDb,
 } from '@/lib/data';
 import type { User } from './definitions';
 import { getAuthSafe } from '@/lib/firebase-server';
@@ -94,12 +95,10 @@ const invoiceSchema = z.object({
   lineItems: z
     .array(LineItemSchemaForAction)
     .min(1, 'Debe haber al menos un concepto.'),
+  priceIncludesVAT: z.boolean(),
 });
 
 export async function createInvoice(prevState: any, formData: FormData) {
-  console.log('[DEBUG createInvoice] Entrando en createInvoice');
-  console.log('[DEBUG createInvoice] formData keys:', Array.from(formData.keys()));
-  
   const cookieStore = cookies();
   const sessionCookie = cookieStore.get('__session')?.value;
   if (!sessionCookie) {
@@ -116,9 +115,7 @@ export async function createInvoice(prevState: any, formData: FormData) {
   try {
     const lineItemsRaw = JSON.parse(formData.get('lineItems') as string);
     const client = JSON.parse(formData.get('client') as string);
-    const priceIncludesVAT = formData.get('priceIncludesVAT') === 'true';
-    const vatRate = Number(formData.get('vatRate') as string);
-
+    const user = JSON.parse(formData.get('user') as string) as User;
 
     const validatedFields = invoiceSchema.safeParse({
       ...Object.fromEntries(formData.entries()),
@@ -127,18 +124,16 @@ export async function createInvoice(prevState: any, formData: FormData) {
     });
 
     if (!validatedFields.success) {
-      console.error('[ERROR createInvoice] Zod validation failed:', validatedFields.error.flatten());
       return {
         errors: validatedFields.error.flatten().fieldErrors,
         message: 'Error de validación. Faltan campos requeridos.',
       };
     }
     
-    console.log('[DEBUG createInvoice] validatedFields:', validatedFields.data);
-
-    const { lineItems } = validatedFields.data;
+    const { lineItems, client: clientData, priceIncludesVAT } = validatedFields.data;
 
     let subtotal = 0;
+    const vatRate = user.vatRate ?? 0;
 
     const finalLineItems = lineItems.map(item => {
         const basePrice = priceIncludesVAT 
@@ -162,7 +157,7 @@ export async function createInvoice(prevState: any, formData: FormData) {
     await saveInvoice(userId, {
       userId,
       invoiceNumber,
-      client: validatedFields.data.client,
+      client: clientData,
       date: new Date().toISOString(),
       lineItems: finalLineItems,
       subtotal,
@@ -172,14 +167,8 @@ export async function createInvoice(prevState: any, formData: FormData) {
     });
 
   } catch (e: any) {
-    console.error('[ERROR createInvoice] Error al ejecutar la acción:', e);
     return {
       message: `Error al crear la factura: ${e?.message || String(e)}`,
-      error: {
-        message: e?.message ?? String(e),
-        stack: e?.stack ?? null,
-        name: e?.name ?? null,
-      },
     };
   }
 
@@ -187,6 +176,26 @@ export async function createInvoice(prevState: any, formData: FormData) {
   revalidatePath('/clients');
   redirect('/invoices');
 }
+
+export async function deleteInvoice(invoiceId: string) {
+  const cookieStore = cookies();
+  const sessionCookie = cookieStore.get('__session')?.value;
+  if (!sessionCookie) {
+    return { message: 'Usuario no autenticado.' };
+  }
+  const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
+  const userId = decodedToken.uid;
+
+  try {
+    await deleteInvoiceFromDb(userId, invoiceId);
+  } catch (e: any) {
+    return { message: `Error al eliminar la factura: ${e.message}` };
+  }
+
+  revalidatePath('/invoices');
+  return { success: true };
+}
+
 
 // --- QUOTE ACTIONS ---
 

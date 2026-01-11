@@ -5,11 +5,13 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal, Download, Send } from 'lucide-react';
 import type { Invoice } from '@/lib/definitions';
 import Link from 'next/link';
+import { DeleteInvoiceButton } from './delete-invoice-button';
 
 export function InvoiceActions({ invoice }: { invoice: Invoice }) {
 
@@ -33,6 +35,11 @@ export function InvoiceActions({ invoice }: { invoice: Invoice }) {
         <DropdownMenuItem disabled>
           <Send className="mr-2 h-4 w-4" />
           <span>Enviar por email</span>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        {/* We stop propagation to avoid triggering the DropdownMenuItem's own click handler */}
+        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+          <DeleteInvoiceButton invoiceId={invoice.id} />
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

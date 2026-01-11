@@ -87,6 +87,12 @@ export async function saveInvoice(userId: string, invoiceData: Omit<Invoice, 'id
   return docRef.id;
 }
 
+export async function deleteInvoice(userId: string, invoiceId: string) {
+  const db = getFirestoreSafe();
+  const invoiceRef = db.collection('users').doc(userId).collection('invoices').doc(invoiceId);
+  await invoiceRef.delete();
+}
+
 export async function saveQuote(userId: string, quoteData: Omit<Quote, 'id'>) {
   const db = getFirestoreSafe();
   const quotesCol = db.collection('users').doc(userId).collection('quotes');
