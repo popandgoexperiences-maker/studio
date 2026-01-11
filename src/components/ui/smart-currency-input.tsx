@@ -33,37 +33,57 @@ export function SmartCurrencyInput({
   }, [value]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    let nextValue = internalValue;
-
-    if (e.key >= '0' && e.key <= '9') {
-      // Append the new digit
-      nextValue = internalValue + e.key;
-    } else if (e.key === 'Backspace') {
-      // Remove the last digit
-      nextValue = internalValue.slice(0, -1);
-    } else if (e.key === 'Delete' || e.key === 'Clear') {
-      // Clear the input
-      nextValue = '0';
-    } else {
-      // Ignore other keys
+    const key = e.key;
+  
+    // Permitir teclas de navegación y tabulación
+    if (
+      key === "Tab" ||
+      key === "ArrowLeft" ||
+      key === "ArrowRight" ||
+      key === "ArrowUp" ||
+      key === "ArrowDown"
+    ) {
       return;
     }
-
-    // Ensure the value is not empty, default to '0'
-    if (nextValue === '') {
-      nextValue = '0';
+  
+    let nextValue = internalValue;
+  
+    // Dígitos 0–9
+    if (/^[0-9]$/.test(key)) {
+      e.preventDefault();
+      nextValue = internalValue + key;
     }
-
-    // Remove leading zeros
-    if (nextValue.length > 1 && nextValue.startsWith('0')) {
+  
+    // Borrar último dígito
+    else if (key === "Backspace") {
+      e.preventDefault();
+      nextValue = internalValue.slice(0, -1);
+    }
+  
+    // Borrar todo
+    else if (key === "Delete" || key === "Clear") {
+      e.preventDefault();
+      nextValue = "0";
+    }
+  
+    // Cualquier otra tecla: ignorar sin bloquear
+    else {
+      return;
+    }
+  
+    // Evitar cadena vacía
+    if (nextValue === "") {
+      nextValue = "0";
+    }
+  
+    // Quitar ceros iniciales
+    if (nextValue.length > 1 && nextValue.startsWith("0")) {
       nextValue = nextValue.substring(1);
     }
-    
+  
     setInternalValue(nextValue);
     onValueChange(parseInt(nextValue, 10) / 100);
   };
-
   const formattedValue = formatCurrency(parseInt(internalValue, 10) / 100);
 
   return (

@@ -22,7 +22,6 @@ import { AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ClientAutocomplete } from '../invoices/client-autocomplete';
 import { Textarea } from '../ui/textarea';
-import { SmartCurrencyInput } from '../ui/smart-currency-input';
 
 const lineItemSchema = z.object({
   descripcion: z.string().min(1, "La descripción es requerida."),
@@ -78,7 +77,7 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
   
   useEffect(() => {
     const subscription = watch((value, { name, type }) => {
-      if (name && (name.startsWith('lineItems') || type === 'change')) {
+      if (name && (name.startsWith('lineItems') || name === 'client.name' || name === 'client.nif' || name === 'client.address')) {
         calculateTotalsFromLineItems();
       }
     });
@@ -99,24 +98,6 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
 
       setTotals({ subtotal, iva, total });
     };
-
-  const handleTotalChange = (newTotal: number) => {
-    const newSubtotal = newTotal / (1 + vatRate);
-    const newVat = newTotal - newSubtotal;
-
-    setTotals({
-      total: newTotal,
-      subtotal: newSubtotal,
-      iva: newVat
-    });
-    
-    const lineItems = getValues('lineItems');
-    if(lineItems.length === 1) {
-        const roundedSubtotal = Math.round(newSubtotal * 100) / 100;
-        setValue('lineItems.0.precioUnitario', roundedSubtotal, { shouldValidate: true });
-        setValue('lineItems.0.cantidad', 1);
-    }
-  };
 
   const onFormSubmit = (data: QuoteFormValues) => {
     startTransition(() => {
@@ -237,10 +218,10 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
                                             />
                                         </TableCell>
                                         <TableCell>
-                                            <Input type="number" step="1" {...register(`lineItems.${index}.cantidad`)} />
+                                            <Input type="number" step="any" {...register(`lineItems.${index}.cantidad`)} />
                                         </TableCell>
                                         <TableCell>
-                                            <Input type="number" step="0.01" {...register(`lineItems.${index}.precioUnitario`)} />
+                                            <Input type="number" step="any" {...register(`lineItems.${index}.precioUnitario`)} />
                                         </TableCell>
                                         <TableCell className="text-right font-medium align-top pt-5">
                                             {formatCurrency((watch(`lineItems.${index}.cantidad`) || 0) * (watch(`lineItems.${index}.precioUnitario`) || 0))}
@@ -278,13 +259,9 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
                         <span className="font-medium">{formatCurrency(totals.iva)}</span>
                     </div>
                     <Separator />
-                    <div className="space-y-2">
-                        <Label htmlFor="totalAmount">Total</Label>
-                         <SmartCurrencyInput
-                            id="totalAmount"
-                            value={totals.total}
-                            onValueChange={handleTotalChange}
-                         />
+                    <div className="flex justify-between items-center text-lg font-bold">
+                        <span >Total</span>
+                        <span >{formatCurrency(totals.total)}</span>
                     </div>
                 </CardContent>
                 <CardFooter className="flex-col gap-4 items-stretch">
