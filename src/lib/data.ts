@@ -9,6 +9,15 @@ export async function fetchClients(userId: string): Promise<Client[]> {
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Client));
 }
 
+export async function fetchClient(userId: string, clientId: string): Promise<Client | null> {
+  const db = getFirestoreSafe();
+  const clientDoc = await db.collection('users').doc(userId).collection('clients').doc(clientId).get();
+  if (!clientDoc.exists) {
+    return null;
+  }
+  return { id: clientDoc.id, ...clientDoc.data() } as Client;
+}
+
 export async function fetchInvoices(userId: string): Promise<Invoice[]> {
   const db = getFirestoreSafe();
   const invoicesCol = db.collection('users').doc(userId).collection('invoices');
@@ -94,6 +103,12 @@ export async function saveClient(userId: string, clientData: Omit<Client, 'id'>)
   const db = getFirestoreSafe();
   const clientsCol = db.collection('users').doc(userId).collection('clients');
   await clientsCol.add(clientData);
+}
+
+export async function updateClient(userId: string, clientId: string, clientData: Omit<Client, 'id'>) {
+    const db = getFirestoreSafe();
+    const clientRef = db.collection('users').doc(userId).collection('clients').doc(clientId);
+    await clientRef.update(clientData);
 }
 
 export async function deleteClient(userId: string, clientId: string) {

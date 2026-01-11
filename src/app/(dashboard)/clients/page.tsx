@@ -1,7 +1,7 @@
 'use client';
 import { Suspense, useMemo } from 'react';
 import Link from 'next/link';
-import { PlusCircle } from 'lucide-react';
+import { Pencil, PlusCircle } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -110,8 +110,8 @@ function ClientsTableWrapper({ userId }: { userId: string }) {
                 <TableHead>Nombre / Razón Social</TableHead>
                 <TableHead className="hidden sm:table-cell">NIF/CIF</TableHead>
                 <TableHead className="hidden md:table-cell">Dirección</TableHead>
-                <TableHead className="text-right">Facturas</TableHead>
-                <TableHead className="w-[50px]">
+                <TableHead className="text-right hidden sm:table-cell">Facturas</TableHead>
+                <TableHead className="w-[100px] text-right">
                   <span className="sr-only">Acciones</span>
                 </TableHead>
               </TableRow>
@@ -124,12 +124,18 @@ function ClientsTableWrapper({ userId }: { userId: string }) {
                   <TableCell className="hidden md:table-cell">
                     {client.address}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right hidden sm:table-cell">
                     <Link href={`/invoices?query=${encodeURIComponent(client.name)}`} className="text-primary hover:underline">
                       {client.invoiceCount}
                     </Link>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="flex justify-end gap-1">
+                     <Button asChild variant="ghost" size="icon" className="h-8 w-8">
+                        <Link href={`/clients/${client.id}/edit`}>
+                            <Pencil className="h-4 w-4" />
+                            <span className="sr-only">Editar cliente</span>
+                        </Link>
+                    </Button>
                     <DeleteClientButton clientId={client.id} />
                   </TableCell>
                 </TableRow>
@@ -162,10 +168,10 @@ function ClientsTableSkeleton() {
               <TableHead className="hidden md:table-cell">
                 <Skeleton className="h-5 w-48" />
               </TableHead>
-              <TableHead className="text-right">
+              <TableHead className="text-right hidden sm:table-cell">
                 <Skeleton className="h-5 w-16" />
               </TableHead>
-               <TableHead className="w-[50px]">
+               <TableHead className="w-[100px] text-right">
                 <span className="sr-only">Acciones</span>
               </TableHead>
             </TableRow>
@@ -182,10 +188,11 @@ function ClientsTableSkeleton() {
                 <TableCell className="hidden md:table-cell">
                   <Skeleton className="h-5 w-56" />
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right hidden sm:table-cell">
                   <Skeleton className="h-5 w-8 ml-auto" />
                 </TableCell>
-                <TableCell>
+                <TableCell className='flex justify-end gap-1'>
+                  <Skeleton className="h-8 w-8" />
                   <Skeleton className="h-8 w-8" />
                 </TableCell>
               </TableRow>

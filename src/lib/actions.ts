@@ -8,6 +8,7 @@ import {
   saveInvoice,
   updateUserProfile,
   saveClient,
+  updateClient as updateClientInDb,
   createUserProfile,
   fetchNextQuoteNumber,
   saveQuote,
@@ -93,9 +94,6 @@ const invoiceSchema = z.object({
   lineItems: z
     .array(LineItemSchemaForAction)
     .min(1, 'Debe haber al menos un concepto.'),
-  subtotal: z.coerce.number(),
-  vat: z.coerce.number(),
-  total: z.coerce.number(),
 });
 
 export async function createInvoice(prevState: any, formData: FormData) {
@@ -116,12 +114,15 @@ export async function createInvoice(prevState: any, formData: FormData) {
   }
 
   try {
-    const lineItems = JSON.parse(formData.get('lineItems') as string);
+    const lineItemsRaw = JSON.parse(formData.get('lineItems') as string);
     const client = JSON.parse(formData.get('client') as string);
+    const priceIncludesVAT = formData.get('priceIncludesVAT') === 'true';
+    const vatRate = Number(formData.get('vatRate') as string);
+
 
     const validatedFields = invoiceSchema.safeParse({
       ...Object.fromEntries(formData.entries()),
-      lineItems,
+      lineItems: lineItemsRaw,
       client,
     });
 
@@ -135,7 +136,26 @@ export async function createInvoice(prevState: any, formData: FormData) {
     
     console.log('[DEBUG createInvoice] validatedFields:', validatedFields.data);
 
-    const { subtotal, vat, total } = validatedFields.data;
+    const { lineItems } = validatedFields.data;
+
+    let subtotal = 0;
+
+    const finalLineItems = lineItems.map(item => {
+        const basePrice = priceIncludesVAT 
+            ? parseFloat((item.unitPrice / (1 + vatRate)).toFixed(2))
+            : item.unitPrice;
+        
+        subtotal += item.quantity * basePrice;
+        return {
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: basePrice
+        };
+    });
+
+    const vat = subtotal * vatRate;
+    const total = subtotal + vat;
+
 
     const invoiceNumber = await fetchNextInvoiceNumber(userId);
 
@@ -144,7 +164,7 @@ export async function createInvoice(prevState: any, formData: FormData) {
       invoiceNumber,
       client: validatedFields.data.client,
       date: new Date().toISOString(),
-      lineItems: validatedFields.data.lineItems,
+      lineItems: finalLineItems,
       subtotal,
       vat,
       total,
@@ -170,7 +190,7 @@ export async function createInvoice(prevState: any, formData: FormData) {
 
 // --- QUOTE ACTIONS ---
 
-const LineItemSchema = z.object({
+const LineItemQuoteSchema = z.object({
   descripcion: z.string().min(1, 'La descripción es requerida.'),
   cantidad: z.coerce.number().gt(0, 'La cantidad debe ser mayor que 0.'),
   precioUnitario: z.coerce.number().gte(0, 'El precio debe ser 0 o mayor.'),
@@ -178,10 +198,7 @@ const LineItemSchema = z.object({
 
 const QuoteSchema = z.object({
   client: ClientSchemaForInvoice,
-  lineItems: z.array(LineItemSchema).min(1, "Debe haber al menos un concepto."),
-  subtotal: z.coerce.number(),
-  vat: z.coerce.number(),
-  total: z.coerce.number(),
+  lineItems: z.array(LineItemQuoteSchema).min(1, "Debe haber al menos un concepto."),
 });
 
 
@@ -195,12 +212,13 @@ export async function createQuote(prevState: any, formData: FormData) {
   const userId = decodedToken.uid;
 
   try {
-    const lineItems = JSON.parse(formData.get('lineItems') as string);
+    const lineItemsRaw = JSON.parse(formData.get('lineItems') as string);
     const client = JSON.parse(formData.get('client') as string);
+    const vatRate = Number(formData.get('vatRate') as string);
 
     const validatedFields = QuoteSchema.safeParse({
       ...Object.fromEntries(formData.entries()),
-      lineItems,
+      lineItems: lineItemsRaw,
       client,
     });
 
@@ -211,7 +229,13 @@ export async function createQuote(prevState: any, formData: FormData) {
       };
     }
     
-    const { subtotal, vat, total } = validatedFields.data;
+    const { lineItems } = validatedFields.data;
+
+    const subtotal = lineItems.reduce((acc, item) => {
+        return acc + item.cantidad * item.precioUnitario;
+    }, 0);
+    const vat = subtotal * vatRate;
+    const total = subtotal + vat;
 
     const quoteNumber = await fetchNextQuoteNumber(userId);
 
@@ -345,6 +369,36 @@ export async function createClient(prevState: any, formData: FormData) {
   revalidatePath('/invoices/new');
   revalidatePath('/quotes/new');
   redirect('/clients');
+}
+
+export async function updateClient(clientId: string, prevState: any, formData: FormData) {
+    const cookieStore = cookies();
+    const sessionCookie = cookieStore.get('__session')?.value;
+    if (!sessionCookie) {
+        return { message: 'User not authenticated.' };
+    }
+    const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
+    const userId = decodedToken.uid;
+
+    const validatedFields = ClientSchema.safeParse(
+        Object.fromEntries(formData.entries())
+    );
+
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Error de validación.',
+        };
+    }
+
+    try {
+        await updateClientInDb(userId, clientId, validatedFields.data);
+    } catch (e: any) {
+        return { message: `Error al actualizar el cliente: ${e.message}` };
+    }
+
+    revalidatePath('/clients');
+    redirect('/clients');
 }
 
 export async function deleteClient(clientId: string) {
