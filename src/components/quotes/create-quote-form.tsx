@@ -112,7 +112,9 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
     
     const lineItems = getValues('lineItems');
     if(lineItems.length === 1) {
-        setValue('lineItems.0.precioUnitario', newSubtotal, { shouldValidate: true });
+        // Redondear el subtotal a 2 decimales para el precio unitario.
+        const roundedSubtotal = Math.round(newSubtotal * 100) / 100;
+        setValue('lineItems.0.precioUnitario', roundedSubtotal, { shouldValidate: true });
         setValue('lineItems.0.cantidad', 1);
     }
   };
