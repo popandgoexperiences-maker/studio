@@ -70,7 +70,6 @@ export default function InvoicePrintPage() {
             .container {
               width: 100%;
               margin: 0 auto;
-              flex-grow: 1;
             }
             .header {
               display: flex;
@@ -166,7 +165,6 @@ export default function InvoicePrintPage() {
               font-size: 9px;
             }
             .footer-notes {
-                flex-grow: 1;
             }
             .footer-signature {
                 text-align: center;

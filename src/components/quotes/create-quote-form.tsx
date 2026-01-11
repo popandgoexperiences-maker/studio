@@ -49,7 +49,6 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
   const vatRate = user.vatRate ?? 0.10;
   
   const [isPending, startTransition] = useTransition();
-  const [isCalculating, setIsCalculating] = useState(false);
   
   const [totals, setTotals] = useState({ subtotal: 0, iva: 0, total: 0 });
 
@@ -79,14 +78,14 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
   useEffect(() => {
     const subscription = watch((value, { name, type }) => {
       if (name && (name.startsWith('lineItems') || type === 'change')) {
-        calculateTotals();
+        calculateTotalsFromLineItems();
       }
     });
+    calculateTotalsFromLineItems();
     return () => subscription.unsubscribe();
   }, [watch]);
 
-  const calculateTotals = () => {
-      setIsCalculating(true);
+  const calculateTotalsFromLineItems = () => {
       const lineItems = getValues('lineItems');
       const subtotal = lineItems.reduce((acc, item) => {
         const quantity = Number(item.cantidad) || 0;
@@ -98,17 +97,40 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
       const total = subtotal + iva;
 
       setTotals({ subtotal, iva, total });
-      setIsCalculating(false);
     };
+
+  const handleTotalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTotal = parseFloat(e.target.value) || 0;
+    const newSubtotal = newTotal / (1 + vatRate);
+    const newVat = newTotal - newSubtotal;
+
+    setTotals({
+      total: newTotal,
+      subtotal: newSubtotal,
+      iva: newVat
+    });
+    
+    const lineItems = getValues('lineItems');
+    if(lineItems.length === 1) {
+        setValue('lineItems.0.precioUnitario', newSubtotal, { shouldValidate: true });
+        setValue('lineItems.0.cantidad', 1);
+    }
+  };
 
   const onFormSubmit = (data: QuoteFormValues) => {
     startTransition(() => {
         const formData = new FormData();
+        const finalSubtotal = data.lineItems.reduce((acc, item) => {
+            return acc + (item.cantidad * item.precioUnitario);
+        }, 0);
+        const finalVat = finalSubtotal * vatRate;
+        const finalTotal = finalSubtotal + finalVat;
+
         formData.append('client', JSON.stringify(data.client));
         formData.append('lineItems', JSON.stringify(data.lineItems));
-        formData.append('subtotal', totals.subtotal.toString());
-        formData.append('vat', totals.iva.toString());
-        formData.append('total', totals.total.toString());
+        formData.append('subtotal', finalSubtotal.toString());
+        formData.append('vat', finalVat.toString());
+        formData.append('total', finalTotal.toString());
         
         formAction(formData);
     });
@@ -250,15 +272,17 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
                         <span className="font-medium">{formatCurrency(totals.iva)}</span>
                     </div>
                     <Separator />
-                    <div className="flex justify-between items-center text-lg font-bold">
-                        <span>Total</span>
-                        <span>{formatCurrency(totals.total)}</span>
+                    <div className="space-y-2">
+                        <Label htmlFor="totalAmount">Total</Label>
+                         <Input 
+                            id="totalAmount"
+                            type="number"
+                            step="0.01"
+                            value={totals.total.toFixed(2)}
+                            onChange={handleTotalChange}
+                            className="text-lg font-bold h-auto p-2 text-right"
+                         />
                     </div>
-                    {isCalculating && 
-                        <div className="flex items-center text-sm text-muted-foreground">
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Calculando...
-                        </div>
-                    }
                 </CardContent>
                 <CardFooter className="flex-col gap-4 items-stretch">
                    {state?.message && !state.errors && (
