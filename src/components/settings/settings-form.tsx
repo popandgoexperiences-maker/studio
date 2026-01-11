@@ -98,8 +98,8 @@ export function SettingsForm({ user, images }: SettingsFormProps) {
                     <CardTitle>Datos de la Empresa/Autónomo</CardTitle>
                     <CardDescription>Esta información aparecerá en tus facturas.</CardDescription>
                 </CardHeader>
-                <CardContent className="grid gap-6 sm:grid-cols-2">
-                    <div className="space-y-2">
+                <CardContent className="grid gap-6 md:grid-cols-2">
+                    <div className="space-y-2 md:col-span-2">
                         <Label htmlFor="name">Nombre Completo o Razón Social</Label>
                         <Input id="name" {...register('name')} />
                         {errors.name && <p className="text-destructive text-sm mt-1">{errors.name.message}</p>}
@@ -157,7 +157,7 @@ export function SettingsForm({ user, images }: SettingsFormProps) {
                             <Label className="text-base font-medium">Firma</Label>
                             <p className="text-sm text-muted-foreground mt-1">Dibuja tu firma en el recuadro. Se guardará al hacer clic en "Guardar cambios".</p>
                         </div>
-                        <div className="w-full sm:w-2/3 flex items-center gap-4">
+                        <div className="w-full sm:w-2/3 flex flex-col items-start gap-4">
                             <Controller
                                 name="signature"
                                 control={control}
@@ -221,7 +221,7 @@ function ImageUploadField({ name, label, image, currentImageUrl, register }: { n
                 <Label className="text-base font-medium">{label}</Label>
                 <p className="text-sm text-muted-foreground mt-1">Sube una imagen para tu {label.toLowerCase()}.</p>
             </div>
-            <div className="w-full sm:w-2/3 flex items-center gap-4">
+            <div className="w-full sm:w-2/3 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
                 <div className="w-48 h-24 relative rounded-md border border-dashed flex items-center justify-center bg-muted/50 p-2">
                     {previewUrl ? (
                         <Image 

@@ -186,10 +186,15 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
                                 }}
                             />
                         </div>
-                        <Button asChild variant="outline">
+                        <Button asChild variant="outline" size="icon" className="sm:hidden">
                             <Link href="/clients/new">
                                 <UserPlus className="h-4 w-4" />
-                                <span className='hidden sm:inline ml-2'>Nuevo Cliente</span>
+                            </Link>
+                        </Button>
+                        <Button asChild variant="outline" className="hidden sm:inline-flex">
+                            <Link href="/clients/new">
+                                <UserPlus className="h-4 w-4" />
+                                <span className='ml-2'>Nuevo Cliente</span>
                             </Link>
                         </Button>
                     </div>
@@ -220,8 +225,8 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Descripción</TableHead>
-                                    <TableHead className="w-[100px]">Cantidad</TableHead>
-                                    <TableHead className="w-[150px]">Precio Unit.</TableHead>
+                                    <TableHead className="w-[100px] hidden sm:table-cell">Cantidad</TableHead>
+                                    <TableHead className="w-[150px] hidden sm:table-cell">Precio Unit.</TableHead>
                                     <TableHead className="w-[150px] text-right">Importe</TableHead>
                                     <TableHead className="w-[50px]"></TableHead>
                                 </TableRow>
@@ -235,17 +240,21 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
                                                 control={control}
                                                 render={({ field }) => <Textarea {...field} placeholder="Ej: Diseño web" />}
                                             />
+                                            <div className="sm:hidden mt-2 space-y-2">
+                                                 <Input type="number" placeholder="Cant." step="1" {...register(`lineItems.${index}.cantidad`)} />
+                                                 <Input type="number" placeholder="Precio" step="0.01" {...register(`lineItems.${index}.precioUnitario`)} />
+                                            </div>
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell className="hidden sm:table-cell">
                                             <Input type="number" step="1" {...register(`lineItems.${index}.cantidad`)} />
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell className="hidden sm:table-cell">
                                             <Input type="number" step="0.01" {...register(`lineItems.${index}.precioUnitario`)} />
                                         </TableCell>
-                                        <TableCell className="text-right font-medium">
+                                        <TableCell className="text-right font-medium align-top pt-5">
                                             {formatCurrency((watch(`lineItems.${index}.cantidad`) || 0) * (watch(`lineItems.${index}.precioUnitario`) || 0))}
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell className="align-top pt-5">
                                             <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} disabled={fields.length <= 1}>
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>

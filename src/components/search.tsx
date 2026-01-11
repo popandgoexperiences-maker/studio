@@ -22,13 +22,13 @@ export function Search({ placeholder }: { placeholder: string }) {
   }, 300);
 
   return (
-    <div className="relative flex flex-1 flex-shrink-0">
+    <div className="relative flex-1">
       <label htmlFor="search" className="sr-only">
         Buscar
       </label>
       <Input
         id="search"
-        className="pl-10"
+        className="w-full pl-10"
         placeholder={placeholder}
         onChange={(e) => {
           handleSearch(e.target.value);

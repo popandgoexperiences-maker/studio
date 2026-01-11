@@ -23,12 +23,12 @@ export default function QuotesPage() {
           title="Presupuestos"
           description="Gestiona tus presupuestos y clientes."
         >
-          <div className="flex items-center gap-2">
+          <div className="flex w-full items-center gap-2 sm:w-auto">
             <Search placeholder="Buscar presupuestos..." />
-            <Button asChild>
+            <Button asChild size="sm">
               <Link href="/quotes/new">
                 <PlusCircle />
-                <span>Nuevo Presupuesto</span>
+                <span className="hidden sm:inline">Nuevo Presupuesto</span>
               </Link>
             </Button>
           </div>
@@ -44,12 +44,12 @@ export default function QuotesPage() {
         title="Presupuestos"
         description="Gestiona tus presupuestos y clientes."
       >
-        <div className="flex items-center gap-2">
+        <div className="flex w-full items-center gap-2 sm:w-auto">
           <Search placeholder="Buscar presupuestos..." />
-          <Button asChild>
+          <Button asChild size="sm">
             <Link href="/quotes/new">
               <PlusCircle />
-              <span>Nuevo Presupuesto</span>
+              <span className="hidden sm:inline">Nuevo Presupuesto</span>
             </Link>
           </Button>
         </div>

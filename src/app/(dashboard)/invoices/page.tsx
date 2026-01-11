@@ -23,12 +23,12 @@ export default function InvoicesPage() {
           title="Facturas"
           description="Gestiona tus facturas y clientes."
         >
-          <div className="flex items-center gap-2">
+          <div className="flex w-full items-center gap-2 sm:w-auto">
             <Search placeholder="Buscar facturas..." />
-            <Button asChild>
+            <Button asChild size="sm">
               <Link href="/invoices/new">
                 <PlusCircle />
-                <span>Nueva Factura</span>
+                <span className="hidden sm:inline">Nueva Factura</span>
               </Link>
             </Button>
           </div>
@@ -44,12 +44,12 @@ export default function InvoicesPage() {
         title="Facturas"
         description="Gestiona tus facturas y clientes."
       >
-        <div className="flex items-center gap-2">
+        <div className="flex w-full items-center gap-2 sm:w-auto">
           <Search placeholder="Buscar facturas..." />
-          <Button asChild>
+          <Button asChild size="sm">
             <Link href="/invoices/new">
               <PlusCircle />
-              <span>Nueva Factura</span>
+              <span className="hidden sm:inline">Nueva Factura</span>
             </Link>
           </Button>
         </div>

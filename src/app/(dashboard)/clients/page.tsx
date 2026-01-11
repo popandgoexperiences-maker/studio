@@ -34,10 +34,10 @@ export default function ClientsPage() {
           title="Clientes"
           description="Consulta la lista de tus clientes y sus facturas."
         >
-          <Button asChild>
+          <Button asChild size="sm">
             <Link href="/clients/new">
               <PlusCircle />
-              <span>Nuevo Cliente</span>
+              <span className="hidden sm:inline">Nuevo Cliente</span>
             </Link>
           </Button>
         </PageHeader>
@@ -47,15 +47,15 @@ export default function ClientsPage() {
   }
 
   return (
-    <div className="p-4 smp-6 lg:p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <PageHeader
         title="Clientes"
         description="Consulta la lista de tus clientes y sus facturas."
       >
-        <Button asChild>
+        <Button asChild size="sm">
           <Link href="/clients/new">
             <PlusCircle />
-            <span>Nuevo Cliente</span>
+            <span className="hidden sm:inline">Nuevo Cliente</span>
           </Link>
         </Button>
       </PageHeader>
@@ -102,32 +102,34 @@ function ClientsTableWrapper({ userId }: { userId: string }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nombre / Razón Social</TableHead>
-              <TableHead>NIF/CIF</TableHead>
-              <TableHead className="hidden sm:table-cell">Dirección</TableHead>
-              <TableHead className="text-right">Facturas</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {clientsWithInvoiceCount.map((client) => (
-              <TableRow key={client.id}>
-                <TableCell className="font-medium">{client.name}</TableCell>
-                <TableCell>{client.nif}</TableCell>
-                <TableCell className="hidden sm:table-cell">
-                  {client.address}
-                </TableCell>
-                <TableCell className="text-right">
-                  <Link href={`/invoices?query=${encodeURIComponent(client.name)}`} className="text-primary hover:underline">
-                    {client.invoiceCount}
-                  </Link>
-                </TableCell>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nombre / Razón Social</TableHead>
+                <TableHead className="hidden sm:table-cell">NIF/CIF</TableHead>
+                <TableHead className="hidden md:table-cell">Dirección</TableHead>
+                <TableHead className="text-right">Facturas</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {clientsWithInvoiceCount.map((client) => (
+                <TableRow key={client.id}>
+                  <TableCell className="font-medium">{client.name}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{client.nif}</TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {client.address}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Link href={`/invoices?query=${encodeURIComponent(client.name)}`} className="text-primary hover:underline">
+                      {client.invoiceCount}
+                    </Link>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );
@@ -147,10 +149,10 @@ function ClientsTableSkeleton() {
               <TableHead>
                 <Skeleton className="h-5 w-32" />
               </TableHead>
-              <TableHead>
+              <TableHead className="hidden sm:table-cell">
                 <Skeleton className="h-5 w-24" />
               </TableHead>
-              <TableHead className="hidden sm:table-cell">
+              <TableHead className="hidden md:table-cell">
                 <Skeleton className="h-5 w-48" />
               </TableHead>
               <TableHead className="text-right">
@@ -164,10 +166,10 @@ function ClientsTableSkeleton() {
                 <TableCell>
                   <Skeleton className="h-5 w-40" />
                 </TableCell>
-                <TableCell>
+                <TableCell className="hidden sm:table-cell">
                   <Skeleton className="h-5 w-28" />
                 </TableCell>
-                <TableCell className="hidden sm:table-cell">
+                <TableCell className="hidden md:table-cell">
                   <Skeleton className="h-5 w-56" />
                 </TableCell>
                 <TableCell className="text-right">

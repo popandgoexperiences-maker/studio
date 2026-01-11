@@ -13,11 +13,21 @@ interface SignaturePadProps {
 
 export function SignaturePad({ value, onChange }: SignaturePadProps) {
   const sigPadRef = useRef<SignatureCanvas>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isEmpty, setIsEmpty] = useState(true);
 
   useEffect(() => {
-    // Only update the empty state based on the initial value
     setIsEmpty(!value);
+    // Resize canvas to fit container
+    const handleResize = () => {
+        if(sigPadRef.current && containerRef.current){
+            const canvas: any = sigPadRef.current.getCanvas();
+            canvas.width = containerRef.current.offsetWidth;
+        }
+    };
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Initial resize
+    return () => window.removeEventListener('resize', handleResize);
   }, [value]);
 
   const clear = () => {
@@ -28,7 +38,6 @@ export function SignaturePad({ value, onChange }: SignaturePadProps) {
 
   const handleEnd = () => {
     if (sigPadRef.current) {
-      // Check if canvas is empty before getting data URL
       if (sigPadRef.current.isEmpty()) {
         onChange('');
         setIsEmpty(true);
@@ -41,16 +50,15 @@ export function SignaturePad({ value, onChange }: SignaturePadProps) {
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-4">
-        <div className="w-full max-w-sm rounded-md border border-input bg-background">
+    <div className="flex flex-col gap-4 w-full">
+      <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
+        <div ref={containerRef} className="w-full max-w-sm rounded-md border border-input bg-background">
             <SignatureCanvas
               ref={sigPadRef}
               penColor='black'
               canvasProps={{
-                width: 400,
                 height: 150,
-                className: 'sigCanvas rounded-md',
+                className: 'sigCanvas rounded-md w-full',
               }}
               onEnd={handleEnd}
             />
