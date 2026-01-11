@@ -10,6 +10,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarSeparator,
+  useSidebar, // Import the hook
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
 import { Settings, FileText, Users, ClipboardList } from 'lucide-react';
@@ -25,6 +26,7 @@ import { useEffect, useState } from 'react';
 export function SidebarNav() {
   const pathname = usePathname();
   const [isClient, setIsClient] = useState(false);
+  const { setOpenMobile } = useSidebar(); // Get the function to close the mobile sidebar
 
   useEffect(() => {
     setIsClient(true);
@@ -70,7 +72,8 @@ export function SidebarNav() {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Link href={item.href}>
+                      {/* Add onClick to close the sidebar */}
+                      <Link href={item.href} onClick={() => setOpenMobile(false)}>
                         <SidebarMenuButton isActive={isActive}>
                           <item.icon />
                           <span>{item.label}</span>
