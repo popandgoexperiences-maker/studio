@@ -17,6 +17,7 @@ import { formatCurrency } from '@/lib/utils';
 import { StatusBadge } from './status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { QuoteActions } from './quote-actions';
+import Link from 'next/link';
 
 export function QuotesTable({ quotes, user }: { quotes: Quote[], user: User }) {
   if (quotes.length === 0) {
@@ -51,7 +52,11 @@ export function QuotesTable({ quotes, user }: { quotes: Quote[], user: User }) {
             <TableBody>
               {quotes.map((quote) => (
                 <TableRow key={quote.id}>
-                  <TableCell className="font-medium">{quote.quoteNumber}</TableCell>
+                  <TableCell className="font-medium">
+                     <Link href={`/quotes/${quote.id}`} className="text-primary hover:underline">
+                        {quote.quoteNumber}
+                    </Link>
+                  </TableCell>
                   <TableCell>{quote.client.name}</TableCell>
                   <TableCell className="hidden sm:table-cell">{new Date(quote.date).toLocaleDateString('es-ES')}</TableCell>
                   <TableCell className="text-right">{formatCurrency(quote.total)}</TableCell>
