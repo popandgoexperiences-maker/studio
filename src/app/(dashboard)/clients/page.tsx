@@ -1,3 +1,4 @@
+
 'use client';
 import { Suspense, useMemo } from 'react';
 import Link from 'next/link';
@@ -119,7 +120,11 @@ function ClientsTableWrapper({ userId }: { userId: string }) {
             <TableBody>
               {clientsWithInvoiceCount.map((client) => (
                 <TableRow key={client.id}>
-                  <TableCell className="font-medium">{client.name}</TableCell>
+                  <TableCell className="font-medium">
+                     <Link href={`/clients/${client.id}`} className="text-primary hover:underline">
+                      {client.name}
+                    </Link>
+                  </TableCell>
                   <TableCell className="hidden sm:table-cell">{client.nif}</TableCell>
                   <TableCell className="hidden md:table-cell">
                     {client.address}
