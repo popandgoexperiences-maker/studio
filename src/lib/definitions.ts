@@ -1,5 +1,5 @@
 export type Client = {
-  id: string;
+  id?: string;   // ← ahora opcional
   name: string;
   nif: string;
   address: string;

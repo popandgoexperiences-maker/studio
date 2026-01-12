@@ -137,10 +137,12 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
 
         formData.append('client', JSON.stringify(data.client));
         formData.append('lineItems', JSON.stringify(lineItemsForSubmission));
+        formData.append('user', JSON.stringify(user));
         formData.append('subtotal', finalSubtotal.toString());
         formData.append('vat', finalVat.toString());
         formData.append('total', finalTotal.toString());
-        
+        formData.append('priceIncludesVAT', String(data.priceIncludesVAT));
+
         formAction(formData);
     });
   };

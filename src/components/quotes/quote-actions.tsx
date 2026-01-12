@@ -8,13 +8,14 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Download, Send, FileOutput, Check, X } from 'lucide-react';
+import { MoreHorizontal, Download, Send, FileOutput, Check, X, Trash2 } from 'lucide-react';
 import type { Quote } from '@/lib/definitions';
 import { convertQuoteToInvoice } from '@/lib/actions';
 import { useTransition } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { updateQuote } from '@/lib/data-client';
 import { useFirestore, useUser } from '@/firebase';
+import { DeleteQuoteButton } from './delete-quote-button';
 
 export function QuoteActions({ quote }: { quote: Quote }) {
   const [isPending, startTransition] = useTransition();
@@ -104,6 +105,10 @@ export function QuoteActions({ quote }: { quote: Quote }) {
         <DropdownMenuItem onClick={handleConvert} disabled={isPending || quote.status === 'accepted' && !!quote.invoiceId}>
           <FileOutput className="mr-2 h-4 w-4" />
           <span>{quote.invoiceId ? 'Ya convertido' : 'Convertir en Factura'}</span>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+          <DeleteQuoteButton quoteId={quote.id} />
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

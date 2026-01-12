@@ -16,6 +16,7 @@ import {
   updateQuote,
   deleteClient as deleteClientFromDb,
   deleteInvoice as deleteInvoiceFromDb,
+  deleteQuote as deleteQuoteFromDb,
 } from '@/lib/data';
 import type { User } from './definitions';
 import { getAuthSafe } from '@/lib/firebase-server';
@@ -70,7 +71,7 @@ export async function signup(prevState: any, formData: FormData) {
 }
 
 export async function logout() {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     cookieStore.delete('__session');
     redirect('/login');
 }
@@ -95,11 +96,11 @@ const invoiceSchema = z.object({
   lineItems: z
     .array(LineItemSchemaForAction)
     .min(1, 'Debe haber al menos un concepto.'),
-  priceIncludesVAT: z.boolean(),
+    priceIncludesVAT: z.coerce.boolean(),
 });
 
 export async function createInvoice(prevState: any, formData: FormData) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sessionCookie = cookieStore.get('__session')?.value;
   if (!sessionCookie) {
     return { message: 'Usuario no autenticado.' };
@@ -178,7 +179,7 @@ export async function createInvoice(prevState: any, formData: FormData) {
 }
 
 export async function deleteInvoice(invoiceId: string) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sessionCookie = cookieStore.get('__session')?.value;
   if (!sessionCookie) {
     return { message: 'Usuario no autenticado.' };
@@ -212,7 +213,7 @@ const QuoteSchema = z.object({
 
 
 export async function createQuote(prevState: any, formData: FormData) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sessionCookie = cookieStore.get('__session')?.value;
   if (!sessionCookie) {
     return { message: 'Usuario no autenticado.' };
@@ -272,8 +273,28 @@ export async function createQuote(prevState: any, formData: FormData) {
   redirect('/quotes');
 }
 
+export async function deleteQuote(quoteId: string) {
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get('__session')?.value;
+  if (!sessionCookie) {
+    return { message: 'Usuario no autenticado.' };
+  }
+  const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
+  const userId = decodedToken.uid;
+
+  try {
+    await deleteQuoteFromDb(userId, quoteId);
+  } catch (e: any) {
+    return { message: `Error al eliminar el presupuesto: ${e.message}` };
+  }
+
+  revalidatePath('/quotes');
+  return { success: true };
+}
+
+
 export async function convertQuoteToInvoice(quoteId: string) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sessionCookie = cookieStore.get('__session')?.value;
   if (!sessionCookie) {
     return { message: 'Usuario no autenticado.' };
@@ -330,7 +351,7 @@ export async function createClient(prevState: any, formData: FormData) {
     console.log('[DEBUG createClient] Entrando en createClient');
     console.log('[DEBUG createClient] formData keys:', Array.from(formData.keys()));
     
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const sessionCookie = cookieStore.get('__session')?.value;
     if (!sessionCookie) {
         return { message: 'User not authenticated.' };
@@ -381,7 +402,7 @@ export async function createClient(prevState: any, formData: FormData) {
 }
 
 export async function updateClient(clientId: string, prevState: any, formData: FormData) {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const sessionCookie = cookieStore.get('__session')?.value;
     if (!sessionCookie) {
         return { message: 'User not authenticated.' };
@@ -411,7 +432,7 @@ export async function updateClient(clientId: string, prevState: any, formData: F
 }
 
 export async function deleteClient(clientId: string) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sessionCookie = cookieStore.get('__session')?.value;
   if (!sessionCookie) {
     return { message: 'Usuario no autenticado.' };
@@ -457,7 +478,7 @@ export async function updateSettings(prevState: any, formData: FormData) {
   console.log('[DEBUG] updateSettings -> Invocada la acción del servidor.');
   try {
     // 1. Verificación de Autenticación
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const sessionCookie = cookieStore.get('__session')?.value;
     if (!sessionCookie) {
       throw new Error('No se encontró la cookie de sesión. El usuario no está autenticado.');
@@ -530,7 +551,7 @@ export async function updateSettings(prevState: any, formData: FormData) {
 
 // New action to handle file uploads via iframe worker
 export async function uploadFile(formData: FormData) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sessionCookie = cookieStore.get('__session')?.value;
   if (!sessionCookie) {
     return { success: false, error: 'User not authenticated.' };

@@ -99,6 +99,12 @@ export async function saveQuote(userId: string, quoteData: Omit<Quote, 'id'>) {
   await quotesCol.add(quoteData);
 }
 
+export async function deleteQuote(userId: string, quoteId: string) {
+  const db = getFirestoreSafe();
+  const quoteRef = db.collection('users').doc(userId).collection('quotes').doc(quoteId);
+  await quoteRef.delete();
+}
+
 export async function updateQuote(userId: string, quoteId: string, data: Partial<Quote>) {
     const db = getFirestoreSafe();
     const quoteRef = db.collection('users').doc(userId).collection('quotes').doc(quoteId);

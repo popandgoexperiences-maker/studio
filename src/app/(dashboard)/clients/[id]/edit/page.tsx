@@ -7,7 +7,7 @@ import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 export default async function EditClientPage({ params }: { params: { id: string } }) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sessionCookie = cookieStore.get('__session')?.value;
   if (!sessionCookie) {
     return notFound();
