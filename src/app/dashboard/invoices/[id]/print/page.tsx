@@ -59,11 +59,15 @@ export default function InvoicePrintPage() {
             }
             @page {
               size: A4;
-              margin: 1cm;
+              margin: 0;
             }
             .page-container {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
                 padding: 1.5cm;
                 min-height: 100vh;
+                box-sizing: border-box;
             }
             .container {
               width: 100%;
@@ -154,8 +158,8 @@ export default function InvoicePrintPage() {
               font-size: 12px;
             }
             .footer {
-              margin-top: auto; /* Pushes footer to the bottom of flex container */
-              padding-top: 40px;
+              margin-top: 2rem;
+              padding-top: 10px;
               border-top: 1px solid #e5e5e5;
               display: flex;
               justify-content: space-between;
@@ -196,9 +200,8 @@ export default function InvoicePrintPage() {
                 margin: 0;
               }
               .page-container {
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
+                min-height: 0;
+                padding: 1.5cm;
               }
             }
           `}
@@ -264,18 +267,17 @@ export default function InvoicePrintPage() {
                   </div>
                   </div>
               </div>
-
-              <div className="footer">
-                  <div className='footer-notes'>
-                      Gracias por su confianza.
-                  </div>
-                  <div className="footer-signature">
-                      {user.signatureUrl && <img src={user.signatureUrl} alt="Firma" className="signature-image" />}
-                      <div>Firma</div>
-                  </div>
-                    {user.sealUrl && <img src={user.sealUrl} alt="Sello" className="seal-image" />}
-              </div>
-          </div>
+            </div>
+            <div className="footer">
+                <div className='footer-notes'>
+                    Gracias por su confianza.
+                </div>
+                <div className="footer-signature">
+                    {user.signatureUrl && <img src={user.signatureUrl} alt="Firma" className="signature-image" />}
+                    <div>Firma</div>
+                </div>
+                  {user.sealUrl && <img src={user.sealUrl} alt="Sello" className="seal-image" />}
+            </div>
       </div>
       <button className="print-button" onClick={() => window.print()}>Imprimir / Guardar como PDF</button>
     </>
