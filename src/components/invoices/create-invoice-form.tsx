@@ -77,9 +77,7 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
   });
 
   const clientNameWatch = watch('client.name');
-  const lineItemsWatch = watch('lineItems');
-  const priceIncludesVATWatch = watch('priceIncludesVAT');
-
+  
   useEffect(() => {
     const subscription = watch((value, { name, type }) => {
       calculateTotals();
@@ -91,10 +89,9 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
   const calculateTotals = () => {
       const { lineItems, priceIncludesVAT } = getValues();
       let subtotal = 0;
-      let total = 0;
 
       if (priceIncludesVAT) {
-        total = lineItems.reduce((acc, item) => {
+        const total = lineItems.reduce((acc, item) => {
             const quantity = Number(item.cantidad) || 0;
             const unitPrice = Number(item.precioUnitario) || 0;
             return acc + quantity * unitPrice;
@@ -106,10 +103,10 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
             const unitPrice = Number(item.precioUnitario) || 0;
             return acc + quantity * unitPrice;
         }, 0);
-        total = subtotal * (1 + vatRate);
       }
       
-      const iva = total - subtotal;
+      const iva = subtotal * vatRate;
+      const total = subtotal + iva;
 
       setTotals({ subtotal, iva, total });
     };
@@ -118,30 +115,10 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
     startTransition(() => {
         const formData = new FormData();
         
-        // Recalculate totals on submission to ensure accuracy
-        let finalSubtotal = 0;
-        let finalTotal = 0;
-        const lineItemsForSubmission = data.lineItems.map(item => ({
-            description: item.descripcion,
-            quantity: item.cantidad,
-            unitPrice: data.priceIncludesVAT 
-              ? (item.precioUnitario / (1 + vatRate)) // store base price
-              : item.precioUnitario,
-        }));
-
-        finalSubtotal = lineItemsForSubmission.reduce((acc, item) => {
-            return acc + item.quantity * item.unitPrice;
-        }, 0);
-        const finalVat = finalSubtotal * vatRate;
-        finalTotal = finalSubtotal + finalVat;
-
         formData.append('client', JSON.stringify(data.client));
-        formData.append('lineItems', JSON.stringify(lineItemsForSubmission));
-        formData.append('user', JSON.stringify(user));
-        formData.append('subtotal', finalSubtotal.toString());
-        formData.append('vat', finalVat.toString());
-        formData.append('total', finalTotal.toString());
+        formData.append('lineItems', JSON.stringify(data.lineItems));
         formData.append('priceIncludesVAT', String(data.priceIncludesVAT));
+        formData.append('vatRate', (user.vatRate ?? 0).toString());
 
         formAction(formData);
     });
@@ -249,7 +226,7 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
                                     <TableHead>Descripción</TableHead>
                                     <TableHead className="w-[100px] text-right">Cantidad</TableHead>
                                     <TableHead className="w-[150px] text-right">
-                                        {priceIncludesVATWatch ? 'Precio (IVA incl.)' : 'Precio Unit.'}
+                                        {watch('priceIncludesVAT') ? 'Precio (IVA incl.)' : 'Precio Unit.'}
                                     </TableHead>
                                     <TableHead className="w-[150px] text-right">Importe</TableHead>
                                     <TableHead className="w-[50px]"></TableHead>
@@ -318,7 +295,7 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
                                             {errors.lineItems?.[index]?.cantidad && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.cantidad?.message}</p>}
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor={`lineItems.${index}.precioUnitario`}>{priceIncludesVATWatch ? 'Precio (IVA incl.)' : 'Precio Unit.'}</Label>
+                                            <Label htmlFor={`lineItems.${index}.precioUnitario`}>{watch('priceIncludesVAT') ? 'Precio (IVA incl.)' : 'Precio Unit.'}</Label>
                                             <Input id={`lineItems.${index}.precioUnitario`} type="number" step="any" {...register(`lineItems.${index}.precioUnitario`)} className="text-right" />
                                             {errors.lineItems?.[index]?.precioUnitario && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.precioUnitario?.message}</p>}
                                         </div>

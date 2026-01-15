@@ -79,9 +79,9 @@ export async function logout() {
 // --- INVOICE ACTIONS ---
 
 const LineItemSchemaForAction = z.object({
-  description: z.string().min(1, 'La descripción no puede estar vacía.'),
-  quantity: z.coerce.number().gt(0, 'La cantidad debe ser mayor que 0.'),
-  unitPrice: z.coerce.number().gte(0, 'El precio debe ser 0 o mayor.'),
+  descripcion: z.string().min(1, 'La descripción no puede estar vacía.'),
+  cantidad: z.coerce.number().gt(0, 'La cantidad debe ser mayor que 0.'),
+  precioUnitario: z.coerce.number().gte(0, 'El precio debe ser 0 o mayor.'),
 });
 
 const ClientSchemaForInvoice = z.object({
@@ -96,7 +96,8 @@ const invoiceSchema = z.object({
   lineItems: z
     .array(LineItemSchemaForAction)
     .min(1, 'Debe haber al menos un concepto.'),
-    priceIncludesVAT: z.coerce.boolean(),
+  priceIncludesVAT: z.coerce.boolean(),
+  vatRate: z.coerce.number(),
 });
 
 export async function createInvoice(prevState: any, formData: FormData) {
@@ -114,16 +115,17 @@ export async function createInvoice(prevState: any, formData: FormData) {
   }
 
   try {
-    const lineItemsRaw = JSON.parse(formData.get('lineItems') as string);
-    const client = JSON.parse(formData.get('client') as string);
-    const user = JSON.parse(formData.get('user') as string) as User;
+    const rawLineItems = JSON.parse(formData.get('lineItems') as string);
+    const rawClient = JSON.parse(formData.get('client') as string);
+    const rawData = {
+      lineItems: rawLineItems,
+      client: rawClient,
+      priceIncludesVAT: formData.get('priceIncludesVAT'),
+      vatRate: formData.get('vatRate'),
+    };
 
-    const validatedFields = invoiceSchema.safeParse({
-      ...Object.fromEntries(formData.entries()),
-      lineItems: lineItemsRaw,
-      client,
-    });
-
+    const validatedFields = invoiceSchema.safeParse(rawData);
+    
     if (!validatedFields.success) {
       return {
         errors: validatedFields.error.flatten().fieldErrors,
@@ -131,34 +133,31 @@ export async function createInvoice(prevState: any, formData: FormData) {
       };
     }
     
-    const { lineItems, client: clientData, priceIncludesVAT } = validatedFields.data;
+    const { lineItems, client, priceIncludesVAT, vatRate } = validatedFields.data;
 
     let subtotal = 0;
-    const vatRate = user.vatRate ?? 0;
-
+    
     const finalLineItems = lineItems.map(item => {
-        const basePrice = priceIncludesVAT 
-            ? parseFloat((item.unitPrice / (1 + vatRate)).toFixed(2))
-            : item.unitPrice;
-        
-        subtotal += item.quantity * basePrice;
-        return {
-            description: item.description,
-            quantity: item.quantity,
-            unitPrice: basePrice
-        };
+      const basePrice = priceIncludesVAT
+        ? item.precioUnitario / (1 + vatRate)
+        : item.precioUnitario;
+      subtotal += item.cantidad * basePrice;
+      return {
+        description: item.descripcion,
+        quantity: item.cantidad,
+        unitPrice: basePrice,
+      };
     });
 
     const vat = subtotal * vatRate;
     const total = subtotal + vat;
-
 
     const invoiceNumber = await fetchNextInvoiceNumber(userId);
 
     await saveInvoice(userId, {
       userId,
       invoiceNumber,
-      client: clientData,
+      client,
       date: new Date().toISOString(),
       lineItems: finalLineItems,
       subtotal,
