@@ -105,14 +105,15 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
         const finalSubtotal = data.lineItems.reduce((acc, item) => {
             return acc + (item.cantidad * item.precioUnitario);
         }, 0);
-        const finalVat = finalSubtotal * vatRate;
+        const finalVat = finalSubtotal * (user.vatRate ?? 0);
         const finalTotal = finalSubtotal + finalVat;
 
         formData.append('client', JSON.stringify(data.client));
-        formData.append('lineItems', JSON.stringify(data.lineItems));
+        formData.append('lineItems', JSON.stringify(data.lineItems.map(item => ({...item, precioUnitario: item.precioUnitario}))));
         formData.append('subtotal', finalSubtotal.toString());
         formData.append('vat', finalVat.toString());
         formData.append('total', finalTotal.toString());
+        formData.append('vatRate', (user.vatRate ?? 0).toString());
         
         formAction(formData);
     });
@@ -196,13 +197,14 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
                     <CardTitle>Conceptos</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="overflow-x-auto">
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block">
                         <Table>
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Descripción</TableHead>
-                                    <TableHead className="w-[100px]">Cantidad</TableHead>
-                                    <TableHead className="w-[150px]">Precio Unit.</TableHead>
+                                    <TableHead className="w-[100px] text-right">Cantidad</TableHead>
+                                    <TableHead className="w-[150px] text-right">Precio Unit.</TableHead>
                                     <TableHead className="w-[150px] text-right">Importe</TableHead>
                                     <TableHead className="w-[50px]"></TableHead>
                                 </TableRow>
@@ -214,14 +216,14 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
                                             <Controller
                                                 name={`lineItems.${index}.descripcion`}
                                                 control={control}
-                                                render={({ field }) => <Textarea {...field} placeholder="Ej: Diseño web" />}
+                                                render={({ field }) => <Textarea {...field} placeholder="Ej: Diseño web" className="min-h-[40px]"/>}
                                             />
                                         </TableCell>
                                         <TableCell>
-                                            <Input type="number" step="any" {...register(`lineItems.${index}.cantidad`)} />
+                                            <Input type="number" step="any" {...register(`lineItems.${index}.cantidad`)} className="text-right"/>
                                         </TableCell>
                                         <TableCell>
-                                            <Input type="number" step="any" {...register(`lineItems.${index}.precioUnitario`)} />
+                                            <Input type="number" step="any" {...register(`lineItems.${index}.precioUnitario`)} className="text-right"/>
                                         </TableCell>
                                         <TableCell className="text-right font-medium align-top pt-5">
                                             {formatCurrency((watch(`lineItems.${index}.cantidad`) || 0) * (watch(`lineItems.${index}.precioUnitario`) || 0))}
@@ -236,6 +238,51 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
                             </TableBody>
                         </Table>
                     </div>
+                    {/* Mobile Card View */}
+                    <div className="md:hidden space-y-4">
+                        {fields.map((field, index) => {
+                            const quantity = watch(`lineItems.${index}.cantidad`) || 0;
+                            const unitPrice = watch(`lineItems.${index}.precioUnitario`) || 0;
+                            const lineTotal = quantity * unitPrice;
+                            return (
+                                <div key={field.id} className="border rounded-lg p-4 space-y-4 relative">
+                                    <div className="space-y-2">
+                                        <Label htmlFor={`lineItems.${index}.descripcion`}>Descripción</Label>
+                                        <Controller
+                                            name={`lineItems.${index}.descripcion`}
+                                            control={control}
+                                            render={({ field }) => <Textarea id={`lineItems.${index}.descripcion`} {...field} placeholder="Ej: Diseño web" className="min-h-[60px]"/>}
+                                        />
+                                        {errors.lineItems?.[index]?.descripcion && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.descripcion?.message}</p>}
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor={`lineItems.${index}.cantidad`}>Cantidad</Label>
+                                            <Input id={`lineItems.${index}.cantidad`} type="number" step="any" {...register(`lineItems.${index}.cantidad`)} className="text-right" />
+                                            {errors.lineItems?.[index]?.cantidad && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.cantidad?.message}</p>}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor={`lineItems.${index}.precioUnitario`}>Precio Unit.</Label>
+                                            <Input id={`lineItems.${index}.precioUnitario`} type="number" step="any" {...register(`lineItems.${index}.precioUnitario`)} className="text-right" />
+                                            {errors.lineItems?.[index]?.precioUnitario && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.precioUnitario?.message}</p>}
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-between items-center border-t pt-2 mt-2">
+                                        <span className="text-muted-foreground text-sm">Importe</span>
+                                        <span className="font-medium">{formatCurrency(lineTotal)}</span>
+                                    </div>
+                                    {fields.length > 1 && (
+                                        <div className="absolute -top-3 -right-3">
+                                            <Button type="button" variant="destructive" size="icon" className="h-7 w-7 rounded-full" onClick={() => remove(index)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })}
+                    </div>
+
                     {errors.lineItems && <p className="text-sm text-destructive mt-2">{errors.lineItems.message || errors.lineItems.root?.message}</p>}
                     <Button type="button" variant="outline" size="sm" onClick={() => append({ descripcion: '', cantidad: 1, precioUnitario: 0 })} className="mt-4">
                         <Plus className="mr-2 h-4 w-4" /> Añadir concepto

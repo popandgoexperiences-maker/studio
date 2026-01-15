@@ -59,7 +59,7 @@ export default function InvoicePrintPage() {
             }
             @page {
               size: A4;
-              margin: 0;
+              margin: 1cm;
             }
             .page-container {
                 padding: 1.5cm;

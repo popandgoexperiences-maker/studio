@@ -241,7 +241,8 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="overflow-x-auto">
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -292,6 +293,53 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
                             </TableBody>
                         </Table>
                     </div>
+
+                    {/* Mobile Card View */}
+                    <div className="md:hidden space-y-4">
+                        {fields.map((field, index) => {
+                            const quantity = watch(`lineItems.${index}.cantidad`) || 0;
+                            const unitPrice = watch(`lineItems.${index}.precioUnitario`) || 0;
+                            const lineTotal = quantity * unitPrice;
+                            return (
+                                <div key={field.id} className="border rounded-lg p-4 space-y-4 relative">
+                                    <div className="space-y-2">
+                                        <Label htmlFor={`lineItems.${index}.descripcion`}>Descripción</Label>
+                                        <Controller
+                                            name={`lineItems.${index}.descripcion`}
+                                            control={control}
+                                            render={({ field }) => <Textarea id={`lineItems.${index}.descripcion`} {...field} placeholder="Ej: Diseño web" className="min-h-[60px]"/>}
+                                        />
+                                        {errors.lineItems?.[index]?.descripcion && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.descripcion?.message}</p>}
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor={`lineItems.${index}.cantidad`}>Cantidad</Label>
+                                            <Input id={`lineItems.${index}.cantidad`} type="number" step="any" {...register(`lineItems.${index}.cantidad`)} className="text-right" />
+                                            {errors.lineItems?.[index]?.cantidad && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.cantidad?.message}</p>}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor={`lineItems.${index}.precioUnitario`}>{priceIncludesVATWatch ? 'Precio (IVA incl.)' : 'Precio Unit.'}</Label>
+                                            <Input id={`lineItems.${index}.precioUnitario`} type="number" step="any" {...register(`lineItems.${index}.precioUnitario`)} className="text-right" />
+                                            {errors.lineItems?.[index]?.precioUnitario && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.precioUnitario?.message}</p>}
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-between items-center border-t pt-2 mt-2">
+                                        <span className="text-muted-foreground text-sm">Importe</span>
+                                        <span className="font-medium">{formatCurrency(lineTotal)}</span>
+                                    </div>
+                                    {fields.length > 1 && (
+                                        <div className="absolute -top-3 -right-3">
+                                            <Button type="button" variant="destructive" size="icon" className="h-7 w-7 rounded-full" onClick={() => remove(index)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })}
+                    </div>
+
+
                     {errors.lineItems && !errors.lineItems.root && (
                         <p className="text-sm text-destructive mt-2">{errors.lineItems.message}</p>
                     )}
