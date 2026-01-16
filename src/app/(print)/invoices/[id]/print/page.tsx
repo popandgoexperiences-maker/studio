@@ -70,7 +70,6 @@ export default function InvoicePrintPage() {
             print-color-adjust: exact;
           }
 
-          /* ⭐ BLOQUE ANTI-PÁGINA EXTRA DEFINITIVO */
           .page-container {
             width: 100%;
             height: calc(100vh - 2.4cm);
@@ -78,7 +77,6 @@ export default function InvoicePrintPage() {
             overflow: hidden;
             position: relative;
             box-sizing: border-box;
-            outline: 2px solid red !important;
             display: flex;
             flex-direction: column;
             justify-content: space-between;

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useTransition } from 'react';
@@ -154,6 +153,16 @@ export default function QuoteDetailPage() {
         </div>
       </div>
       <Card className="overflow-hidden">
+        {quote.invoiceId && (
+            <div className="border-b border-green-200 bg-green-100 p-4 dark:border-green-700/50 dark:bg-green-900/30">
+                <p className="text-center text-sm font-medium text-green-800 dark:text-green-300">
+                    Este presupuesto fue aceptado y convertido en factura.{' '}
+                    <Link href={`/invoices/${quote.invoiceId}`} className="font-bold underline hover:no-underline">
+                        Ver la factura
+                    </Link>
+                </p>
+            </div>
+        )}
         <CardHeader className="p-6 bg-muted/30 flex flex-col sm:flex-row justify-between">
           <div>
             <h1 className="text-2xl font-bold text-primary">{quote.quoteNumber}</h1>
@@ -228,21 +237,6 @@ export default function QuoteDetailPage() {
                   </div>
               </div>
             </div>
-
-            {/* Quote specific info */}
-            {quote.invoiceId && (
-                <div>
-                    <h3 className="font-semibold mb-2">Información Adicional</h3>
-                    <div className="text-sm p-4 bg-muted/50 rounded-md">
-                        <p>
-                            Este presupuesto fue aceptado y convertido en la factura{' '}
-                            <Link href={`/invoices/${quote.invoiceId}`} className="font-medium text-primary hover:underline">
-                                 (ver factura)
-                            </Link>.
-                        </p>
-                    </div>
-                </div>
-            )}
         </CardContent>
         <CardFooter className="p-6 bg-muted/30">
             <p className="text-xs text-muted-foreground">Este documento es un presupuesto y no tiene validez como factura.</p>

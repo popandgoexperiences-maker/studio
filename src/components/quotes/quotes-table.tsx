@@ -18,6 +18,7 @@ import { StatusBadge } from './status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { QuoteActions } from './quote-actions';
 import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
 
 export function QuotesTable({ quotes, user }: { quotes: Quote[], user: User }) {
   if (quotes.length === 0) {
@@ -61,7 +62,15 @@ export function QuotesTable({ quotes, user }: { quotes: Quote[], user: User }) {
                   <TableCell className="hidden sm:table-cell">{new Date(quote.date).toLocaleDateString('es-ES')}</TableCell>
                   <TableCell className="text-right">{formatCurrency(quote.total)}</TableCell>
                   <TableCell className="hidden md:table-cell">
-                    <StatusBadge status={quote.status} />
+                    {quote.invoiceId ? (
+                        <Link href={`/invoices/${quote.invoiceId}`}>
+                            <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700/50 cursor-pointer">
+                                Facturado
+                            </Badge>
+                        </Link>
+                    ) : (
+                        <StatusBadge status={quote.status} />
+                    )}
                   </TableCell>
                   <TableCell>
                     <QuoteActions quote={quote} />
