@@ -33,14 +33,20 @@ export function ForgotPasswordForm() {
 
     try {
         await sendPasswordResetEmail(auth, email);
-        // For security reasons, we show success even if the email doesn't exist.
+        // If the call succeeds, or if the user is not found, we show the success message.
+        // This is a security measure to prevent email enumeration.
         setSuccess(true);
     } catch (e: any) {
-        // Also show success on common "user not found" errors.
-        if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-email') {
+        // We still show success for 'auth/user-not-found' to prevent attackers from discovering registered emails.
+        if (e.code === 'auth/user-not-found') {
              setSuccess(true);
+        } else if (e.code === 'auth/invalid-email') {
+            // But if the email format is wrong, we should tell the user.
+            setError('La dirección de email no es válida. Por favor, revísala.');
         } else {
-            setError(`Ha ocurrido un error inesperado: ${e.message}`);
+            // For any other error (like network issues), we show a generic message.
+            setError(`Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo.`);
+            console.error("Password Reset Error:", e); // Log the actual error for debugging
         }
     } finally {
         setLoading(false);
