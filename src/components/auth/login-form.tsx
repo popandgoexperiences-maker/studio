@@ -188,7 +188,12 @@ export function LoginForm() {
 
           {/* Campo: contraseña */}
           <div className="space-y-2">
-            <Label htmlFor="password">Contraseña</Label>
+            <div className="flex items-center">
+              <Label htmlFor="password">Contraseña</Label>
+              <Link href="/forgot-password" className="ml-auto inline-block text-sm text-primary hover:underline">
+                ¿Has olvidado la contraseña?
+              </Link>
+            </div>
             <Input
               id="password"
               type="password"
