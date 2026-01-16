@@ -1,23 +1,23 @@
 import admin from 'firebase-admin';
 
 /**
- * Garantiza que Firebase Admin SDK se inicialice una sola vez de forma segura.
- * Reutiliza la instancia si ya existe (importante para entornos de desarrollo con recarga en caliente).
- * Lanza un error si faltan las credenciales para un diagnóstico claro.
+ * Garantiza que Firebase Admin SDK se inicialice una sola vez de forma perezosa y segura.
+ * Este patrón es ideal para entornos sin servidor (serverless) y con recarga en caliente (hot-reloading).
+ * @returns La instancia de la aplicación Firebase Admin inicializada.
  */
-function initializeFirebaseAdmin() {
-  // Si ya hay una aplicación inicializada, la reutilizamos.
-  if (admin.apps.length > 0) {
-    return admin.app();
+function getAdminApp() {
+  // Si ya hay una aplicación inicializada, la reutilizamos para evitar errores.
+  if (admin.apps.length > 0 && admin.apps[0]) {
+    return admin.apps[0];
   }
 
-  // Obtiene las credenciales de las variables de entorno.
+  // Obtenemos las credenciales de las variables de entorno.
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  // Importante: reemplaza los caracteres de nueva línea escapados.
+  // IMPORTANTE: La clave privada de las variables de entorno necesita que los \n se conviertan en saltos de línea reales.
   const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
-  // Si falta alguna credencial, lanza un error claro.
+  // Verificamos que todas las credenciales necesarias estén presentes.
   if (!projectId || !clientEmail || !privateKey) {
     const missingVars = [
         !projectId && "FIREBASE_PROJECT_ID",
@@ -25,10 +25,12 @@ function initializeFirebaseAdmin() {
         !privateKey && "FIREBASE_PRIVATE_KEY"
     ].filter(Boolean).join(", ");
     
+    // Este error es crítico y detendrá el proceso, lo cual es intencional
+    // para proporcionar un feedback claro sobre lo que falta.
     throw new Error(`Faltan variables de entorno de Firebase Admin: ${missingVars}. No se puede inicializar el SDK.`);
   }
 
-  // Intenta inicializar la aplicación.
+  // Intentamos inicializar la aplicación con las credenciales.
   try {
     const app = admin.initializeApp({
       credential: admin.credential.cert({
@@ -40,23 +42,29 @@ function initializeFirebaseAdmin() {
     console.log('Firebase Admin SDK inicializado con éxito.');
     return app;
   } catch (error: any) {
-    console.error('Error al inicializar Firebase Admin SDK:', error.stack);
-    // Relanza el error para que el servidor falle al arrancar si no puede inicializar.
-    throw new Error('No se pudo inicializar Firebase Admin SDK.');
+    // Registramos el error detallado y lanzamos uno más genérico.
+    console.error('Error catastrófico al inicializar Firebase Admin SDK:', error.stack);
+    throw new Error(`No se pudo inicializar Firebase Admin SDK: ${error.message}`);
   }
 }
 
-// Llama a la inicialización al cargar el módulo y guarda la instancia.
-const adminApp = initializeFirebaseAdmin();
+/**
+ * Obtiene la instancia del servicio de autenticación, asegurando que la app esté inicializada.
+ * @returns La instancia del servicio Firebase Auth.
+ */
+export const getAuthSafe = () => {
+  const app = getAdminApp();
+  return admin.auth(app);
+};
 
 /**
- * Obtiene la instancia de Firestore de forma segura.
- * @returns Instancia de Firestore.
+ * Obtiene la instancia del servicio de Firestore, asegurando que la app esté inicializada.
+ * @returns La instancia del servicio Firebase Firestore.
  */
-export const getFirestoreSafe = () => admin.firestore(adminApp);
+export const getFirestoreSafe = () => {
+  const app = getAdminApp();
+  return admin.firestore(app);
+};
 
-/**
- * Obtiene la instancia de Auth de forma segura.
- * @returns Instancia de Auth.
- */
-export const getAuthSafe = () => admin.auth(adminApp);
+// Exportamos adminAuth para mantener la compatibilidad con otros archivos que puedan usar este nombre.
+export const adminAuth = getAuthSafe;
