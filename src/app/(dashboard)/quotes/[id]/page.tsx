@@ -126,6 +126,10 @@ export default function QuoteDetailPage() {
     });
   };
 
+  const handlePrint = () => {
+    window.open(`/quotes/${id}/print`, '_blank');
+  };
+
   if (loading) {
     return <QuoteDetailPageSkeleton />;
   }
@@ -142,7 +146,7 @@ export default function QuoteDetailPage() {
             Volver a Presupuestos
         </Button>
         <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Button variant="outline" className="w-full" disabled>
+            <Button variant="outline" className="w-full" onClick={handlePrint}>
                 <Printer className="mr-2" />
                 Imprimir / PDF
             </Button>

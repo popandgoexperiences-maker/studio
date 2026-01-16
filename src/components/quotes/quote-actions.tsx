@@ -24,9 +24,7 @@ export function QuoteActions({ quote }: { quote: Quote }) {
   const { user } = useUser();
 
   const handleDownload = () => {
-    // This logic would be similar to invoices, pointing to a quote print page
-    // window.open(`/quotes/${quote.id}/print`, '_blank');
-    toast({ title: 'Info', description: 'La vista de impresión para presupuestos no está implementada.' });
+    window.open(`/quotes/${quote.id}/print`, '_blank');
   };
   
   const handleConvert = () => {
