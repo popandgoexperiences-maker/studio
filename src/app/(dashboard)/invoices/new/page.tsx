@@ -14,12 +14,12 @@ export default function NewInvoicePage() {
     () => (authUser ? collection(firestore, 'users', authUser.uid, 'clients') : null),
     [firestore, authUser]
   );
+  const { data: clients, isLoading: areClientsLoading } = useCollection<Client>(clientsQuery);
+
   const userRef = useMemoFirebase(
     () => (authUser ? doc(firestore, 'users', authUser.uid) : null),
     [firestore, authUser]
   );
-
-  const { data: clients, isLoading: areClientsLoading } = useCollection<Client>(clientsQuery);
   const { data: user, isLoading: isUserLoading } = useDoc<User>(userRef);
 
   const showLoading = isAuthUserLoading || areClientsLoading || isUserLoading;
@@ -40,9 +40,9 @@ export default function NewInvoicePage() {
             <Skeleton className="h-80 w-full" />
           </div>
         </div>
-      ) : user && clients && (
+      ) : user && clients ? (
         <CreateInvoiceForm clients={clients} user={user} />
-      )}
+      ) : null}
     </div>
   );
 }

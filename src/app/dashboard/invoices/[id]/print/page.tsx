@@ -62,12 +62,14 @@ export default function InvoicePrintPage() {
               margin: 0;
             }
             .page-container {
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-                padding: 1.5cm;
-                min-height: 100vh;
-                box-sizing: border-box;
+                width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0.5cm 1cm;
+  background: #ffffff !important;
+  min-height: calc(100vh - 2.4cm);
             }
             .container {
               width: 100%;
