@@ -48,7 +48,7 @@ type InvoiceFormValues = z.infer<typeof invoiceSchema>;
 export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: User }) {
   const [state, formAction] = useActionState(createInvoice, undefined);
   const { toast } = useToast();
-  const vatRate = user.vatRate ?? 0.10;
+  const vatRate = user.vatRate ?? 0.21;
   
   const [isPending, startTransition] = useTransition();
   
@@ -118,7 +118,6 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
         formData.append('client', JSON.stringify(data.client));
         formData.append('lineItems', JSON.stringify(data.lineItems));
         formData.append('priceIncludesVAT', String(data.priceIncludesVAT));
-        formData.append('vatRate', (user.vatRate ?? 0).toString());
 
         formAction(formData);
     });

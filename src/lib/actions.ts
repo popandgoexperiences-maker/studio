@@ -17,6 +17,7 @@ import {
   deleteClient as deleteClientFromDb,
   deleteInvoice as deleteInvoiceFromDb,
   deleteQuote as deleteQuoteFromDb,
+  fetchUser,
 } from '@/lib/data';
 import type { User } from './definitions';
 import { getAuthSafe } from '@/lib/firebase-server';
@@ -97,7 +98,6 @@ const invoiceSchema = z.object({
     .array(LineItemSchemaForAction)
     .min(1, 'Debe haber al menos un concepto.'),
   priceIncludesVAT: z.coerce.boolean(),
-  vatRate: z.coerce.number(),
 });
 
 export async function createInvoice(prevState: any, formData: FormData) {
@@ -115,13 +115,18 @@ export async function createInvoice(prevState: any, formData: FormData) {
   }
 
   try {
+    const user = await fetchUser(userId);
+    if (!user) {
+        return { message: 'No se pudo encontrar el perfil del usuario.' };
+    }
+    const vatRate = user.vatRate ?? 0.21;
+
     const rawLineItems = JSON.parse(formData.get('lineItems') as string);
     const rawClient = JSON.parse(formData.get('client') as string);
     const rawData = {
       lineItems: rawLineItems,
       client: rawClient,
       priceIncludesVAT: formData.get('priceIncludesVAT'),
-      vatRate: formData.get('vatRate'),
     };
 
     const validatedFields = invoiceSchema.safeParse(rawData);
@@ -133,7 +138,7 @@ export async function createInvoice(prevState: any, formData: FormData) {
       };
     }
     
-    const { lineItems, client, priceIncludesVAT, vatRate } = validatedFields.data;
+    const { lineItems, client, priceIncludesVAT } = validatedFields.data;
 
     let subtotal = 0;
     
