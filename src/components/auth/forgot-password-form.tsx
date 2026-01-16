@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/firebase';
-import { sendPasswordResetEmail } from 'firebase/auth';
+import { sendPasswordResetEmail, type ActionCodeSettings } from 'firebase/auth';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,8 +31,15 @@ export function ForgotPasswordForm() {
         return;
     }
 
+    // Construct the URL for the password reset link to redirect the user back to the login page.
+    const continueUrl = `${window.location.origin}/login`;
+    const actionCodeSettings: ActionCodeSettings = {
+      url: continueUrl,
+      handleCodeInApp: true,
+    };
+
     try {
-        await sendPasswordResetEmail(auth, email);
+        await sendPasswordResetEmail(auth, email, actionCodeSettings);
         // If the call succeeds, or if the user is not found, we show the success message.
         // This is a security measure to prevent email enumeration.
         setSuccess(true);
