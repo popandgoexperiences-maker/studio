@@ -41,7 +41,7 @@ export function Logo({ className }: { className?: string }) {
 ="round"
         />
       </svg>
-      <span className="text-foreground">InvoiceFlow</span>
+      <span className="text-foreground">FactuFácil</span>
     </div>
   );
 }

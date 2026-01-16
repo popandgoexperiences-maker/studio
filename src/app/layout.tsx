@@ -5,8 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
-  title: 'InvoiceFlow',
-  description: 'Simple and professional invoicing for freelancers and small businesses.',
+  title: 'FactuFácil',
+  description: 'Facturación sencilla y profesional para autónomos y pequeñas empresas.',
 };
 
 export default function RootLayout({
