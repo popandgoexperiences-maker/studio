@@ -22,11 +22,12 @@ import { AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ClientAutocomplete } from '../invoices/client-autocomplete';
 import { Textarea } from '../ui/textarea';
+import { Switch } from '@/components/ui/switch';
 
 const lineItemSchema = z.object({
   descripcion: z.string().min(1, "La descripción es requerida."),
   cantidad: z.coerce.number().min(0.01, "La cantidad debe ser positiva."),
-  precioUnitario: z.coerce.number().min(0.01, "El precio debe ser positivo."),
+  precioUnitario: z.coerce.number().min(0, "El precio debe ser 0 o mayor."),
 });
 
 const clientSchema = z.object({
@@ -39,6 +40,7 @@ const clientSchema = z.object({
 const quoteSchema = z.object({
   client: clientSchema,
   lineItems: z.array(lineItemSchema).min(1, "Debe haber al menos un concepto."),
+  priceIncludesVAT: z.boolean(),
 });
 
 type QuoteFormValues = z.infer<typeof quoteSchema>;
@@ -46,7 +48,7 @@ type QuoteFormValues = z.infer<typeof quoteSchema>;
 export function CreateQuoteForm({ clients, user }: { clients: Client[], user: User }) {
   const [state, formAction] = useActionState(createQuote, undefined);
   const { toast } = useToast();
-  const vatRate = user.vatRate ?? 0.10;
+  const vatRate = user.vatRate ?? 0.21;
   
   const [isPending, startTransition] = useTransition();
   
@@ -65,6 +67,7 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
     defaultValues: {
       client: { id: '', name: '', nif: '', address: '' },
       lineItems: [{ descripcion: '', cantidad: 1, precioUnitario: 0 }],
+      priceIncludesVAT: false,
     },
   });
 
@@ -77,21 +80,30 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
   
   useEffect(() => {
     const subscription = watch((value, { name, type }) => {
-      if (name && (name.startsWith('lineItems') || name === 'client.name' || name === 'client.nif' || name === 'client.address')) {
-        calculateTotalsFromLineItems();
-      }
+        calculateTotals();
     });
-    calculateTotalsFromLineItems();
+    calculateTotals();
     return () => subscription.unsubscribe();
   }, [watch, vatRate]);
 
-  const calculateTotalsFromLineItems = () => {
-      const lineItems = getValues('lineItems');
-      const subtotal = lineItems.reduce((acc, item) => {
-        const quantity = Number(item.cantidad) || 0;
-        const unitPrice = Number(item.precioUnitario) || 0;
-        return acc + quantity * unitPrice;
-      }, 0);
+  const calculateTotals = () => {
+      const { lineItems, priceIncludesVAT } = getValues();
+      let subtotal = 0;
+
+      if (priceIncludesVAT) {
+        const totalWithVat = lineItems.reduce((acc, item) => {
+            const quantity = Number(item.cantidad) || 0;
+            const unitPrice = Number(item.precioUnitario) || 0;
+            return acc + quantity * unitPrice;
+        }, 0);
+        subtotal = totalWithVat / (1 + vatRate);
+      } else {
+        subtotal = lineItems.reduce((acc, item) => {
+            const quantity = Number(item.cantidad) || 0;
+            const unitPrice = Number(item.precioUnitario) || 0;
+            return acc + quantity * unitPrice;
+        }, 0);
+      }
       
       const iva = subtotal * vatRate;
       const total = subtotal + iva;
@@ -102,18 +114,10 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
   const onFormSubmit = (data: QuoteFormValues) => {
     startTransition(() => {
         const formData = new FormData();
-        const finalSubtotal = data.lineItems.reduce((acc, item) => {
-            return acc + (item.cantidad * item.precioUnitario);
-        }, 0);
-        const finalVat = finalSubtotal * (user.vatRate ?? 0);
-        const finalTotal = finalSubtotal + finalVat;
-
+        
         formData.append('client', JSON.stringify(data.client));
-        formData.append('lineItems', JSON.stringify(data.lineItems.map(item => ({...item, precioUnitario: item.precioUnitario}))));
-        formData.append('subtotal', finalSubtotal.toString());
-        formData.append('vat', finalVat.toString());
-        formData.append('total', finalTotal.toString());
-        formData.append('vatRate', (user.vatRate ?? 0).toString());
+        formData.append('lineItems', JSON.stringify(data.lineItems));
+        formData.append('priceIncludesVAT', String(data.priceIncludesVAT));
         
         formAction(formData);
     });
@@ -193,8 +197,24 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
             </Card>
 
             <Card>
-                <CardHeader>
+                <CardHeader className="flex-row items-center justify-between">
                     <CardTitle>Conceptos</CardTitle>
+                    <div className="flex items-center space-x-2">
+                        <Controller
+                            control={control}
+                            name="priceIncludesVAT"
+                            render={({ field }) => (
+                                <Switch
+                                    id="priceIncludesVAT"
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                />
+                            )}
+                        />
+                        <Label htmlFor="priceIncludesVAT" className="text-sm">
+                            Precios con IVA incluido
+                        </Label>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     {/* Desktop Table View */}
@@ -204,37 +224,47 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
                                 <TableRow>
                                     <TableHead>Descripción</TableHead>
                                     <TableHead className="w-[100px] text-right">Cantidad</TableHead>
-                                    <TableHead className="w-[150px] text-right">Precio Unit.</TableHead>
+                                    <TableHead className="w-[150px] text-right">
+                                        {watch('priceIncludesVAT') ? 'Precio (IVA incl.)' : 'Precio Unit.'}
+                                    </TableHead>
                                     <TableHead className="w-[150px] text-right">Importe</TableHead>
                                     <TableHead className="w-[50px]"></TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {fields.map((field, index) => (
-                                    <TableRow key={field.id}>
-                                        <TableCell>
-                                            <Controller
-                                                name={`lineItems.${index}.descripcion`}
-                                                control={control}
-                                                render={({ field }) => <Textarea {...field} placeholder="Ej: Diseño web" className="min-h-[40px]"/>}
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Input type="number" step="any" {...register(`lineItems.${index}.cantidad`)} className="text-right"/>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Input type="number" step="any" {...register(`lineItems.${index}.precioUnitario`)} className="text-right"/>
-                                        </TableCell>
-                                        <TableCell className="text-right font-medium align-top pt-5">
-                                            {formatCurrency((watch(`lineItems.${index}.cantidad`) || 0) * (watch(`lineItems.${index}.precioUnitario`) || 0))}
-                                        </TableCell>
-                                        <TableCell className="align-top pt-5">
-                                            <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} disabled={fields.length <= 1}>
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
+                                {fields.map((field, index) => {
+                                    const quantity = watch(`lineItems.${index}.cantidad`) || 0;
+                                    const unitPrice = watch(`lineItems.${index}.precioUnitario`) || 0;
+                                    const lineTotal = quantity * unitPrice;
+                                    return (
+                                        <TableRow key={field.id}>
+                                            <TableCell>
+                                                <Controller
+                                                    name={`lineItems.${index}.descripcion`}
+                                                    control={control}
+                                                    render={({ field }) => <Textarea {...field} placeholder="Ej: Diseño web" className="min-h-[40px]"/>}
+                                                />
+                                                {errors.lineItems?.[index]?.descripcion && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.descripcion?.message}</p>}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input type="number" step="any" {...register(`lineItems.${index}.cantidad`)} className="text-right"/>
+                                                {errors.lineItems?.[index]?.cantidad && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.cantidad?.message}</p>}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input type="number" step="any" {...register(`lineItems.${index}.precioUnitario`)} className="text-right"/>
+                                                {errors.lineItems?.[index]?.precioUnitario && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.precioUnitario?.message}</p>}
+                                            </TableCell>
+                                            <TableCell className="text-right font-medium align-top pt-5">
+                                                {formatCurrency(lineTotal)}
+                                            </TableCell>
+                                            <TableCell className="align-top pt-5">
+                                                <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} disabled={fields.length <= 1}>
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
                             </TableBody>
                         </Table>
                     </div>
@@ -262,7 +292,7 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
                                             {errors.lineItems?.[index]?.cantidad && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.cantidad?.message}</p>}
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor={`lineItems.${index}.precioUnitario`}>Precio Unit.</Label>
+                                            <Label htmlFor={`lineItems.${index}.precioUnitario`}>{watch('priceIncludesVAT') ? 'Precio (IVA incl.)' : 'Precio Unit.'}</Label>
                                             <Input id={`lineItems.${index}.precioUnitario`} type="number" step="any" {...register(`lineItems.${index}.precioUnitario`)} className="text-right" />
                                             {errors.lineItems?.[index]?.precioUnitario && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.precioUnitario?.message}</p>}
                                         </div>

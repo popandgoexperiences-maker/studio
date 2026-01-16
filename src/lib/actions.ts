@@ -213,6 +213,7 @@ const LineItemQuoteSchema = z.object({
 const QuoteSchema = z.object({
   client: ClientSchemaForInvoice,
   lineItems: z.array(LineItemQuoteSchema).min(1, "Debe haber al menos un concepto."),
+  priceIncludesVAT: z.coerce.boolean(),
 });
 
 
@@ -226,15 +227,21 @@ export async function createQuote(prevState: any, formData: FormData) {
   const userId = decodedToken.uid;
 
   try {
-    const lineItemsRaw = JSON.parse(formData.get('lineItems') as string);
-    const client = JSON.parse(formData.get('client') as string);
-    const vatRate = Number(formData.get('vatRate') as string);
+    const user = await fetchUser(userId);
+    if (!user) {
+        return { message: 'No se pudo encontrar el perfil del usuario.' };
+    }
+    const vatRate = user.vatRate ?? 0.21;
 
-    const validatedFields = QuoteSchema.safeParse({
-      ...Object.fromEntries(formData.entries()),
+    const lineItemsRaw = JSON.parse(formData.get('lineItems') as string);
+    const clientRaw = JSON.parse(formData.get('client') as string);
+    const rawData = {
       lineItems: lineItemsRaw,
-      client,
-    });
+      client: clientRaw,
+      priceIncludesVAT: formData.get('priceIncludesVAT'),
+    };
+    
+    const validatedFields = QuoteSchema.safeParse(rawData);
 
     if (!validatedFields.success) {
       return {
@@ -243,11 +250,21 @@ export async function createQuote(prevState: any, formData: FormData) {
       };
     }
     
-    const { lineItems } = validatedFields.data;
+    const { lineItems, client, priceIncludesVAT } = validatedFields.data;
 
-    const subtotal = lineItems.reduce((acc, item) => {
-        return acc + item.cantidad * item.precioUnitario;
-    }, 0);
+    let subtotal = 0;
+    const finalLineItems = lineItems.map(item => {
+      const basePrice = priceIncludesVAT
+        ? item.precioUnitario / (1 + vatRate)
+        : item.precioUnitario;
+      subtotal += item.cantidad * basePrice;
+      return {
+        description: item.descripcion,
+        quantity: item.cantidad,
+        unitPrice: basePrice,
+      };
+    });
+
     const vat = subtotal * vatRate;
     const total = subtotal + vat;
 
@@ -256,13 +273,9 @@ export async function createQuote(prevState: any, formData: FormData) {
     await saveQuote(userId, {
       userId,
       quoteNumber,
-      client: validatedFields.data.client,
+      client,
       date: new Date().toISOString(),
-      lineItems: validatedFields.data.lineItems.map(item => ({
-          description: item.descripcion,
-          quantity: item.cantidad,
-          unitPrice: item.precioUnitario
-      })),
+      lineItems: finalLineItems,
       subtotal,
       vat,
       total,
