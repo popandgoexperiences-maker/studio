@@ -201,17 +201,6 @@ export default function QuotePrintPage() {
             font-weight: 700;
             font-size: 13px;
           }
-
-          .footer {
-            margin-top: auto;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
-            font-size: 10px;
-          }
-          
-          .footer-text {
-            color: #555;
-          }
         `}
       </style>
 
@@ -281,10 +270,6 @@ export default function QuotePrintPage() {
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="footer">
-          <div className="footer-text">Este documento es un presupuesto y no tiene validez como factura.</div>
         </div>
       </div>
     </>

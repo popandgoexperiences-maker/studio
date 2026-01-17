@@ -201,26 +201,6 @@ export default function InvoicePrintPage() {
             font-weight: 700;
             font-size: 13px;
           }
-
-          .footer {
-            margin-top: auto;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            font-size: 10px;
-          }
-
-          .signature-image {
-            max-height: 50px;
-            object-fit: contain;
-          }
-
-          .seal-image {
-            max-height: 70px;
-            object-fit: contain;
-          }
         `}
       </style>
 
@@ -290,21 +270,6 @@ export default function InvoicePrintPage() {
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="footer">
-          <div>Gracias por su confianza.</div>
-
-          <div className="footer-signature">
-            {user.signatureUrl && (
-              <img src={user.signatureUrl} alt="Firma" className="signature-image" />
-            )}
-            <div>Firma</div>
-          </div>
-
-          {user.sealUrl && (
-            <img src={user.sealUrl} alt="Sello" className="seal-image" />
-          )}
         </div>
       </div>
     </>
