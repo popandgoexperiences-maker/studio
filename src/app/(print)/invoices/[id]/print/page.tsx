@@ -161,10 +161,10 @@ export default function InvoicePrintPage() {
           <div className="header">
             <div className="company-details">
               {user.logoUrl && <img className="logo" src={user.logoUrl} alt="Logo" />}
-              <div className="company-name">{user.name}</div>
+              <div className="company-name" translate="no">{user.name}</div>
               <div className="company-info">{user.nif}</div>
-              <div className="company-info">{user.address}</div>
-              <div className="company-info">{user.email}</div>
+              <div className="company-info" translate="no">{user.address}</div>
+              <div className="company-info" translate="no">{user.email}</div>
             </div>
             <div className="invoice-details">
               <div className="invoice-title">FACTURA</div>
@@ -175,9 +175,9 @@ export default function InvoicePrintPage() {
 
           <div className="client-info">
             <div className="bill-to">Facturar a:</div>
-            <div>{invoice.client.name}</div>
+            <div translate="no">{invoice.client.name}</div>
             <div>{invoice.client.nif}</div>
-            <div>{invoice.client.address}</div>
+            <div translate="no">{invoice.client.address}</div>
           </div>
 
           <table>
@@ -192,7 +192,7 @@ export default function InvoicePrintPage() {
             <tbody>
               {invoice.lineItems.map((item, index) => (
                 <tr key={index}>
-                  <td>{item.description}</td>
+                  <td translate="no">{item.description}</td>
                   <td className="col-qty">{item.quantity}</td>
                   <td className="col-price">{formatCurrency(item.unitPrice)}</td>
                   <td className="col-total">{formatCurrency(item.quantity * item.unitPrice)}</td>
@@ -225,7 +225,7 @@ export default function InvoicePrintPage() {
                 {user.signatureUrl && (
                     <div className="signature-block">
                     <img src={user.signatureUrl} alt="Firma" className="signature-image" />
-                    <p className="signature-name">{user.name}</p>
+                    <p className="signature-name" translate="no">{user.name}</p>
                     {user.nif && <p className="signature-nif">{user.nif}</p>}
                     </div>
                 )}
