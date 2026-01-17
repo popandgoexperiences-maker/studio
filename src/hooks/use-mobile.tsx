@@ -1,19 +1,25 @@
-import * as React from "react"
+import { useState, useEffect } from "react";
 
-const MOBILE_BREAKPOINT = 768
+const MOBILE_BREAKPOINT = 768;
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
+  const [isMobile, setIsMobile] = useState(false);
 
-  React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    }
-    mql.addEventListener("change", onChange)
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    return () => mql.removeEventListener("change", onChange)
-  }, [])
+  useEffect(() => {
+    // Esta función se llamará para comprobar el tamaño de la pantalla.
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    };
 
-  return !!isMobile
+    // Ejecuta la función en el montaje inicial del lado del cliente para establecer el estado correcto.
+    handleResize();
+
+    // Añade el detector de eventos para futuros cambios de tamaño.
+    window.addEventListener("resize", handleResize);
+
+    // Limpia el detector de eventos cuando el componente se desmonta.
+    return () => window.removeEventListener("resize", handleResize);
+  }, []); // El array de dependencias vacío asegura que este efecto se ejecute solo una vez en el montaje.
+
+  return isMobile;
 }
