@@ -58,7 +58,7 @@ export default function InvoicePrintPage() {
 
           @page {
             size: A4;
-            margin: 1.2cm;
+            margin: 1.5cm;
           }
 
           html, body {
@@ -69,28 +69,29 @@ export default function InvoicePrintPage() {
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
-
+          
           .page-container {
-            width: 100%;
-            height: calc(100vh - 2.4cm);
-            max-height: calc(100vh - 2.4cm);
-            overflow: hidden;
-            position: relative;
-            box-sizing: border-box;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            gap: 10px;
-            padding: 0.3cm 1cm;
+            min-height: 98vh; /* For screen view */
             background: #ffffff !important;
-            page-break-after: avoid;
-            break-after: avoid;
+          }
+          
+          @media print {
+              .page-container {
+                  min-height: 0;
+              }
           }
 
-          .page-container::after {
-            content: "";
-            display: block;
-            height: 0;
+          @media screen {
+            .page-container {
+                width: 21cm;
+                min-height: 29.7cm;
+                margin: 1rem auto;
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+                padding: 1.5cm;
+                box-sizing: border-box;
+            }
           }
 
           .header {
@@ -138,8 +139,8 @@ export default function InvoicePrintPage() {
           }
 
           .client-info {
-            margin-top: 10px;
-            margin-bottom: 10px;
+            margin-top: 20px;
+            margin-bottom: 20px;
           }
 
           .bill-to {
@@ -179,7 +180,7 @@ export default function InvoicePrintPage() {
           .totals {
             display: flex;
             justify-content: flex-end;
-            margin-top: 10px;
+            margin-top: 20px;
           }
 
           .totals-container {
@@ -202,8 +203,8 @@ export default function InvoicePrintPage() {
           }
 
           .footer {
-            margin-top: 20px;
-            padding-top: 10px;
+            margin-top: auto;
+            padding-top: 20px;
             border-top: 1px solid #ddd;
             display: flex;
             justify-content: space-between;
@@ -220,89 +221,73 @@ export default function InvoicePrintPage() {
             max-height: 70px;
             object-fit: contain;
           }
-
-          .print-button {
-            margin-top: 20px;
-            align-self: flex-end;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-          }
-
-          @media print {
-            .print-button {
-              display: none;
-            }
-          }
         `}
       </style>
 
       <div className="page-container">
-        <div className="header">
-          <div className="company-details">
-            {user.logoUrl && <img className="logo" src={user.logoUrl} alt="Logo" />}
-            <div className="company-name">{user.name}</div>
-            <div className="company-info">{user.nif}</div>
-            <div className="company-info">{user.address}</div>
-            <div className="company-info">{user.email}</div>
-          </div>
+        <div className="main-content">
+          <div className="header">
+            <div className="company-details">
+              {user.logoUrl && <img className="logo" src={user.logoUrl} alt="Logo" />}
+              <div className="company-name">{user.name}</div>
+              <div className="company-info">{user.nif}</div>
+              <div className="company-info">{user.address}</div>
+              <div className="company-info">{user.email}</div>
+            </div>
 
-          <div className="invoice-details">
-            <div className="invoice-title">FACTURA</div>
-            <div className="invoice-number">{invoice.invoiceNumber}</div>
-            <div className="invoice-date">
-              Fecha: {new Date(invoice.date).toLocaleDateString('es-ES')}
+            <div className="invoice-details">
+              <div className="invoice-title">FACTURA</div>
+              <div className="invoice-number">{invoice.invoiceNumber}</div>
+              <div className="invoice-date">
+                Fecha: {new Date(invoice.date).toLocaleDateString('es-ES')}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="client-info">
-          <div className="bill-to">Facturar a:</div>
-          <div>{invoice.client.name}</div>
-          <div>{invoice.client.nif}</div>
-          <div>{invoice.client.address}</div>
-        </div>
+          <div className="client-info">
+            <div className="bill-to">Facturar a:</div>
+            <div>{invoice.client.name}</div>
+            <div>{invoice.client.nif}</div>
+            <div>{invoice.client.address}</div>
+          </div>
 
-        <table>
-          <thead>
-            <tr>
-              <th>Descripción</th>
-              <th className="col-qty">Cantidad</th>
-              <th className="col-price">Precio Unit.</th>
-              <th className="col-total">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoice.lineItems.map((item, index) => (
-              <tr key={index}>
-                <td>{item.description}</td>
-                <td className="col-qty">{item.quantity}</td>
-                <td className="col-price">{formatCurrency(item.unitPrice)}</td>
-                <td className="col-total">
-                  {formatCurrency(item.quantity * item.unitPrice)}
-                </td>
+          <table>
+            <thead>
+              <tr>
+                <th>Descripción</th>
+                <th className="col-qty">Cantidad</th>
+                <th className="col-price">Precio Unit.</th>
+                <th className="col-total">Total</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {invoice.lineItems.map((item, index) => (
+                <tr key={index}>
+                  <td>{item.description}</td>
+                  <td className="col-qty">{item.quantity}</td>
+                  <td className="col-price">{formatCurrency(item.unitPrice)}</td>
+                  <td className="col-total">
+                    {formatCurrency(item.quantity * item.unitPrice)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
-        <div className="totals">
-          <div className="totals-container">
-            <div className="total-row">
-              <span>Subtotal</span>
-              <span>{formatCurrency(invoice.subtotal)}</span>
-            </div>
-            <div className="total-row">
-              <span>IVA ({(vatRate * 100).toFixed(0)}%)</span>
-              <span>{formatCurrency(invoice.vat)}</span>
-            </div>
-            <div className="total-row grand-total-row">
-              <span>TOTAL</span>
-              <span>{formatCurrency(invoice.total)}</span>
+          <div className="totals">
+            <div className="totals-container">
+              <div className="total-row">
+                <span>Subtotal</span>
+                <span>{formatCurrency(invoice.subtotal)}</span>
+              </div>
+              <div className="total-row">
+                <span>IVA ({(vatRate * 100).toFixed(0)}%)</span>
+                <span>{formatCurrency(invoice.vat)}</span>
+              </div>
+              <div className="total-row grand-total-row">
+                <span>TOTAL</span>
+                <span>{formatCurrency(invoice.total)}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -321,10 +306,6 @@ export default function InvoicePrintPage() {
             <img src={user.sealUrl} alt="Sello" className="seal-image" />
           )}
         </div>
-
-        <button className="print-button" onClick={() => window.print()}>
-          Imprimir / Guardar como PDF
-        </button>
       </div>
     </>
   );
