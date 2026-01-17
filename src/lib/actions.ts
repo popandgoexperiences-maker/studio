@@ -2,7 +2,6 @@
 
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
 import {
   fetchNextInvoiceNumber,
   saveInvoice,
@@ -177,8 +176,6 @@ export async function createInvoice(prevState: any, formData: FormData) {
     };
   }
 
-  revalidatePath('/invoices');
-  revalidatePath('/clients');
   redirect('/invoices');
 }
 
@@ -197,7 +194,6 @@ export async function deleteInvoice(invoiceId: string) {
     return { message: `Error al eliminar la factura: ${e.message}` };
   }
 
-  revalidatePath('/invoices');
   return { success: true };
 }
 
@@ -286,7 +282,6 @@ export async function createQuote(prevState: any, formData: FormData) {
     return { message: `Error al crear el presupuesto: ${e.message}` };
   }
 
-  revalidatePath('/quotes');
   redirect('/quotes');
 }
 
@@ -305,7 +300,6 @@ export async function deleteQuote(quoteId: string) {
     return { message: `Error al eliminar el presupuesto: ${e.message}` };
   }
 
-  revalidatePath('/quotes');
   return { success: true };
 }
 
@@ -351,8 +345,6 @@ export async function convertQuoteToInvoice(quoteId: string) {
     return { message: `Error al convertir el presupuesto: ${e.message}` };
   }
 
-  revalidatePath('/quotes');
-  revalidatePath('/invoices');
   redirect('/invoices');
 }
 
@@ -412,9 +404,6 @@ export async function createClient(prevState: any, formData: FormData) {
     };
   }
 
-  revalidatePath('/clients');
-  revalidatePath('/invoices/new');
-  revalidatePath('/quotes/new');
   redirect('/clients');
 }
 
@@ -444,7 +433,6 @@ export async function updateClient(clientId: string, prevState: any, formData: F
         return { message: `Error al actualizar el cliente: ${e.message}` };
     }
 
-    revalidatePath('/clients');
     redirect('/clients');
 }
 
@@ -463,7 +451,6 @@ export async function deleteClient(clientId: string) {
     return { message: `Error al eliminar el cliente: ${e.message}` };
   }
 
-  revalidatePath('/clients');
   return { success: true };
 }
 
@@ -559,9 +546,6 @@ export async function updateSettings(prevState: any, formData: FormData) {
 
   // 5. Revalidación y Finalización
   console.log('[DEBUG] updateSettings -> Revalidando rutas y finalizando.');
-  revalidatePath('/settings');
-  revalidatePath('/invoices/new');
-  revalidatePath('/(dashboard)/layout.tsx');
   
   return { message: 'Perfil actualizado con éxito.' };
 }
@@ -591,7 +575,6 @@ export async function uploadFile(formData: FormData) {
   try {
     const dataUrl = await fileToDataUrl(file);
     await updateUserProfile(userId, { [fieldName]: dataUrl });
-    revalidatePath('/settings');
     return { success: true, url: dataUrl };
   } catch (error: any) {
     return { success: false, error: error.message };
