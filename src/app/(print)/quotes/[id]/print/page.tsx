@@ -28,14 +28,12 @@ export default function QuotePrintPage() {
 
   const loading = isAuthUserLoading || isQuoteLoading || isUserLoading;
 
-  // 👉 Auto-imprimir cuando cargue
   useEffect(() => {
     if (!loading && quote) {
       setTimeout(() => window.print(), 300);
     }
   }, [loading, quote]);
 
-  // 👉 Reload limpio al volver atrás (evita error de hidratación)
   useEffect(() => {
     const handlePopState = () => {
       window.location.reload();
@@ -52,157 +50,87 @@ export default function QuotePrintPage() {
 
   return (
     <>
-      <style>
-        {`
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        
+        @page {
+          size: A4;
+          margin: 1.5cm;
+        }
 
-          @page {
-            size: A4;
-            margin: 1.5cm;
-          }
+        html, body {
+          background: #ffffff !important;
+          margin: 0;
+          padding: 0;
+          font-family: 'Inter', sans-serif;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        
+        .page-container {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          background: #ffffff !important;
+        }
 
-          html, body {
-            background: #ffffff !important;
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', sans-serif;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-
+        @media screen {
           .page-container {
-            display: flex;
-            flex-direction: column;
-            min-height: 98vh; /* For screen view */
-            background: #ffffff !important;
+            width: 21cm;
+            min-height: 29.7cm;
+            margin: 1rem auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 1.5cm;
+            box-sizing: border-box;
           }
-          
-          @media print {
-              .page-container {
-                  min-height: 0;
-              }
-          }
+        }
 
-          @media screen {
+        @media print {
             .page-container {
-                width: 21cm;
-                min-height: 29.7cm;
-                margin: 1rem auto;
-                box-shadow: 0 0 10px rgba(0,0,0,0.1);
-                padding: 1.5cm;
-                box-sizing: border-box;
+                height: 100%;
+                width: 100%;
             }
-          }
+        }
 
-          .header {
+        .main-content {
+          flex-grow: 1;
+        }
+
+        .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #ddd; padding-bottom: 12px; }
+        .company-details { display: flex; flex-direction: column; gap: 2px; }
+        .company-name { font-size: 16px; font-weight: 700; }
+        .company-info { font-size: 10px; }
+        .logo { max-width: 120px; max-height: 50px; object-fit: contain; margin-bottom: 6px; }
+        .invoice-details { text-align: right; }
+        .invoice-title { font-size: 22px; font-weight: 700; }
+        .invoice-number, .invoice-date { font-size: 11px; }
+        .client-info { margin-top: 20px; margin-bottom: 20px; }
+        .bill-to { font-weight: 600; margin-bottom: 4px; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        thead { background-color: #f5f5f5; }
+        th { text-align: left; padding: 8px; border-bottom: 1px solid #ddd; font-weight: 600; }
+        td { padding: 8px; border-bottom: 1px solid #eee; }
+        .col-qty, .col-price, .col-total { text-align: right; width: 15%; }
+        
+        .totals { display: flex; justify-content: flex-end; margin-top: 20px; }
+        .totals-container { width: 40%; font-size: 11px; }
+        .total-row { display: flex; justify-content: space-between; padding: 4px 0; }
+        .grand-total-row { margin-top: 6px; padding-top: 6px; border-top: 1px solid #333; font-weight: 700; font-size: 13px; }
+        
+        .footer {
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 12px;
-          }
-
-          .company-details {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-          }
-
-          .company-name {
-            font-size: 16px;
-            font-weight: 700;
-          }
-
-          .company-info {
-            font-size: 10px;
-          }
-
-          .logo {
-            max-width: 120px;
-            max-height: 50px;
-            object-fit: contain;
-            margin-bottom: 6px;
-          }
-
-          .invoice-details {
-            text-align: right;
-          }
-
-          .invoice-title {
-            font-size: 22px;
-            font-weight: 700;
-          }
-
-          .invoice-number,
-          .invoice-date {
-            font-size: 11px;
-          }
-
-          .client-info {
-            margin-top: 20px;
-            margin-bottom: 20px;
-          }
-
-          .bill-to {
-            font-weight: 600;
-            margin-bottom: 4px;
-          }
-
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 11px;
-          }
-
-          thead {
-            background-color: #f5f5f5;
-          }
-
-          th {
-            text-align: left;
-            padding: 8px;
-            border-bottom: 1px solid #ddd;
-            font-weight: 600;
-          }
-
-          td {
-            padding: 8px;
-            border-bottom: 1px solid #eee;
-          }
-
-          .col-qty,
-          .col-price,
-          .col-total {
-            text-align: right;
-            width: 15%;
-          }
-
-          .totals {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 20px;
-          }
-
-          .totals-container {
-            width: 40%;
-            font-size: 11px;
-          }
-
-          .total-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 4px 0;
-          }
-
-          .grand-total-row {
-            margin-top: 6px;
-            padding-top: 6px;
-            border-top: 1px solid #333;
-            font-weight: 700;
-            font-size: 13px;
-          }
-        `}
-      </style>
+            align-items: flex-end;
+            page-break-inside: avoid;
+        }
+        .signature, .seal { text-align: center; }
+        .signature-image { max-height: 50px; object-fit: contain; }
+        .seal-image { max-height: 80px; object-fit: contain; }
+        .footer-label { font-size: 10px; color: #555; margin-top: 4px; }
+      `}</style>
 
       <div className="page-container">
         <div className="main-content">
@@ -214,13 +142,10 @@ export default function QuotePrintPage() {
               <div className="company-info">{user.address}</div>
               <div className="company-info">{user.email}</div>
             </div>
-
             <div className="invoice-details">
               <div className="invoice-title">PRESUPUESTO</div>
               <div className="invoice-number">{quote.quoteNumber}</div>
-              <div className="invoice-date">
-                Fecha: {new Date(quote.date).toLocaleDateString('es-ES')}
-              </div>
+              <div className="invoice-date">Fecha: {new Date(quote.date).toLocaleDateString('es-ES')}</div>
             </div>
           </div>
 
@@ -246,9 +171,7 @@ export default function QuotePrintPage() {
                   <td>{item.description}</td>
                   <td className="col-qty">{item.quantity}</td>
                   <td className="col-price">{formatCurrency(item.unitPrice)}</td>
-                  <td className="col-total">
-                    {formatCurrency(item.quantity * item.unitPrice)}
-                  </td>
+                  <td className="col-total">{formatCurrency(item.quantity * item.unitPrice)}</td>
                 </tr>
               ))}
             </tbody>
@@ -271,6 +194,22 @@ export default function QuotePrintPage() {
             </div>
           </div>
         </div>
+
+        {(user.signatureUrl || user.sealUrl) && (
+          <footer className="footer">
+            {user.signatureUrl && (
+              <div className="signature">
+                <img src={user.signatureUrl} alt="Firma" className="signature-image" />
+                <p className="footer-label">Firma</p>
+              </div>
+            )}
+            {user.sealUrl && (
+              <div className="seal">
+                <img src={user.sealUrl} alt="Sello" className="seal-image" />
+              </div>
+            )}
+          </footer>
+        )}
       </div>
     </>
   );
