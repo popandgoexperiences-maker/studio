@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
 import { useActionState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { signup } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,13 @@ import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 export function SignupForm() {
   const [state, dispatch] = useActionState(signup, undefined);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state?.success && state.redirectPath) {
+      router.push(state.redirectPath);
+    }
+  }, [state, router]);
 
   return (
     <form action={dispatch}>

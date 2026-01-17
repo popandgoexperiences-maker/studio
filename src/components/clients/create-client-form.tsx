@@ -1,11 +1,12 @@
 'use client';
 
-import { useActionState, useTransition } from 'react';
+import { useActionState, useTransition, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, Save } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { createClient } from '@/lib/actions';
 
@@ -27,6 +28,7 @@ type ClientFormValues = z.infer<typeof clientSchema>;
 export function CreateClientForm() {
   const [state, formAction] = useActionState(createClient, undefined);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const {
     register,
@@ -40,6 +42,12 @@ export function CreateClientForm() {
       address: '',
     },
   });
+
+  useEffect(() => {
+    if (state?.success && state.redirectPath) {
+      router.push(state.redirectPath);
+    }
+  }, [state, router]);
 
   const onFormSubmit = (data: ClientFormValues) => {
     startTransition(() => {

@@ -1,7 +1,6 @@
 'use server';
 
 import { z } from 'zod';
-import { redirect } from 'next/navigation';
 import {
   fetchNextInvoiceNumber,
   saveInvoice,
@@ -67,12 +66,13 @@ export async function signup(prevState: any, formData: FormData) {
     return { message: `Error al crear la cuenta: ${e.message}` };
   }
   
-  redirect('/login');
+  return { success: true, redirectPath: '/login' };
 }
 
 export async function logout() {
     const cookieStore = await cookies();
     cookieStore.delete('__session');
+    // The redirect in a simple action like this is safe.
     redirect('/login');
 }
 
@@ -176,7 +176,7 @@ export async function createInvoice(prevState: any, formData: FormData) {
     };
   }
 
-  redirect('/invoices');
+  return { success: true, redirectPath: '/invoices' };
 }
 
 export async function deleteInvoice(invoiceId: string) {
@@ -262,7 +262,7 @@ export async function createQuote(prevState: any, formData: FormData) {
     });
 
     const vat = subtotal * vatRate;
-    const total = subtotal + vat;
+    const total = subtotal + iva;
 
     const quoteNumber = await fetchNextQuoteNumber(userId);
 
@@ -282,7 +282,7 @@ export async function createQuote(prevState: any, formData: FormData) {
     return { message: `Error al crear el presupuesto: ${e.message}` };
   }
 
-  redirect('/quotes');
+  return { success: true, redirectPath: '/quotes' };
 }
 
 export async function deleteQuote(quoteId: string) {
@@ -340,12 +340,11 @@ export async function convertQuoteToInvoice(quoteId: string) {
       status: 'accepted',
       invoiceId: newInvoiceId 
     });
-
+    
+    return { success: true, redirectPath: '/invoices' };
   } catch (e: any) {
     return { message: `Error al convertir el presupuesto: ${e.message}` };
   }
-
-  redirect('/invoices');
 }
 
 // --- CLIENT ACTIONS ---
@@ -357,9 +356,6 @@ const ClientSchema = z.object({
 });
 
 export async function createClient(prevState: any, formData: FormData) {
-    console.log('[DEBUG createClient] Entrando en createClient');
-    console.log('[DEBUG createClient] formData keys:', Array.from(formData.keys()));
-    
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get('__session')?.value;
     if (!sessionCookie) {
@@ -382,29 +378,14 @@ export async function createClient(prevState: any, formData: FormData) {
       message: 'Error de validación.',
     };
   }
-  
-  console.log('[DEBUG createClient] userId before saveClient:', userId);
-  console.log('[DEBUG createClient] validatedFields:', validatedFields.data);
 
   try {
-    console.log('[DEBUG createClient] Llamando a saveClient con userId:', userId);
     await saveClient(userId, validatedFields.data);
-    console.log('[DEBUG createClient] saveClient completado correctamente');
   } catch (e: any) {
-    console.error('[ERROR createClient] Error al ejecutar saveClient:', e);
-    // Devolver el mensaje y la traza para diagnóstico inmediato.
-    // Nota: esto es solo diagnóstico; no modificar la lógica más allá de devolver información.
-    return {
-      message: `Error al guardar el cliente: ${e?.message || String(e)}`,
-      error: {
-        message: e?.message ?? String(e),
-        stack: e?.stack ?? null,
-        name: e?.name ?? null
-      }
-    };
+    return { message: `Error al guardar el cliente: ${e?.message || String(e)}` };
   }
 
-  redirect('/clients');
+  return { success: true, redirectPath: '/clients' };
 }
 
 export async function updateClient(clientId: string, prevState: any, formData: FormData) {
@@ -433,7 +414,7 @@ export async function updateClient(clientId: string, prevState: any, formData: F
         return { message: `Error al actualizar el cliente: ${e.message}` };
     }
 
-    redirect('/clients');
+    return { success: true, redirectPath: '/clients' };
 }
 
 export async function deleteClient(clientId: string) {
@@ -479,9 +460,7 @@ async function fileToDataUrl(file: File): Promise<string> {
 }
 
 export async function updateSettings(prevState: any, formData: FormData) {
-  console.log('[DEBUG] updateSettings -> Invocada la acción del servidor.');
   try {
-    // 1. Verificación de Autenticación
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get('__session')?.value;
     if (!sessionCookie) {
@@ -494,58 +473,38 @@ export async function updateSettings(prevState: any, formData: FormData) {
     if (!userId) {
       throw new Error('Token de sesión inválido o expirado.');
     }
-    console.log(`[DEBUG] updateSettings -> Autenticación verificada. userId: ${userId}`);
 
-    // 2. Validación de Datos del Formulario
     const rawData = Object.fromEntries(formData.entries());
-    console.log('[DEBUG] updateSettings -> Raw form data:', rawData);
 
     const validatedFields = SettingsSchema.safeParse(rawData);
 
     if (!validatedFields.success) {
-      console.error('[DEBUG] updateSettings -> Error de validación de Zod:', validatedFields.error.flatten());
       return {
         errors: validatedFields.error.flatten().fieldErrors,
         message: 'Error de validación. Revisa los campos marcados.',
       };
     }
-    console.log('[DEBUG] updateSettings -> Datos validados:', validatedFields.data);
 
-    // 3. Procesamiento de Archivos y Datos
     const updatedUserData: Partial<User> = { ...validatedFields.data };
-    console.log('[DEBUG] updateSettings -> Objeto de datos inicial:', updatedUserData);
 
     const logoFile = formData.get('logo') as File | null;
     if (logoFile && logoFile.size > 0) {
-      console.log(`[DEBUG] updateSettings -> Procesando archivo 'logo': ${logoFile.name}`);
       updatedUserData.logoUrl = await fileToDataUrl(logoFile);
     }
 
     if (validatedFields.data.signature && validatedFields.data.signature.startsWith('data:image')) {
-      console.log('[DEBUG] updateSettings -> Procesando data URL de la firma.');
       updatedUserData.signatureUrl = validatedFields.data.signature;
     }
 
     const sealFile = formData.get('seal') as File | null;
     if (sealFile && sealFile.size > 0) {
-      console.log(`[DEBUG] updateSettings -> Procesando archivo 'seal': ${sealFile.name}`);
       updatedUserData.sealUrl = await fileToDataUrl(sealFile);
     }
-    console.log('[DEBUG] updateSettings -> Objeto de datos final para Firestore:', updatedUserData);
-
-    // 4. Actualización en Base de Datos
-    console.log(`[DEBUG] updateSettings -> Llamando a updateUserProfile para userId: ${userId}`);
     await updateUserProfile(userId, updatedUserData);
-    console.log(`[DEBUG] updateSettings -> updateUserProfile completado con éxito.`);
 
   } catch (e: any) {
-    console.error('[ERROR] en updateSettings:', e);
-    console.error('[ERROR STACK] en updateSettings:', e.stack);
     return { message: `Error al actualizar perfil: ${e.message}` };
   }
-
-  // 5. Revalidación y Finalización
-  console.log('[DEBUG] updateSettings -> Revalidando rutas y finalizando.');
   
   return { message: 'Perfil actualizado con éxito.' };
 }

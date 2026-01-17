@@ -109,19 +109,18 @@ export default function QuoteDetailPage() {
     }
     startTransition(async () => {
       const result = await convertQuoteToInvoice(id);
-      if (result?.message) {
+      if (result?.success && result.redirectPath) {
+        toast({
+          title: '¡Éxito!',
+          description: 'Presupuesto convertido a factura correctamente.',
+        });
+        router.push(result.redirectPath);
+      } else if (result?.message) {
         toast({
           variant: 'destructive',
           title: 'Error al convertir',
           description: result.message,
         });
-      } else {
-        toast({
-          title: '¡Éxito!',
-          description: 'Presupuesto convertido a factura correctamente.',
-        });
-        // La acción `convertQuoteToInvoice` redirige a /invoices,
-        // así que no necesitamos una redirección manual aquí.
       }
     });
   };

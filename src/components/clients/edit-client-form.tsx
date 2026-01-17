@@ -1,11 +1,12 @@
 'use client';
 
-import { useActionState, useTransition } from 'react';
+import { useActionState, useTransition, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, Save } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { updateClient } from '@/lib/actions';
 import type { Client } from '@/lib/definitions';
@@ -29,6 +30,7 @@ export function EditClientForm({ client }: { client: Client }) {
   const updateClientWithId = updateClient.bind(null, client.id);
   const [state, formAction] = useActionState(updateClientWithId, undefined);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const {
     register,
@@ -42,6 +44,12 @@ export function EditClientForm({ client }: { client: Client }) {
       address: client.address,
     },
   });
+
+  useEffect(() => {
+    if (state?.success && state.redirectPath) {
+      router.push(state.redirectPath);
+    }
+  }, [state, router]);
 
   const onFormSubmit = (data: ClientFormValues) => {
     startTransition(() => {
