@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { uploadFile } from '@/lib/actions';
 
+export const dynamic = "force-dynamic";
 export default function AuthWorkerPage() {
   useEffect(() => {
     const handleMessage = async (event: MessageEvent) => {

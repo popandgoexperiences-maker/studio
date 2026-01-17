@@ -1,7 +1,10 @@
 'use client';
+
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
+
+export const dynamic = "force-dynamic";
 
 export default function HomePage() {
   const { user, isUserLoading } = useUser();

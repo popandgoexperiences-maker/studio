@@ -20,6 +20,7 @@ import {
 import type { User } from './definitions';
 import { getAuthSafe } from '@/lib/firebase-server';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 
 // --- AUTH ACTIONS ---
@@ -100,20 +101,20 @@ const invoiceSchema = z.object({
 });
 
 export async function createInvoice(prevState: any, formData: FormData) {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get('__session')?.value;
-  if (!sessionCookie) {
-    return { message: 'Usuario no autenticado.' };
-  }
-
-  const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
-  const userId = decodedToken?.uid;
-
-  if (!userId) {
-    return { message: 'Token de sesión inválido.' };
-  }
-
   try {
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get('__session')?.value;
+    if (!sessionCookie) {
+      return { message: 'Usuario no autenticado.' };
+    }
+
+    const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
+    const userId = decodedToken?.uid;
+
+    if (!userId) {
+      return { message: 'Token de sesión inválido.' };
+    }
+
     const user = await fetchUser(userId);
     if (!user) {
         return { message: 'No se pudo encontrar el perfil del usuario.' };
@@ -170,31 +171,29 @@ export async function createInvoice(prevState: any, formData: FormData) {
       status: 'pending',
     });
 
+    return { success: true, redirectPath: '/invoices' };
   } catch (e: any) {
     return {
       message: `Error al crear la factura: ${e?.message || String(e)}`,
     };
   }
-
-  return { success: true, redirectPath: '/invoices' };
 }
 
 export async function deleteInvoice(invoiceId: string) {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get('__session')?.value;
-  if (!sessionCookie) {
-    return { message: 'Usuario no autenticado.' };
-  }
-  const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
-  const userId = decodedToken.uid;
-
   try {
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get('__session')?.value;
+    if (!sessionCookie) {
+      return { message: 'Usuario no autenticado.' };
+    }
+    const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
+    const userId = decodedToken.uid;
+
     await deleteInvoiceFromDb(userId, invoiceId);
+    return { success: true };
   } catch (e: any) {
     return { message: `Error al eliminar la factura: ${e.message}` };
   }
-
-  return { success: true };
 }
 
 
@@ -214,15 +213,15 @@ const QuoteSchema = z.object({
 
 
 export async function createQuote(prevState: any, formData: FormData) {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get('__session')?.value;
-  if (!sessionCookie) {
-    return { message: 'Usuario no autenticado.' };
-  }
-  const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
-  const userId = decodedToken.uid;
-
   try {
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get('__session')?.value;
+    if (!sessionCookie) {
+      return { message: 'Usuario no autenticado.' };
+    }
+    const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
+    const userId = decodedToken.uid;
+
     const user = await fetchUser(userId);
     if (!user) {
         return { message: 'No se pudo encontrar el perfil del usuario.' };
@@ -262,7 +261,7 @@ export async function createQuote(prevState: any, formData: FormData) {
     });
 
     const vat = subtotal * vatRate;
-    const total = subtotal + iva;
+    const total = subtotal + vat;
 
     const quoteNumber = await fetchNextQuoteNumber(userId);
 
@@ -278,42 +277,40 @@ export async function createQuote(prevState: any, formData: FormData) {
       status: 'draft',
     });
 
+    return { success: true, redirectPath: '/quotes' };
   } catch (e: any) {
     return { message: `Error al crear el presupuesto: ${e.message}` };
   }
-
-  return { success: true, redirectPath: '/quotes' };
 }
 
 export async function deleteQuote(quoteId: string) {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get('__session')?.value;
-  if (!sessionCookie) {
-    return { message: 'Usuario no autenticado.' };
-  }
-  const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
-  const userId = decodedToken.uid;
-
   try {
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get('__session')?.value;
+    if (!sessionCookie) {
+      return { message: 'Usuario no autenticado.' };
+    }
+    const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
+    const userId = decodedToken.uid;
+
     await deleteQuoteFromDb(userId, quoteId);
+    return { success: true };
   } catch (e: any) {
     return { message: `Error al eliminar el presupuesto: ${e.message}` };
   }
-
-  return { success: true };
 }
 
 
 export async function convertQuoteToInvoice(quoteId: string) {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get('__session')?.value;
-  if (!sessionCookie) {
-    return { message: 'Usuario no autenticado.' };
-  }
-  const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
-  const userId = decodedToken.uid;
-
   try {
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get('__session')?.value;
+    if (!sessionCookie) {
+      return { message: 'Usuario no autenticado.' };
+    }
+    const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
+    const userId = decodedToken.uid;
+
     const quote = await getQuote(userId, quoteId);
     if (!quote || quote.userId !== userId) {
       throw new Error('Presupuesto no encontrado o no pertenece al usuario.');
