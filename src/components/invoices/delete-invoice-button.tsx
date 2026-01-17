@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { Trash2, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
@@ -21,22 +22,24 @@ export function DeleteInvoiceButton({ invoiceId }: { invoiceId: string }) {
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
 
   const handleDelete = () => {
     startTransition(async () => {
       const result = await deleteInvoice(invoiceId);
-      if (result?.message) {
+      if (result?.success && result.redirectPath) {
+        toast({
+          title: 'Factura eliminada',
+          description: 'La factura ha sido eliminada correctamente.',
+        });
+        router.push(result.redirectPath);
+      } else if (result?.message) {
         toast({
           variant: 'destructive',
           title: 'Error',
           description: result.message,
         });
-      } else {
-        toast({
-          title: 'Factura eliminada',
-          description: 'La factura ha sido eliminada correctamente.',
-        });
-        setOpen(false);
+        setOpen(false); // Close dialog on error
       }
     });
   };

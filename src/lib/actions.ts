@@ -190,7 +190,7 @@ export async function deleteInvoice(invoiceId: string) {
     const userId = decodedToken.uid;
 
     await deleteInvoiceFromDb(userId, invoiceId);
-    return { success: true };
+    return { success: true, redirectPath: '/invoices' };
   } catch (e: any) {
     return { message: `Error al eliminar la factura: ${e.message}` };
   }
@@ -294,7 +294,7 @@ export async function deleteQuote(quoteId: string) {
     const userId = decodedToken.uid;
 
     await deleteQuoteFromDb(userId, quoteId);
-    return { success: true };
+    return { success: true, redirectPath: '/quotes' };
   } catch (e: any) {
     return { message: `Error al eliminar el presupuesto: ${e.message}` };
   }
