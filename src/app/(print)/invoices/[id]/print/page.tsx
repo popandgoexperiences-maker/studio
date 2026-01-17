@@ -119,17 +119,41 @@ export default function InvoicePrintPage() {
         .grand-total-row { margin-top: 6px; padding-top: 6px; border-top: 1px solid #333; font-weight: 700; font-size: 13px; }
         
         .footer {
+            margin-top: 40px;
             padding-top: 20px;
             border-top: 1px solid #ddd;
             display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
+            justify-content: flex-end;
             page-break-inside: avoid;
         }
-        .signature, .seal { text-align: center; }
-        .signature-image { max-height: 50px; object-fit: contain; }
-        .seal-image { max-height: 80px; object-fit: contain; }
-        .footer-label { font-size: 10px; color: #555; margin-top: 4px; }
+        .signature-seal-area {
+            display: flex;
+            align-items: flex-end;
+            gap: 30px;
+        }
+        .signature-block {
+            text-align: center;
+        }
+        .signature-image { 
+            max-height: 50px;
+            display: block;
+            margin: 0 auto 8px auto;
+        }
+        .signature-name {
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .signature-nif {
+            font-size: 10px;
+            color: #555;
+        }
+        .seal-block {
+            text-align: center;
+        }
+        .seal-image {
+            max-height: 80px;
+            object-fit: contain;
+        }
       `}</style>
 
       <div className="page-container">
@@ -196,19 +220,22 @@ export default function InvoicePrintPage() {
         </div>
 
         {(user.signatureUrl || user.sealUrl) && (
-          <footer className="footer">
-            {user.signatureUrl && (
-              <div className="signature">
-                <img src={user.signatureUrl} alt="Firma" className="signature-image" />
-                <p className="footer-label">Firma</p>
-              </div>
-            )}
-            {user.sealUrl && (
-              <div className="seal">
-                <img src={user.sealUrl} alt="Sello" className="seal-image" />
-              </div>
-            )}
-          </footer>
+            <footer className="footer">
+                <div className="signature-seal-area">
+                {user.signatureUrl && (
+                    <div className="signature-block">
+                    <img src={user.signatureUrl} alt="Firma" className="signature-image" />
+                    <p className="signature-name">{user.name}</p>
+                    {user.nif && <p className="signature-nif">{user.nif}</p>}
+                    </div>
+                )}
+                {user.sealUrl && (
+                    <div className="seal-block">
+                    <img src={user.sealUrl} alt="Sello" className="seal-image" />
+                    </div>
+                )}
+                </div>
+            </footer>
         )}
       </div>
     </>
