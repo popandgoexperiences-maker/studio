@@ -97,7 +97,6 @@ const invoiceSchema = z.object({
   lineItems: z
     .array(LineItemSchemaForAction)
     .min(1, 'Debe haber al menos un concepto.'),
-  priceIncludesVAT: z.coerce.boolean(),
 });
 
 export async function createInvoice(prevState: any, formData: FormData) {
@@ -126,8 +125,9 @@ export async function createInvoice(prevState: any, formData: FormData) {
     const rawData = {
       lineItems: rawLineItems,
       client: rawClient,
-      priceIncludesVAT: formData.get('priceIncludesVAT'),
     };
+    
+    const priceIncludesVAT = formData.get('priceIncludesVAT') === 'true';
 
     const validatedFields = invoiceSchema.safeParse(rawData);
     
@@ -138,7 +138,7 @@ export async function createInvoice(prevState: any, formData: FormData) {
       };
     }
     
-    const { lineItems, client, priceIncludesVAT } = validatedFields.data;
+    const { lineItems, client } = validatedFields.data;
 
     let finalClient = { ...client };
 
@@ -221,7 +221,6 @@ const LineItemQuoteSchema = z.object({
 const QuoteSchema = z.object({
   client: ClientSchemaForInvoice,
   lineItems: z.array(LineItemQuoteSchema).min(1, "Debe haber al menos un concepto."),
-  priceIncludesVAT: z.coerce.boolean(),
 });
 
 
@@ -246,9 +245,10 @@ export async function createQuote(prevState: any, formData: FormData) {
     const rawData = {
       lineItems: lineItemsRaw,
       client: clientRaw,
-      priceIncludesVAT: formData.get('priceIncludesVAT'),
     };
     
+    const priceIncludesVAT = formData.get('priceIncludesVAT') === 'true';
+
     const validatedFields = QuoteSchema.safeParse(rawData);
 
     if (!validatedFields.success) {
@@ -258,7 +258,7 @@ export async function createQuote(prevState: any, formData: FormData) {
       };
     }
     
-    const { lineItems, client, priceIncludesVAT } = validatedFields.data;
+    const { lineItems, client } = validatedFields.data;
     
     let finalClient = { ...client };
 
