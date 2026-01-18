@@ -24,8 +24,29 @@ export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(
     useImperativeHandle(ref, () => ({
       getSignatureData: () => {
         if (sigPadRef.current && !sigPadRef.current.isEmpty()) {
-          // Use JPEG with 80% quality for significant size reduction.
-          return sigPadRef.current.getTrimmedCanvas().toDataURL('image/jpeg', 0.8);
+          // Get the signature canvas with a transparent background
+          const signatureCanvas = sigPadRef.current.getTrimmedCanvas();
+          
+          // Create a new canvas to draw a white background
+          const backgroundCanvas = document.createElement('canvas');
+          backgroundCanvas.width = signatureCanvas.width;
+          backgroundCanvas.height = signatureCanvas.height;
+          
+          const ctx = backgroundCanvas.getContext('2d');
+          if (!ctx) {
+            // Fallback or error handling if context is not available
+            return sigPadRef.current.toDataURL('image/png');
+          }
+          
+          // Fill the background with white
+          ctx.fillStyle = 'white';
+          ctx.fillRect(0, 0, backgroundCanvas.width, backgroundCanvas.height);
+          
+          // Draw the signature (with its transparent background) over the white background
+          ctx.drawImage(signatureCanvas, 0, 0);
+          
+          // Return the new canvas as a JPEG, which is much smaller than PNG
+          return backgroundCanvas.toDataURL('image/jpeg', 0.8);
         }
         return null;
       },
