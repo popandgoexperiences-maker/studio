@@ -65,16 +65,30 @@ export function SettingsForm({ user, images }: SettingsFormProps) {
     });
 
     useEffect(() => {
-        const newSignatureFromStorage = localStorage.getItem('newSignature');
-        if (newSignatureFromStorage !== null) {
-            setSignatureUrl(newSignatureFromStorage);
-            localStorage.removeItem('newSignature');
-            toast({
-                title: 'Firma actualizada',
-                description: 'Tu nueva firma está lista para ser guardada con el resto de cambios.',
-            });
-        }
-    }, [isMobile, toast]); // Reruns if isMobile changes, covering navigation back.
+        const handlePageShow = () => {
+            const newSignatureFromStorage = localStorage.getItem('newSignature');
+            if (newSignatureFromStorage !== null) {
+                setSignatureUrl(newSignatureFromStorage);
+                localStorage.removeItem('newSignature');
+                toast({
+                    title: 'Firma actualizada',
+                    description: 'Tu nueva firma está lista para ser guardada con el resto de cambios.',
+                });
+            }
+        };
+
+        // This event fires when a page is displayed, including after navigating back.
+        // It's more reliable for this use case than a simple mount effect.
+        window.addEventListener('pageshow', handlePageShow);
+
+        // Also check on initial mount, in case the page was loaded directly
+        // with the localStorage item already set.
+        handlePageShow();
+
+        return () => {
+            window.removeEventListener('pageshow', handlePageShow);
+        };
+    }, [toast]);
 
     useEffect(() => {
         if (state?.message) {
