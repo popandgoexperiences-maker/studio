@@ -22,7 +22,7 @@ import { PageHeader } from '@/components/page-header';
 
 function ClientDetailPageSkeleton() {
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div>
       <div className="flex items-center justify-between mb-8">
         <Skeleton className="h-10 w-32" />
         <Skeleton className="h-10 w-24" />
@@ -80,7 +80,7 @@ export default function ClientDetailPage() {
 
   if (!client) {
     return (
-        <div className="p-4 sm:p-6 lg:p-8 text-center">
+        <div className="text-center">
             <PageHeader title="Cliente no encontrado" description="No se pudo encontrar al cliente solicitado." />
              <Button variant="outline" onClick={() => router.back()}>
                 <ArrowLeft className="mr-2" />
@@ -97,7 +97,7 @@ export default function ClientDetailPage() {
 
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div>
       <PageHeader
         title={client.name}
         description="Aquí puedes ver toda la información y actividad de tu cliente."
@@ -124,7 +124,7 @@ export default function ClientDetailPage() {
                     <CardTitle>Datos de Contacto</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base">
                         <div>
                             <p className="text-muted-foreground">NIF/CIF</p>
                             <p className="font-medium">{client.nif}</p>

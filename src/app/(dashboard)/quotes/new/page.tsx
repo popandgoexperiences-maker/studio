@@ -25,7 +25,7 @@ export default function NewQuotePage() {
   const showLoading = isAuthUserLoading || areClientsLoading || isUserLoading;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div>
       <PageHeader
         title="Nuevo Presupuesto"
         description="Rellena los datos para crear un nuevo presupuesto."

@@ -144,13 +144,13 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
 
   return (
     <form onSubmit={handleSubmit(onFormSubmit)}>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <div className="lg:col-span-2 space-y-10">
             <Card>
                 <CardHeader>
                     <CardTitle>Datos del Cliente</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
                     <div className='flex items-end gap-2'>
                         <div className="flex-grow">
                             <ClientAutocomplete 
@@ -189,7 +189,7 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
                     </div>
                     {errors.client?.name && <p className="text-sm text-destructive mt-1">{errors.client.name.message}</p>}
                     
-                    <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="grid sm:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <Label htmlFor="clientNif">NIF/CIF</Label>
                             <Input id="clientNif" {...register('client.nif')} />
@@ -335,12 +335,12 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
             </Card>
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-10">
             <Card>
                 <CardHeader>
                     <CardTitle>Resumen</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
                      <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">Subtotal</span>
                         <span className="font-medium">{formatCurrency(totals.subtotal)}</span>

@@ -31,7 +31,7 @@ export default function ClientsPage() {
 
   if (isUserLoading || !user) {
     return (
-      <div className="p-4 sm:p-6 lg:p-8">
+      <div>
         <PageHeader
           title="Clientes"
           description="Consulta la lista de tus clientes y sus facturas."
@@ -49,7 +49,7 @@ export default function ClientsPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div>
       <PageHeader
         title="Clientes"
         description="Consulta la lista de tus clientes y sus facturas."

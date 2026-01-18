@@ -94,13 +94,13 @@ export function SettingsForm({ user, images }: SettingsFormProps) {
     };
 
     return (
-        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-10">
             <Card>
                 <CardHeader>
                     <CardTitle>Datos de la Empresa/Autónomo</CardTitle>
                     <CardDescription>Esta información aparecerá en tus facturas.</CardDescription>
                 </CardHeader>
-                <CardContent className="grid gap-6 md:grid-cols-2">
+                <CardContent className="grid gap-8 md:grid-cols-2">
                     <div className="space-y-2 md:col-span-2">
                         <Label htmlFor="name">Nombre Completo o Razón Social</Label>
                         <Input id="name" {...register('name')} />
@@ -145,7 +145,7 @@ export function SettingsForm({ user, images }: SettingsFormProps) {
                     <CardTitle>Identidad Visual</CardTitle>
                     <CardDescription>Logo, firma y sello para tus facturas en PDF.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-8">
                     <ImageUploadField 
                         name="logo" 
                         label="Logo" 

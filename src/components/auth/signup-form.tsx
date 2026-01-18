@@ -28,12 +28,12 @@ export function SignupForm() {
     <form action={dispatch}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Crear una cuenta</CardTitle>
+          <CardTitle>Crear una cuenta</CardTitle>
           <CardDescription>
             Rellena tus datos para empezar a crear facturas.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="name">Nombre Completo</Label>
             <Input id="name" name="name" placeholder="Tu Nombre" required />

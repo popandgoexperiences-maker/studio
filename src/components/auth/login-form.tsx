@@ -163,13 +163,13 @@ export function LoginForm() {
     <form onSubmit={handleSubmit(onSubmit)}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Iniciar Sesión</CardTitle>
+          <CardTitle>Iniciar Sesión</CardTitle>
           <CardDescription>
             Introduce tu email y contraseña para acceder a tu panel.
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
 
           {/* Campo: email */}
           <div className="space-y-2">

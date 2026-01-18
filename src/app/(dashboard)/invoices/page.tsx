@@ -18,7 +18,7 @@ export default function InvoicesPage() {
 
   if (isUserLoading || !user) {
     return (
-      <div className="p-4 sm:p-6 lg:p-8">
+      <div>
         <PageHeader
           title="Facturas"
           description="Gestiona tus facturas y clientes."
@@ -39,7 +39,7 @@ export default function InvoicesPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div>
       <PageHeader
         title="Facturas"
         description="Gestiona tus facturas y clientes."

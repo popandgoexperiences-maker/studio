@@ -36,7 +36,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           <SidebarNav />
         </Sidebar>
         <Header />
-        <main className="ml-0 md:ml-[16rem] transition-[margin-left] duration-300 ease-in-out pt-14 md:pt-0">
+        <main className="ml-0 p-4 transition-[margin-left] duration-300 ease-in-out pt-16 sm:p-6 md:ml-[16rem] md:pt-0 lg:p-10">
           {children}
         </main>
       </div>

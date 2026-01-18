@@ -63,7 +63,7 @@ export default function SettingsPage() {
     const showLoading = isAuthUserLoading || isUserLoading;
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8">
+        <div>
             <PageHeader
                 title="Configuración"
                 description="Gestiona la información de tu empresa y tus datos personales."

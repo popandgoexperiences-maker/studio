@@ -67,7 +67,7 @@ export function EditClientForm({ client }: { client: Client }) {
             <CardHeader>
                 <CardTitle>Datos del Cliente</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
                 <div className="space-y-2">
                     <Label htmlFor="name">Nombre o Razón Social</Label>
                     <Input id="name" {...register('name')} />

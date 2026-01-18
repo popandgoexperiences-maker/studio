@@ -23,7 +23,7 @@ export default async function EditClientPage({ params }: { params: { id: string 
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div>
       <PageHeader
         title="Editar Cliente"
         description="Modifica los datos del cliente y guarda los cambios."

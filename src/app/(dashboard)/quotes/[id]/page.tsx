@@ -29,7 +29,7 @@ import { StatusBadge } from '@/components/quotes/status-badge';
 
 function QuoteDetailPageSkeleton() {
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div>
       <div className="flex items-center justify-between mb-8">
         <Skeleton className="h-10 w-24" />
         <div className="flex items-center gap-2">
@@ -38,11 +38,11 @@ function QuoteDetailPageSkeleton() {
         </div>
       </div>
       <Card>
-        <CardHeader className="p-6">
+        <CardHeader className="p-6 md:p-8">
             <Skeleton className="h-8 w-48" />
             <Skeleton className="h-5 w-32" />
         </CardHeader>
-        <CardContent className="p-6 space-y-8">
+        <CardContent className="p-6 md:p-8 md:pt-0 space-y-8">
             <div className="grid sm:grid-cols-2 gap-8">
                 <div>
                     <Skeleton className="h-5 w-20 mb-2" />
@@ -65,7 +65,7 @@ function QuoteDetailPageSkeleton() {
                 </div>
             </div>
         </CardContent>
-        <CardFooter className="p-6">
+        <CardFooter className="p-6 md:p-8 md:pt-0">
             <div className="w-full text-xs text-muted-foreground">
                 <p>Presupuesto generado. Este documento no es una factura.</p>
             </div>
@@ -138,7 +138,7 @@ export default function QuoteDetailPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
         <Button variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">
             <ArrowLeft className="mr-2" />
@@ -166,7 +166,7 @@ export default function QuoteDetailPage() {
                 </p>
             </div>
         )}
-        <CardHeader className="p-6 bg-muted/30 flex flex-col sm:flex-row justify-between">
+        <CardHeader className="p-6 md:p-8 bg-muted/30 flex flex-col sm:flex-row justify-between">
           <div>
             <h1 className="text-2xl font-bold text-primary">{quote.quoteNumber}</h1>
             <p className="text-muted-foreground">
@@ -175,7 +175,7 @@ export default function QuoteDetailPage() {
           </div>
           <StatusBadge status={quote.status} />
         </CardHeader>
-        <CardContent className="p-6 space-y-8">
+        <CardContent className="p-6 md:p-8 md:pt-0 space-y-8">
             {/* User and Client Details */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 <div>
@@ -241,7 +241,7 @@ export default function QuoteDetailPage() {
               </div>
             </div>
         </CardContent>
-        <CardFooter className="p-6 bg-muted/30">
+        <CardFooter className="p-6 md:p-8 md:pt-0 bg-muted/30">
             <p className="text-xs text-muted-foreground">Este documento es un presupuesto y no tiene validez como factura.</p>
         </CardFooter>
       </Card>

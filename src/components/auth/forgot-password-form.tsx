@@ -64,7 +64,7 @@ export function ForgotPasswordForm() {
     return (
         <Card>
             <CardHeader>
-                <CardTitle className="text-2xl">Revisa tu Email</CardTitle>
+                <CardTitle>Revisa tu Email</CardTitle>
                 <CardDescription>
                     Si tu cuenta existe, hemos enviado un enlace a tu correo para restablecer tu contraseña.
                 </CardDescription>
@@ -87,12 +87,12 @@ export function ForgotPasswordForm() {
     <form onSubmit={handleSubmit}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Recuperar Contraseña</CardTitle>
+          <CardTitle>Recuperar Contraseña</CardTitle>
           <CardDescription>
             Introduce tu email y te enviaremos un enlace para restablecer tu contraseña.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input 
