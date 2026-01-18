@@ -24,29 +24,51 @@ export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(
     useImperativeHandle(ref, () => ({
       getSignatureData: () => {
         if (sigPadRef.current && !sigPadRef.current.isEmpty()) {
-          // Get the signature canvas with a transparent background
           const signatureCanvas = sigPadRef.current.getTrimmedCanvas();
-          
-          // Create a new canvas to draw a white background
-          const backgroundCanvas = document.createElement('canvas');
-          backgroundCanvas.width = signatureCanvas.width;
-          backgroundCanvas.height = signatureCanvas.height;
-          
-          const ctx = backgroundCanvas.getContext('2d');
-          if (!ctx) {
-            // Fallback or error handling if context is not available
-            return sigPadRef.current.toDataURL('image/png');
+
+          // 1. Define a maximum width for the signature image to control file size.
+          const MAX_WIDTH = 400; // pixels
+
+          // 2. Calculate new dimensions to maintain aspect ratio.
+          let newWidth = signatureCanvas.width;
+          let newHeight = signatureCanvas.height;
+
+          if (newWidth > MAX_WIDTH) {
+            const ratio = MAX_WIDTH / newWidth;
+            newWidth = MAX_WIDTH;
+            newHeight = newHeight * ratio;
+          }
+
+          // 3. Create a temporary canvas to resize the signature.
+          const resizedCanvas = document.createElement('canvas');
+          resizedCanvas.width = newWidth;
+          resizedCanvas.height = newHeight;
+          const resizedCtx = resizedCanvas.getContext('2d');
+          if (!resizedCtx) {
+            return sigPadRef.current.toDataURL('image/png'); // Fallback
           }
           
-          // Fill the background with white
-          ctx.fillStyle = 'white';
-          ctx.fillRect(0, 0, backgroundCanvas.width, backgroundCanvas.height);
-          
-          // Draw the signature (with its transparent background) over the white background
-          ctx.drawImage(signatureCanvas, 0, 0);
-          
-          // Return the new canvas as a JPEG, which is much smaller than PNG
-          return backgroundCanvas.toDataURL('image/jpeg', 0.8);
+          // 4. Draw the original signature onto the smaller canvas.
+          resizedCtx.drawImage(signatureCanvas, 0, 0, newWidth, newHeight);
+
+          // 5. Create the final canvas that will have a white background.
+          const finalCanvas = document.createElement('canvas');
+          finalCanvas.width = newWidth;
+          finalCanvas.height = newHeight;
+          const finalCtx = finalCanvas.getContext('2d');
+          if (!finalCtx) {
+            return sigPadRef.current.toDataURL('image/png'); // Fallback
+          }
+
+          // 6. Fill the final canvas with a white background.
+          finalCtx.fillStyle = 'white';
+          finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+
+          // 7. Draw the resized signature image over the white background.
+          finalCtx.drawImage(resizedCanvas, 0, 0);
+
+          // 8. Return as a compressed JPEG. This is much smaller than PNG.
+          return finalCanvas.toDataURL('image/jpeg', 0.7);
         }
         return null;
       },
