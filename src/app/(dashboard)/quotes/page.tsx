@@ -1,9 +1,9 @@
 'use client';
 import { PlusCircle } from 'lucide-react';
 import Link from 'next/link';
-import { Suspense, useMemo, useState, useEffect } from 'react';
+import { Suspense, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { collection, query, where, orderBy, doc, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, doc } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/page-header';
@@ -11,7 +11,6 @@ import { QuotesTable, QuotesTableSkeleton } from '@/components/quotes/quotes-tab
 import { Search } from '@/components/search';
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
 import type { Quote, User } from '@/lib/definitions';
-import { useDebouncedCallback } from 'use-debounce';
 
 export default function QuotesPage() {
   const { user, isUserLoading } = useUser();
@@ -67,72 +66,39 @@ function QuotesTableWrapper({ userId }: { userId: string }) {
   const searchQuery = searchParams.get('query') || '';
   const firestore = useFirestore();
 
-  const quotesCollectionRef = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'users', userId, 'quotes') : null),
-    [firestore, userId]
-  );
-  
   const quotesQuery = useMemoFirebase(
     () => {
-      if (!quotesCollectionRef) return null;
-      if (searchQuery) return null;
+      if (!firestore) return null;
+      const quotesCollectionRef = collection(firestore, 'users', userId, 'quotes');
       return query(quotesCollectionRef, orderBy('date', 'desc'));
     },
-    [quotesCollectionRef, searchQuery]
+    [firestore, userId]
   );
 
-  const { data: initialQuotes, isLoading: isLoadingInitial } = useCollection<Quote>(quotesQuery);
+  const { data: allQuotes, isLoading: isLoadingQuotes } = useCollection<Quote>(quotesQuery);
 
-  const [searchedQuotes, setSearchedQuotes] = useState<Quote[] | null>(null);
-  const [isSearching, setIsSearching] = useState(false);
-
-  const performSearch = useDebouncedCallback(async (queryTerm: string) => {
-    if (!quotesCollectionRef) return;
-    setIsSearching(true);
-
-    try {
-      const numberQuery = query(quotesCollectionRef, where('quoteNumber', '==', queryTerm.toUpperCase()));
-      const clientQuery = query(
-        quotesCollectionRef,
-        where('client.name', '>=', queryTerm),
-        where('client.name', '<=', queryTerm + '\uf8ff')
-      );
-
-      const [numberSnap, clientSnap] = await Promise.all([
-        getDocs(numberQuery),
-        getDocs(clientQuery),
-      ]);
-
-      const resultsMap = new Map<string, Quote>();
-      numberSnap.forEach(doc => resultsMap.set(doc.id, { id: doc.id, ...doc.data() } as Quote));
-      clientSnap.forEach(doc => resultsMap.set(doc.id, { id: doc.id, ...doc.data() } as Quote));
-
-      setSearchedQuotes(Array.from(resultsMap.values()));
-    } catch (error) {
-      console.error("Error searching quotes:", error);
-      setSearchedQuotes([]);
-    } finally {
-      setIsSearching(false);
+  const filteredQuotes = useMemo(() => {
+    if (!allQuotes) {
+      return null;
     }
-  }, 300);
-
-  useEffect(() => {
-    if (searchQuery) {
-      performSearch(searchQuery);
-    } else {
-      setSearchedQuotes(null);
+    if (!searchQuery) {
+      return allQuotes;
     }
-  }, [searchQuery, performSearch]);
+    const lowercasedQuery = searchQuery.toLowerCase();
+    return allQuotes.filter(quote => 
+      quote.quoteNumber.toLowerCase().includes(lowercasedQuery) ||
+      quote.client.name.toLowerCase().includes(lowercasedQuery)
+    );
+  }, [allQuotes, searchQuery]);
 
   const userRef = useMemoFirebase(() => (firestore ? doc(firestore, 'users', userId) : null), [firestore, userId]);
   const { data: user, isLoading: isUserLoading } = useDoc<User>(userRef);
 
-  const isLoading = isLoadingInitial || isUserLoading || isSearching;
-  const quotes = searchQuery ? searchedQuotes : initialQuotes;
+  const isLoading = isLoadingQuotes || isUserLoading;
 
-  if (isLoading || !user || quotes === null) {
+  if (isLoading || !user || filteredQuotes === null) {
     return <QuotesTableSkeleton />;
   }
 
-  return <QuotesTable quotes={quotes} user={user} />;
+  return <QuotesTable quotes={filteredQuotes} user={user} />;
 }
