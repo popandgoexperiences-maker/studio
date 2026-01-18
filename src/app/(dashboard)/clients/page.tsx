@@ -1,8 +1,9 @@
-
 'use client';
 import { Suspense, useMemo } from 'react';
 import Link from 'next/link';
 import { Pencil, PlusCircle } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,23 +26,31 @@ import type { Client, Invoice } from '@/lib/definitions';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { DeleteClientButton } from '@/components/clients/delete-client-button';
+import { Search } from '@/components/search';
 
 export default function ClientsPage() {
   const { user, isUserLoading } = useUser();
+
+  const headerActions = (
+    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+      <Search placeholder="Buscar clientes..." />
+      <Button asChild className="w-full sm:w-auto">
+        <Link href="/clients/new">
+          <PlusCircle />
+          <span>Añadir cliente</span>
+        </Link>
+      </Button>
+    </div>
+  );
 
   if (isUserLoading || !user) {
     return (
       <div>
         <PageHeader
           title="Clientes"
-          description="Consulta la lista de tus clientes y sus facturas."
+          description="Consulta la lista de tus clientes."
         >
-          <Button asChild size="sm">
-            <Link href="/clients/new">
-              <PlusCircle />
-              <span>Añadir cliente</span>
-            </Link>
-          </Button>
+          {headerActions}
         </PageHeader>
         <ClientsTableSkeleton />
       </div>
@@ -52,14 +61,9 @@ export default function ClientsPage() {
     <div>
       <PageHeader
         title="Clientes"
-        description="Consulta la lista de tus clientes y sus facturas."
+        description="Consulta la lista de tus clientes."
       >
-        <Button asChild size="sm">
-          <Link href="/clients/new">
-            <PlusCircle />
-            <span>Añadir cliente</span>
-          </Link>
-        </Button>
+        {headerActions}
       </PageHeader>
       <Suspense fallback={<ClientsTableSkeleton />}>
         <ClientsTableWrapper userId={user.uid} />
@@ -69,6 +73,8 @@ export default function ClientsPage() {
 }
 
 function ClientsTableWrapper({ userId }: { userId: string }) {
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get('query') || '';
   const firestore = useFirestore();
   const { user: authUser } = useUser();
 
@@ -81,29 +87,49 @@ function ClientsTableWrapper({ userId }: { userId: string }) {
     [firestore, authUser]
   );
 
-  const { data: clients, isLoading: isLoadingClients } = useCollection<Client>(clientsQuery);
+  const { data: allClients, isLoading: isLoadingClients } = useCollection<Client>(clientsQuery);
   const { data: invoices, isLoading: isLoadingInvoices } = useCollection<Invoice>(invoicesQuery);
 
-  if (isLoadingClients || isLoadingInvoices) {
+  const filteredClients = useMemo(() => {
+    if (!allClients) {
+      return null;
+    }
+    if (!searchQuery) {
+      return allClients;
+    }
+    const lowercasedQuery = searchQuery.toLowerCase();
+    return allClients.filter(client => 
+      client.name.toLowerCase().includes(lowercasedQuery) ||
+      client.nif.toLowerCase().includes(lowercasedQuery)
+    );
+  }, [allClients, searchQuery]);
+
+  if (isLoadingClients || isLoadingInvoices || filteredClients === null) {
     return <ClientsTableSkeleton />;
   }
 
-  const clientsWithInvoiceCount = (clients || []).map((client) => ({
+  const clientsWithInvoiceCount = filteredClients.map((client) => ({
     ...client,
     invoiceCount: (invoices || []).filter(
       (invoice) => invoice.client.id === client.id
     ).length,
   }));
+  
+  if (clientsWithInvoiceCount.length === 0) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center text-muted-foreground">
+            No se encontraron clientes que coincidan con tu búsqueda.
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Registro de Clientes</CardTitle>
-        <CardDescription>
-          Aquí puedes ver todos tus clientes registrados.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -156,11 +182,7 @@ function ClientsTableWrapper({ userId }: { userId: string }) {
 function ClientsTableSkeleton() {
   return (
     <Card>
-      <CardHeader>
-        <Skeleton className="h-7 w-48" />
-        <Skeleton className="h-4 w-64" />
-      </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         <Table>
           <TableHeader>
             <TableRow>
