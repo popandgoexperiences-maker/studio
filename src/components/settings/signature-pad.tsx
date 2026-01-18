@@ -11,7 +11,6 @@ interface SignaturePadProps {
   onChange: (value: string) => void;
 }
 
-// This is the handle that will be exposed to the parent component.
 export type SignaturePadHandle = {
   getSignatureData: () => string | null;
 };
@@ -20,59 +19,64 @@ export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(
   ({ value, onChange }, ref) => {
     const sigPadRef = useRef<SignatureCanvas>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    // Track if the user has drawn anything on the canvas since it was last cleared/loaded.
     const [hasBeenDrawnOn, setHasBeenDrawnOn] = useState(false);
 
-    // Expose a method to the parent component to get the signature data URL.
     useImperativeHandle(ref, () => ({
       getSignatureData: () => {
         if (sigPadRef.current && !sigPadRef.current.isEmpty()) {
           return sigPadRef.current.getTrimmedCanvas().toDataURL('image/png');
         }
-        return null; // Return null if the canvas is empty.
+        return null;
       },
     }));
 
-    // Effect to handle canvas resizing.
     useEffect(() => {
       const handleResize = () => {
           if(sigPadRef.current && containerRef.current){
               const canvas: any = sigPadRef.current.getCanvas();
-              canvas.width = containerRef.current.offsetWidth;
+              const ratio = Math.max(window.devicePixelRatio || 1, 1);
+              canvas.width = containerRef.current.offsetWidth * ratio;
+              canvas.height = containerRef.current.offsetHeight * ratio;
+              canvas.getContext("2d").scale(ratio, ratio);
+              // Redraw the signature if it exists
+              const data = sigPadRef.current.toDataURL();
+              sigPadRef.current.fromDataURL(data);
           }
       };
+      // A small delay to ensure the container has its final dimensions
+      const timeoutId = setTimeout(handleResize, 100);
       window.addEventListener('resize', handleResize);
-      handleResize(); // Initial resize
-      return () => window.removeEventListener('resize', handleResize);
+      
+      return () => {
+        clearTimeout(timeoutId);
+        window.removeEventListener('resize', handleResize);
+      };
     }, []);
 
     const clear = () => {
       sigPadRef.current?.clear();
-      onChange(''); // Notify the form that the value has been cleared.
+      onChange('');
       setHasBeenDrawnOn(false);
     };
     
-    // This handler now only tracks that a stroke has been made.
-    // It does NOT call onChange, allowing for multiple strokes.
     const handleDrawEnd = () => {
         setHasBeenDrawnOn(true);
     };
 
     return (
-      <div className="flex flex-col gap-4 w-full">
-        <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
-          <div ref={containerRef} className="w-full max-w-sm rounded-md border border-input bg-background">
+      <div className="flex flex-col gap-4 w-full h-full">
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full h-full">
+          <div ref={containerRef} className="w-full h-full max-w-sm rounded-md border border-input bg-background">
               <SignatureCanvas
                 ref={sigPadRef}
                 penColor='black'
                 canvasProps={{
-                  height: 150,
-                  className: 'sigCanvas rounded-md w-full',
+                  className: 'sigCanvas rounded-md w-full h-full',
                 }}
-                onEnd={handleDrawEnd} // Use the new handler.
+                onEnd={handleDrawEnd}
               />
           </div>
-          {value && ( // Show the previously saved signature.
+          {value && !hasBeenDrawnOn && (
               <div className="hidden sm:flex flex-col items-center gap-2">
                   <p className="text-xs text-muted-foreground">Firma Actual</p>
                   <div className="w-32 h-16 rounded-md border p-1 flex items-center justify-center bg-muted/50">

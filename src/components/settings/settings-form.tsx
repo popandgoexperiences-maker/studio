@@ -1,17 +1,19 @@
 'use client';
 
 import { useActionState, useTransition } from 'react';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { Save, Upload, Loader2 } from 'lucide-react';
-import { useForm, Controller } from 'react-hook-form';
+import { Save, Upload, Loader2, PenSquare } from 'lucide-react';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import Link from 'next/link';
 
 import type { User } from '@/lib/definitions';
 import type { ImagePlaceholder } from '@/lib/placeholder-images';
 import { updateSettings } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,7 +38,6 @@ const settingsSchema = z.object({
   phone: z.string().optional(),
   vatRate: z.coerce.number().min(0, "El IVA no puede ser negativo.").optional(),
   logo: z.any().optional(),
-  signature: z.string().optional(),
   seal: z.any().optional(),
 });
 
@@ -47,8 +48,11 @@ export function SettingsForm({ user, images }: SettingsFormProps) {
     const [state, formAction] = useActionState(updateSettings, undefined);
     const [isPending, startTransition] = useTransition();
     const signaturePadRef = useRef<SignaturePadHandle>(null);
+    const isMobile = useIsMobile();
+
+    const [signatureUrl, setSignatureUrl] = useState(user.signatureUrl);
     
-    const { register, handleSubmit, control, formState: { errors } } = useForm<SettingsFormValues>({
+    const { register, handleSubmit, formState: { errors } } = useForm<SettingsFormValues>({
         resolver: zodResolver(settingsSchema),
         defaultValues: {
             name: user.name,
@@ -57,9 +61,20 @@ export function SettingsForm({ user, images }: SettingsFormProps) {
             address: user.address || '',
             phone: user.phone || '',
             vatRate: user.vatRate ? user.vatRate * 100 : 21,
-            signature: user.signatureUrl || '',
         },
     });
+
+    useEffect(() => {
+        const newSignatureFromStorage = localStorage.getItem('newSignature');
+        if (newSignatureFromStorage !== null) {
+            setSignatureUrl(newSignatureFromStorage);
+            localStorage.removeItem('newSignature');
+            toast({
+                title: 'Firma actualizada',
+                description: 'Tu nueva firma está lista para ser guardada con el resto de cambios.',
+            });
+        }
+    }, [isMobile, toast]); // Reruns if isMobile changes, covering navigation back.
 
     useEffect(() => {
         if (state?.message) {
@@ -73,13 +88,10 @@ export function SettingsForm({ user, images }: SettingsFormProps) {
 
     const onFormSubmit = (data: SettingsFormValues) => {
         const formData = new FormData();
-        const newSignatureData = signaturePadRef.current?.getSignatureData();
+        const newSignatureData = !isMobile ? signaturePadRef.current?.getSignatureData() : null;
 
         Object.entries(data).forEach(([key, value]) => {
-            if (key === 'signature') {
-                const finalSignature = newSignatureData ?? value ?? '';
-                formData.append('signature', finalSignature);
-            } else if (value instanceof FileList) {
+            if (value instanceof FileList) {
                 if (value.length > 0) {
                     formData.append(key, value[0]);
                 }
@@ -87,6 +99,8 @@ export function SettingsForm({ user, images }: SettingsFormProps) {
                  formData.append(key, String(value));
             }
         });
+        
+        formData.append('signature', newSignatureData ?? signatureUrl ?? '');
         
         startTransition(() => {
             formAction(formData);
@@ -157,20 +171,37 @@ export function SettingsForm({ user, images }: SettingsFormProps) {
                     <div className="flex flex-col sm:flex-row items-start gap-6">
                         <div className="w-full sm:w-1/3">
                             <Label className="text-base font-medium">Firma</Label>
-                            <p className="text-sm text-muted-foreground mt-1">Dibuja tu firma en el recuadro. Se guardará al hacer clic en "Guardar cambios".</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                                {isMobile 
+                                    ? "Toca para abrir el panel de firma a pantalla completa." 
+                                    : "Dibuja tu firma en el recuadro. Se guardará al hacer clic en \"Guardar cambios\"."
+                                }
+                            </p>
                         </div>
                         <div className="w-full sm:w-2/3 flex flex-col items-start gap-4">
-                            <Controller
-                                name="signature"
-                                control={control}
-                                render={({ field }) => (
-                                    <SignaturePad 
-                                        ref={signaturePadRef}
-                                        value={field.value}
-                                        onChange={field.onChange}
-                                    />
-                                )}
-                            />
+                            {isMobile ? (
+                                <>
+                                    <div className="w-48 h-24 relative rounded-md border border-dashed flex items-center justify-center bg-muted/50 p-2">
+                                        {signatureUrl ? (
+                                            <Image src={signatureUrl} alt="Firma" fill className="object-contain" />
+                                        ) : (
+                                            <span className="text-xs text-muted-foreground">Sin firma</span>
+                                        )}
+                                    </div>
+                                    <Button asChild variant="outline">
+                                        <Link href="/settings/signature">
+                                            <PenSquare className="mr-2" />
+                                            {signatureUrl ? 'Cambiar Firma' : 'Añadir Firma'}
+                                        </Link>
+                                    </Button>
+                                </>
+                            ) : (
+                                <SignaturePad 
+                                    ref={signaturePadRef}
+                                    value={signatureUrl}
+                                    onChange={() => {}}
+                                />
+                            )}
                         </div>
                     </div>
                     <Separator />
