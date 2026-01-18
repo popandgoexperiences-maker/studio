@@ -24,7 +24,8 @@ export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(
     useImperativeHandle(ref, () => ({
       getSignatureData: () => {
         if (sigPadRef.current && !sigPadRef.current.isEmpty()) {
-          return sigPadRef.current.getTrimmedCanvas().toDataURL('image/png');
+          // Use JPEG with 80% quality for significant size reduction.
+          return sigPadRef.current.getTrimmedCanvas().toDataURL('image/jpeg', 0.8);
         }
         return null;
       },
