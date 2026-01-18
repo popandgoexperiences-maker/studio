@@ -93,10 +93,11 @@ export async function deleteInvoice(userId: string, invoiceId: string) {
   await invoiceRef.delete();
 }
 
-export async function saveQuote(userId: string, quoteData: Omit<Quote, 'id'>) {
+export async function saveQuote(userId: string, quoteData: Omit<Quote, 'id'>): Promise<string> {
   const db = getFirestoreSafe();
   const quotesCol = db.collection('users').doc(userId).collection('quotes');
-  await quotesCol.add(quoteData);
+  const docRef = await quotesCol.add(quoteData);
+  return docRef.id;
 }
 
 export async function deleteQuote(userId: string, quoteId: string) {
@@ -111,10 +112,11 @@ export async function updateQuote(userId: string, quoteId: string, data: Partial
     await quoteRef.update(data);
 }
 
-export async function saveClient(userId: string, clientData: Omit<Client, 'id'>) {
+export async function saveClient(userId: string, clientData: Omit<Client, 'id'>): Promise<string> {
   const db = getFirestoreSafe();
   const clientsCol = db.collection('users').doc(userId).collection('clients');
-  await clientsCol.add(clientData);
+  const docRef = await clientsCol.add(clientData);
+  return docRef.id;
 }
 
 export async function updateClient(userId: string, clientId: string, clientData: Omit<Client, 'id'>) {

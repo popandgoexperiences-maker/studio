@@ -14,13 +14,11 @@ import { doc, getDoc } from 'firebase/firestore';
  * Ejecuta la prueba automáticamente al montar.
  */
 function CustomLoginTester() {
-  // Obtenemos las instancias de Auth y Firestore del contexto de Firebase.
   const auth = useAuth();
   const firestore = useFirestore();
   const [testStatus, setTestStatus] = useState('Pendiente');
 
   useEffect(() => {
-    // Esta función asíncrona contiene toda la lógica de la prueba.
     const runTest = async () => {
       if (!auth || !firestore) {
         console.error('Error en Test: Servicios de Auth o Firestore no disponibles.');
@@ -31,17 +29,22 @@ function CustomLoginTester() {
 
       try {
         setTestStatus('Ejecutando...');
+
         // --- PASO 1: Obtener token del backend ---
         console.log('Paso 1: Solicitando token personalizado del endpoint /api/test-token...');
         const response = await fetch('/api/test-token');
-        
+
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(`Error del servidor al obtener token: ${errorData.error || response.statusText}`);
+          throw new Error(
+            `Error del servidor al obtener token: ${errorData.error || response.statusText}`
+          );
         }
 
         const { token } = await response.json();
-        console.log('Paso 1: Token recibido con éxito.', { token: token.substring(0, 30) + '...' });
+        console.log('Paso 1: Token recibido con éxito.', {
+          token: token.substring(0, 30) + '...',
+        });
 
         // --- PASO 2: Iniciar sesión en el frontend ---
         console.log('Paso 2: Intentando iniciar sesión con signInWithCustomToken...');
@@ -51,48 +54,64 @@ function CustomLoginTester() {
         if (!user || user.uid !== 'test-uid') {
           throw new Error('El inicio de sesión no devolvió el usuario esperado.');
         }
+
         console.log('Paso 2: Login OK. Usuario autenticado con UID:', user.uid);
 
         // --- PASO 3: Leer documento de Firestore ---
-        // Este paso se ejecuta SOLO DESPUÉS de que signInWithCustomToken se ha completado con éxito.
         const docPath = `users/${user.uid}`;
         const docRef = doc(firestore, docPath);
-        console.log(`Paso 3: Intentando leer documento en Firestore en la ruta: ${docRef.path}`);
-        
+
+        console.log(
+          `Paso 3: Intentando leer documento en Firestore en la ruta: ${docRef.path}`
+        );
+
         const docSnap = await getDoc(docRef);
 
-      
-        // Manejo de errores específicos de Firebase para dar pistas más claras.
-        if (error.name === 'FirebaseError') {
-            if (error.code === 'permission-denied' || error.code?.includes('permission-denied')) {
-                 console.error("Detalle del Error: La lectura fue denegada por las reglas de seguridad de Firestore. Verifica que el UID del usuario autenticado coincida con el del documento y que las reglas lo permitan.");
-                 alert(`Error de Firebase: Permiso denegado (Missing or insufficient permissions).\n\nCausas comunes:\n1. Las reglas de seguridad en firestore.rules no permiten la lectura.\n2. El UID en el token ('${auth.currentUser?.uid}') no coincide con el ID del documento que intentas leer.\n\nRevisa la consola para más detalles.`);
-            } else {
-              alert(`Error de Firebase: ${error.code}\n\nMira la consola para más detalles.`);
-            }
-        } else {
-            alert(`Error en el flujo: ${error.message}\n\nMira la consola para más detalles.`);
+        if (!docSnap.exists()) {
+          throw new Error(`El documento ${docRef.path} no existe en Firestore.`);
         }
+
+        console.log('Paso 3: Documento leído correctamente:', docSnap.data());
+        setTestStatus('OK');
+      } catch (err: any) {
+        // Manejo de errores específicos de Firebase
+        if (err?.name === 'FirebaseError') {
+          if (err.code === 'permission-denied') {
+            console.error('Permiso denegado al leer Firestore.');
+            alert(
+              `Error de Firebase: Permiso denegado.\n\nCausas comunes:\n1. Reglas de Firestore no permiten la lectura.\n2. UID del usuario no coincide.\n\nUID actual: ${auth.currentUser?.uid}`
+            );
+          } else {
+            alert(
+              `Error de Firebase: ${err.code}\n\nMira la consola para más detalles.`
+            );
+          }
+        } else {
+          alert(
+            `Error en el flujo: ${err.message}\n\nMira la consola para más detalles.`
+          );
+        }
+
+        setTestStatus('Error');
       }
     };
 
-    // Ejecutamos la prueba solo si los servicios están disponibles.
-    if(auth && firestore){
-        runTest();
+    if (auth && firestore) {
+      runTest();
     }
-  // La dependencia [auth, firestore] asegura que se ejecute cuando los servicios estén listos.
   }, [auth, firestore]);
 
   return (
     <div className="mt-4 border-t pt-4">
-      <p className="text-center text-sm text-muted-foreground mb-2">Zona de depuración</p>
+      <p className="text-center text-sm text-muted-foreground mb-2">
+        Zona de depuración
+      </p>
       <Button variant="outline" className="w-full" disabled>
         Prueba automática: {testStatus}
       </Button>
     </div>
   );
 }
-
 
 export default function LoginPage() {
   return (
@@ -101,7 +120,9 @@ export default function LoginPage() {
         <div className="mb-8 flex justify-center">
           <Logo />
         </div>
+
         <LoginForm />
+
         {/* Componente de prueba añadido al final de la página de login */}
         <CustomLoginTester />
       </div>

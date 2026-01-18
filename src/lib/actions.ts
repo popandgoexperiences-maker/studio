@@ -140,6 +140,19 @@ export async function createInvoice(prevState: any, formData: FormData) {
     
     const { lineItems, client, priceIncludesVAT } = validatedFields.data;
 
+    let finalClient = { ...client };
+
+    // If the client doesn't have an ID, it's a new client. Save it first.
+    if (!client.id && client.name && client.nif && client.address) {
+        const newClientId = await saveClient(userId, {
+            name: client.name,
+            nif: client.nif,
+            address: client.address
+        });
+        finalClient.id = newClientId;
+    }
+
+
     let subtotal = 0;
     
     const finalLineItems = lineItems.map(item => {
@@ -162,7 +175,7 @@ export async function createInvoice(prevState: any, formData: FormData) {
     await saveInvoice(userId, {
       userId,
       invoiceNumber,
-      client,
+      client: finalClient,
       date: new Date().toISOString(),
       lineItems: finalLineItems,
       subtotal,
@@ -246,6 +259,18 @@ export async function createQuote(prevState: any, formData: FormData) {
     }
     
     const { lineItems, client, priceIncludesVAT } = validatedFields.data;
+    
+    let finalClient = { ...client };
+
+    // If the client doesn't have an ID, it's a new client. Save it first.
+    if (!client.id && client.name && client.nif && client.address) {
+        const newClientId = await saveClient(userId, {
+            name: client.name,
+            nif: client.nif,
+            address: client.address
+        });
+        finalClient.id = newClientId;
+    }
 
     let subtotal = 0;
     const finalLineItems = lineItems.map(item => {
@@ -268,7 +293,7 @@ export async function createQuote(prevState: any, formData: FormData) {
     await saveQuote(userId, {
       userId,
       quoteNumber,
-      client,
+      client: finalClient,
       date: new Date().toISOString(),
       lineItems: finalLineItems,
       subtotal,
@@ -353,59 +378,59 @@ const ClientSchema = z.object({
 });
 
 export async function createClient(prevState: any, formData: FormData) {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('__session')?.value;
-    if (!sessionCookie) {
-        return { message: 'User not authenticated.' };
+    try {
+        const cookieStore = await cookies();
+        const sessionCookie = cookieStore.get('__session')?.value;
+        if (!sessionCookie) {
+            return { message: 'User not authenticated.' };
+        }
+        const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
+        const userId = decodedToken?.uid;
+
+        if (!userId) {
+            return { message: 'Invalid session token.' };
+        }
+
+      const validatedFields = ClientSchema.safeParse(
+        Object.fromEntries(formData.entries())
+      );
+
+      if (!validatedFields.success) {
+        return {
+          errors: validatedFields.error.flatten().fieldErrors,
+          message: 'Error de validación.',
+        };
+      }
+
+      await saveClient(userId, validatedFields.data);
+    } catch (e: any) {
+        return { message: `Error al guardar el cliente: ${e?.message || String(e)}` };
     }
-    const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
-    const userId = decodedToken?.uid;
-
-    if (!userId) {
-        return { message: 'Invalid session token.' };
-    }
-
-  const validatedFields = ClientSchema.safeParse(
-    Object.fromEntries(formData.entries())
-  );
-
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-      message: 'Error de validación.',
-    };
-  }
-
-  try {
-    await saveClient(userId, validatedFields.data);
-  } catch (e: any) {
-    return { message: `Error al guardar el cliente: ${e?.message || String(e)}` };
-  }
 
   return { success: true, redirectPath: '/clients' };
 }
 
 export async function updateClient(clientId: string, prevState: any, formData: FormData) {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('__session')?.value;
-    if (!sessionCookie) {
-        return { message: 'User not authenticated.' };
-    }
-    const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
-    const userId = decodedToken.uid;
-
-    const validatedFields = ClientSchema.safeParse(
-        Object.fromEntries(formData.entries())
-    );
-
-    if (!validatedFields.success) {
-        return {
-            errors: validatedFields.error.flatten().fieldErrors,
-            message: 'Error de validación.',
-        };
-    }
-
     try {
+        const cookieStore = await cookies();
+        const sessionCookie = cookieStore.get('__session')?.value;
+        if (!sessionCookie) {
+            return { message: 'User not authenticated.' };
+        }
+        const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
+        const userId = decodedToken.uid;
+
+        const validatedFields = ClientSchema.safeParse(
+            Object.fromEntries(formData.entries())
+        );
+
+        if (!validatedFields.success) {
+            return {
+                errors: validatedFields.error.flatten().fieldErrors,
+                message: 'Error de validación.',
+            };
+        }
+
         await updateClientInDb(userId, clientId, validatedFields.data);
     } catch (e: any) {
         return { message: `Error al actualizar el cliente: ${e.message}` };
@@ -415,19 +440,20 @@ export async function updateClient(clientId: string, prevState: any, formData: F
 }
 
 export async function deleteClient(clientId: string) {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get('__session')?.value;
-  if (!sessionCookie) {
-    return { message: 'Usuario no autenticado.' };
-  }
-  const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
-  const userId = decodedToken.uid;
+    try {
+        const cookieStore = await cookies();
+        const sessionCookie = cookieStore.get('__session')?.value;
+        if (!sessionCookie) {
+            return { message: 'Usuario no autenticado.' };
+        }
+        const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
+        const userId = decodedToken.uid;
 
-  try {
-    await deleteClientFromDb(userId, clientId);
-  } catch (e: any) {
-    return { message: `Error al eliminar el cliente: ${e.message}` };
-  }
+        await deleteClientFromDb(userId, clientId);
+
+    } catch (e: any) {
+        return { message: `Error al eliminar el cliente: ${e.message}` };
+    }
 
   return { success: true };
 }
