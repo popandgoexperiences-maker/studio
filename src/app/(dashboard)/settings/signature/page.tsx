@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SignaturePad, type SignaturePadHandle } from '@/components/settings/signature-pad';
 import { Button } from '@/components/ui/button';
@@ -11,13 +11,21 @@ export default function SignaturePage() {
     const router = useRouter();
     const signaturePadRef = useRef<SignaturePadHandle>(null);
     const isMobile = useIsMobile();
-
-    // This page is mobile-only. If the user is on a desktop, redirect them.
+    
+    // We need to ensure we only check for mobile status on the client,
+    // after the component has mounted, to avoid hydration errors and premature redirects.
+    const [isClient, setIsClient] = useState(false);
     useEffect(() => {
-        if (!isMobile) {
+        setIsClient(true);
+    }, []);
+
+    useEffect(() => {
+        // Only perform the redirect check after we are sure we're on the client
+        // and the isMobile hook has had a chance to run correctly.
+        if (isClient && !isMobile) {
             router.replace('/settings');
         }
-    }, [isMobile, router]);
+    }, [isClient, isMobile, router]);
 
 
     const handleSave = () => {
@@ -28,8 +36,9 @@ export default function SignaturePage() {
         router.back();
     };
     
-    // While redirecting, render nothing to avoid a flash of content.
-    if (!isMobile) {
+    // While hydrating or if we are on desktop (and about to redirect), render nothing.
+    // This prevents a flash of content and ensures the redirect logic runs cleanly.
+    if (!isClient || !isMobile) {
         return null; 
     }
 
