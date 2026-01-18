@@ -44,10 +44,10 @@ export function CreateClientForm() {
   });
 
   useEffect(() => {
-    if (state?.success && state.redirectPath) {
+    if (!isPending && state?.success && state.redirectPath) {
       router.push(state.redirectPath);
     }
-  }, [state, router]);
+  }, [state, router, isPending]);
 
   const onFormSubmit = (data: ClientFormValues) => {
     startTransition(() => {
@@ -92,7 +92,7 @@ export function CreateClientForm() {
                 )}
                 <div className='flex gap-2 justify-end'>
                     <Button variant="ghost" asChild>
-                        <Link href="/invoices/new">Cancelar</Link>
+                        <Link href="/clients">Cancelar</Link>
                     </Button>
                     <Button type="submit" disabled={isPending}>
                         {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}

@@ -46,10 +46,10 @@ export function EditClientForm({ client }: { client: Client }) {
   });
 
   useEffect(() => {
-    if (state?.success && state.redirectPath) {
+    if (!isPending && state?.success && state.redirectPath) {
       router.push(state.redirectPath);
     }
-  }, [state, router]);
+  }, [state, router, isPending]);
 
   const onFormSubmit = (data: ClientFormValues) => {
     startTransition(() => {
