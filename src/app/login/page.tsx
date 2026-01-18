@@ -61,21 +61,7 @@ function CustomLoginTester() {
         
         const docSnap = await getDoc(docRef);
 
-        if (docSnap.exists()) {
-          console.log('Paso 3: ¡ÉXITO! Documento leído correctamente:', docSnap.data());
-          alert(`¡Flujo completo exitoso! Documento de '${user.uid}' leído. Revisa la consola para ver los detalles.`);
-          setTestStatus('Éxito');
-        } else {
-          // Esto puede ocurrir si el documento no se ha creado en el backend.
-          console.warn('Paso 3: Lectura completada, pero el documento no existe en Firestore.');
-          alert(`Login exitoso, pero el documento /users/${user.uid} no existe en Firestore. Asegúrate de que el script en firebase-server.ts lo está creando.`);
-          setTestStatus('Doc no encontrado');
-        }
-
-      } catch (error: any) {
-        console.error("--- ERROR EN EL FLUJO DE PRUEBA ---", error);
-        setTestStatus('Error en flujo');
-        
+      
         // Manejo de errores específicos de Firebase para dar pistas más claras.
         if (error.name === 'FirebaseError') {
             if (error.code === 'permission-denied' || error.code?.includes('permission-denied')) {

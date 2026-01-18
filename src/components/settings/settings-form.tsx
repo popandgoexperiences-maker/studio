@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { SignaturePad } from './signature-pad';
+import { SignaturePad, type SignaturePadHandle } from './signature-pad';
 
 type SettingsFormProps = {
   user: User;
@@ -46,6 +46,7 @@ export function SettingsForm({ user, images }: SettingsFormProps) {
     const { toast } = useToast();
     const [state, formAction] = useActionState(updateSettings, undefined);
     const [isPending, startTransition] = useTransition();
+    const signaturePadRef = useRef<SignaturePadHandle>(null);
     
     const { register, handleSubmit, control, formState: { errors } } = useForm<SettingsFormValues>({
         resolver: zodResolver(settingsSchema),
@@ -72,17 +73,18 @@ export function SettingsForm({ user, images }: SettingsFormProps) {
 
     const onFormSubmit = (data: SettingsFormValues) => {
         const formData = new FormData();
+        const newSignatureData = signaturePadRef.current?.getSignatureData();
+
         Object.entries(data).forEach(([key, value]) => {
-            if (value instanceof FileList) {
+            if (key === 'signature') {
+                const finalSignature = newSignatureData ?? value ?? '';
+                formData.append('signature', finalSignature);
+            } else if (value instanceof FileList) {
                 if (value.length > 0) {
                     formData.append(key, value[0]);
                 }
             } else if (value !== undefined && value !== null) {
-                if (key === 'signature' && typeof value === 'string' && value.startsWith('data:image')) {
-                    formData.append(key, value);
-                } else if (key !== 'signature') {
-                     formData.append(key, String(value));
-                }
+                 formData.append(key, String(value));
             }
         });
         
@@ -163,6 +165,7 @@ export function SettingsForm({ user, images }: SettingsFormProps) {
                                 control={control}
                                 render={({ field }) => (
                                     <SignaturePad 
+                                        ref={signaturePadRef}
                                         value={field.value}
                                         onChange={field.onChange}
                                     />
