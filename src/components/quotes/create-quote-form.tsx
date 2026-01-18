@@ -259,7 +259,7 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
                                                 {errors.lineItems?.[index]?.cantidad && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.cantidad?.message}</p>}
                                             </TableCell>
                                             <TableCell>
-                                                <Input type="number" step="any" {...register(`lineItems.${index}.precioUnitario`)} className="text-right"/>
+                                                <Input type="number" step="any" {...register(`lineItems.${index}.precioUnitario`)} className="text-right" onFocus={(e) => e.target.select()}/>
                                                 {errors.lineItems?.[index]?.precioUnitario && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.precioUnitario?.message}</p>}
                                             </TableCell>
                                             <TableCell className="text-right font-medium align-top pt-5">
@@ -301,7 +301,7 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor={`lineItems.${index}.precioUnitario`}>{watch('priceIncludesVAT') ? 'Precio (IVA incl.)' : 'Precio Unit.'}</Label>
-                                            <Input id={`lineItems.${index}.precioUnitario`} type="number" step="any" {...register(`lineItems.${index}.precioUnitario`)} className="text-right" />
+                                            <Input id={`lineItems.${index}.precioUnitario`} type="number" step="any" {...register(`lineItems.${index}.precioUnitario`)} className="text-right" onFocus={(e) => e.target.select()} />
                                             {errors.lineItems?.[index]?.precioUnitario && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.precioUnitario?.message}</p>}
                                         </div>
                                     </div>
