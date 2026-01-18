@@ -39,7 +39,7 @@ export default function ClientsPage() {
           <Button asChild size="sm">
             <Link href="/clients/new">
               <PlusCircle />
-              <span className="hidden sm:inline">Nuevo Cliente</span>
+              <span>Añadir cliente</span>
             </Link>
           </Button>
         </PageHeader>
@@ -57,7 +57,7 @@ export default function ClientsPage() {
         <Button asChild size="sm">
           <Link href="/clients/new">
             <PlusCircle />
-            <span className="hidden sm:inline">Nuevo Cliente</span>
+            <span>Añadir cliente</span>
           </Link>
         </Button>
       </PageHeader>
