@@ -256,11 +256,11 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
                                             {errors.lineItems?.[index]?.descripcion && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.descripcion?.message}</p>}
                                         </TableCell>
                                         <TableCell>
-                                            <Input type="number" step="any" {...register(`lineItems.${index}.cantidad`)} className="text-right" />
+                                            <Input type="text" inputMode="decimal" {...register(`lineItems.${index}.cantidad`)} className="text-right" onFocus={(e) => e.target.select()} />
                                             {errors.lineItems?.[index]?.cantidad && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.cantidad?.message}</p>}
                                         </TableCell>
                                         <TableCell>
-                                            <Input type="number" step="any" {...register(`lineItems.${index}.precioUnitario`)} className="text-right" onFocus={(e) => e.target.select()} />
+                                            <Input type="text" inputMode="decimal" {...register(`lineItems.${index}.precioUnitario`)} className="text-right" onFocus={(e) => e.target.select()} />
                                             {errors.lineItems?.[index]?.precioUnitario && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.precioUnitario?.message}</p>}
                                         </TableCell>
                                         <TableCell className="text-right font-medium align-top pt-5">
@@ -298,12 +298,12 @@ export function CreateInvoiceForm({ clients, user }: { clients: Client[], user: 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <Label htmlFor={`lineItems.${index}.cantidad`}>Cantidad</Label>
-                                            <Input id={`lineItems.${index}.cantidad`} type="number" step="any" {...register(`lineItems.${index}.cantidad`)} className="text-right" />
+                                            <Input id={`lineItems.${index}.cantidad`} type="text" inputMode="decimal" {...register(`lineItems.${index}.cantidad`)} className="text-right" onFocus={(e) => e.target.select()} />
                                             {errors.lineItems?.[index]?.cantidad && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.cantidad?.message}</p>}
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor={`lineItems.${index}.precioUnitario`}>{watch('priceIncludesVAT') ? 'Precio (IVA incl.)' : 'Precio Unit.'}</Label>
-                                            <Input id={`lineItems.${index}.precioUnitario`} type="number" step="any" {...register(`lineItems.${index}.precioUnitario`)} className="text-right" onFocus={(e) => e.target.select()} />
+                                            <Input id={`lineItems.${index}.precioUnitario`} type="text" inputMode="decimal" {...register(`lineItems.${index}.precioUnitario`)} className="text-right" onFocus={(e) => e.target.select()} />
                                             {errors.lineItems?.[index]?.precioUnitario && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.precioUnitario?.message}</p>}
                                         </div>
                                     </div>
