@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useTransition, useEffect } from 'react';
+import { useTransition, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -27,8 +27,7 @@ const clientSchema = z.object({
 type ClientFormValues = z.infer<typeof clientSchema>;
 
 export function EditClientForm({ client }: { client: Client }) {
-  const updateClientWithId = updateClient.bind(null, client.id);
-  const [state, formAction] = useActionState(updateClientWithId, undefined);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -44,20 +43,28 @@ export function EditClientForm({ client }: { client: Client }) {
       address: client.address,
     },
   });
-
-  useEffect(() => {
-    if (!isPending && state?.success && state.redirectPath) {
-      router.push(state.redirectPath);
-    }
-  }, [state, router, isPending]);
-
+  
   const onFormSubmit = (data: ClientFormValues) => {
-    startTransition(() => {
+    setServerError(null);
+    startTransition(async () => {
         const formData = new FormData();
         formData.append('name', data.name);
         formData.append('nif', data.nif);
         formData.append('address', data.address);
-        formAction(formData);
+        
+        const updateClientWithId = updateClient.bind(null, client.id);
+        const result = await updateClientWithId(null, formData);
+
+        if (result?.success && result.redirectPath) {
+            router.push(result.redirectPath);
+        } else if (result?.message) {
+            setServerError(result.message);
+        } else if (result?.errors) {
+            const errorMessages = Object.values(result.errors).flat().join(' ');
+            setServerError(errorMessages || 'Hubo un error de validación.');
+        } else {
+            setServerError('Ocurrió un error inesperado.');
+        }
     });
   };
 
@@ -85,11 +92,11 @@ export function EditClientForm({ client }: { client: Client }) {
                 </div>
             </CardContent>
             <CardFooter className="flex-col gap-4 items-stretch">
-                {state?.message && !state.errors && (
+                {serverError && (
                     <Alert variant="destructive">
                       <AlertCircle className="h-4 w-4" />
                       <AlertTitle>Error</AlertTitle>
-                      <AlertDescription>{state.message}</AlertDescription>
+                      <AlertDescription>{serverError}</AlertDescription>
                     </Alert>
                 )}
                 <div className='flex gap-2 justify-end'>
