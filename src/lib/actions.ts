@@ -378,65 +378,75 @@ const ClientSchema = z.object({
 });
 
 export async function createClient(prevState: any, formData: FormData) {
-    try {
-        const cookieStore = await cookies();
-        const sessionCookie = cookieStore.get('__session')?.value;
-        if (!sessionCookie) {
-            return { message: 'User not authenticated.' };
-        }
-        const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
-        const userId = decodedToken?.uid;
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get('__session')?.value;
+  if (!sessionCookie) {
+    return { message: 'User not authenticated.' };
+  }
+  const decodedToken = await getAuthSafe().verifySessionCookie(
+    sessionCookie,
+    true
+  );
+  const userId = decodedToken?.uid;
 
-        if (!userId) {
-            return { message: 'Invalid session token.' };
-        }
+  if (!userId) {
+    return { message: 'Invalid session token.' };
+  }
 
-      const validatedFields = ClientSchema.safeParse(
-        Object.fromEntries(formData.entries())
-      );
+  const validatedFields = ClientSchema.safeParse(
+    Object.fromEntries(formData.entries())
+  );
 
-      if (!validatedFields.success) {
-        return {
-          errors: validatedFields.error.flatten().fieldErrors,
-          message: 'Error de validación.',
-        };
-      }
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Error de validación.',
+    };
+  }
 
-      await saveClient(userId, validatedFields.data);
-    } catch (e: any) {
-        return { message: `Error al guardar el cliente: ${e?.message || String(e)}` };
-    }
+  try {
+    await saveClient(userId, validatedFields.data);
+  } catch (e: any) {
+    return { message: `Error al guardar el cliente: ${e?.message || String(e)}` };
+  }
 
-  return { success: true, redirectPath: '/clients' };
+  redirect('/clients');
 }
 
-export async function updateClient(clientId: string, prevState: any, formData: FormData) {
-    try {
-        const cookieStore = await cookies();
-        const sessionCookie = cookieStore.get('__session')?.value;
-        if (!sessionCookie) {
-            return { message: 'User not authenticated.' };
-        }
-        const decodedToken = await getAuthSafe().verifySessionCookie(sessionCookie, true);
-        const userId = decodedToken.uid;
+export async function updateClient(
+  clientId: string,
+  prevState: any,
+  formData: FormData
+) {
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get('__session')?.value;
+  if (!sessionCookie) {
+    return { message: 'User not authenticated.' };
+  }
+  const decodedToken = await getAuthSafe().verifySessionCookie(
+    sessionCookie,
+    true
+  );
+  const userId = decodedToken.uid;
 
-        const validatedFields = ClientSchema.safeParse(
-            Object.fromEntries(formData.entries())
-        );
+  const validatedFields = ClientSchema.safeParse(
+    Object.fromEntries(formData.entries())
+  );
 
-        if (!validatedFields.success) {
-            return {
-                errors: validatedFields.error.flatten().fieldErrors,
-                message: 'Error de validación.',
-            };
-        }
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Error de validación.',
+    };
+  }
 
-        await updateClientInDb(userId, clientId, validatedFields.data);
-    } catch (e: any) {
-        return { message: `Error al actualizar el cliente: ${e.message}` };
-    }
+  try {
+    await updateClientInDb(userId, clientId, validatedFields.data);
+  } catch (e: any) {
+    return { message: `Error al actualizar el cliente: ${e.message}` };
+  }
 
-    return { success: true, redirectPath: '/clients' };
+  redirect('/clients');
 }
 
 export async function deleteClient(clientId: string) {

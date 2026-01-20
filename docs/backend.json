@@ -63,7 +63,7 @@
             "nif": { "type": "string" },
             "address": { "type": "string" }
         },
-        "required": ["id", "name", "nif", "address"]
+        "required": ["name", "nif", "address"]
     },
     "Invoice": {
       "title": "Invoice",
@@ -125,7 +125,6 @@
         }
       },
       "required": [
-        "id",
         "userId",
         "invoiceNumber",
         "client",
@@ -195,7 +194,6 @@
         }
       },
       "required": [
-        "id",
         "userId",
         "quoteNumber",
         "client",

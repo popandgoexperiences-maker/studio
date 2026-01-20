@@ -1,12 +1,9 @@
 'use client';
 
-import { useTransition, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Loader2, Save } from 'lucide-react';
+import { useActionState, useEffect } from 'react';
+import { useFormStatus } from 'react-dom';
+import { Loader2, Save, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 import { updateClient } from '@/lib/actions';
 import type { Client } from '@/lib/definitions';
@@ -16,60 +13,35 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
-const clientSchema = z.object({
-  name: z.string().min(1, "El nombre del cliente es requerido."),
-  nif: z.string().min(1, "El NIF del cliente es requerido."),
-  address: z.string().min(1, "La dirección del cliente es requerida."),
-});
-
-type ClientFormValues = z.infer<typeof clientSchema>;
+function SubmitButton() {
+    const { pending } = useFormStatus();
+    return (
+        <Button type="submit" disabled={pending}>
+            {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+            {pending ? 'Guardando...' : 'Guardar Cambios'}
+        </Button>
+    );
+}
 
 export function EditClientForm({ client }: { client: Client }) {
-  const [serverError, setServerError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
+  const updateClientWithId = updateClient.bind(null, client.id);
+  const [state, formAction] = useActionState(updateClientWithId, undefined);
+  const { toast } = useToast();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<ClientFormValues>({
-    resolver: zodResolver(clientSchema),
-    defaultValues: {
-      name: client.name,
-      nif: client.nif,
-      address: client.address,
-    },
-  });
-  
-  const onFormSubmit = (data: ClientFormValues) => {
-    setServerError(null);
-    startTransition(async () => {
-        const formData = new FormData();
-        formData.append('name', data.name);
-        formData.append('nif', data.nif);
-        formData.append('address', data.address);
-        
-        const updateClientWithId = updateClient.bind(null, client.id);
-        const result = await updateClientWithId(null, formData);
-
-        if (result?.success && result.redirectPath) {
-            router.push(result.redirectPath);
-        } else if (result?.message) {
-            setServerError(result.message);
-        } else if (result?.errors) {
-            const errorMessages = Object.values(result.errors).flat().join(' ');
-            setServerError(errorMessages || 'Hubo un error de validación.');
-        } else {
-            setServerError('Ocurrió un error inesperado.');
-        }
-    });
-  };
+  useEffect(() => {
+    if (state?.message && !state.errors) {
+        toast({
+            variant: "destructive",
+            title: "Error al actualizar",
+            description: state.message,
+        })
+    }
+  }, [state, toast]);
 
   return (
-    <form onSubmit={handleSubmit(onFormSubmit)}>
+    <form action={formAction}>
         <Card className="max-w-2xl mx-auto">
             <CardHeader>
                 <CardTitle>Datos del Cliente</CardTitle>
@@ -77,36 +49,33 @@ export function EditClientForm({ client }: { client: Client }) {
             <CardContent className="space-y-6">
                 <div className="space-y-2">
                     <Label htmlFor="name">Nombre o Razón Social</Label>
-                    <Input id="name" {...register('name')} />
-                    {errors.name && <p className="text-sm text-destructive mt-1">{errors.name.message}</p>}
+                    <Input id="name" name="name" defaultValue={client.name} required />
+                     {state?.errors?.name && <p className="text-sm text-destructive mt-1">{state.errors.name[0]}</p>}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="nif">NIF/CIF</Label>
-                    <Input id="nif" {...register('nif')} />
-                    {errors.nif && <p className="text-sm text-destructive mt-1">{errors.nif.message}</p>}
+                    <Input id="nif" name="nif" defaultValue={client.nif} required />
+                    {state?.errors?.nif && <p className="text-sm text-destructive mt-1">{state.errors.nif[0]}</p>}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="address">Dirección</Label>
-                    <Input id="address" {...register('address')} />
-                    {errors.address && <p className="text-sm text-destructive mt-1">{errors.address.message}</p>}
+                    <Input id="address" name="address" defaultValue={client.address} required />
+                    {state?.errors?.address && <p className="text-sm text-destructive mt-1">{state.errors.address[0]}</p>}
                 </div>
             </CardContent>
             <CardFooter className="flex-col gap-4 items-stretch">
-                {serverError && (
+                {state?.message && !state.errors && (
                     <Alert variant="destructive">
                       <AlertCircle className="h-4 w-4" />
                       <AlertTitle>Error</AlertTitle>
-                      <AlertDescription>{serverError}</AlertDescription>
+                      <AlertDescription>{state.message}</AlertDescription>
                     </Alert>
                 )}
                 <div className='flex gap-2 justify-end'>
                     <Button variant="ghost" asChild>
                         <Link href="/clients">Cancelar</Link>
                     </Button>
-                    <Button type="submit" disabled={isPending}>
-                        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                        {isPending ? 'Guardando...' : 'Guardar Cambios'}
-                    </Button>
+                    <SubmitButton />
                 </div>
             </CardFooter>
         </Card>
