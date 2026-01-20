@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, Trash2, Loader2, Save, UserPlus } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 import { createQuote } from '@/lib/actions';
 import { formatCurrency } from '@/lib/utils';
@@ -49,7 +48,6 @@ type QuoteFormValues = z.infer<typeof quoteSchema>;
 export function CreateQuoteForm({ clients, user }: { clients: Client[], user: User }) {
   const [state, formAction] = useActionState(createQuote, undefined);
   const { toast } = useToast();
-  const router = useRouter();
   const vatRate = user.vatRate ?? 0.21;
   
   const [isPending, startTransition] = useTransition();
@@ -126,20 +124,14 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
   };
   
   useEffect(() => {
-    if (state?.success && state.redirectPath) {
-      toast({
-        title: "¡Presupuesto Creado!",
-        description: "El presupuesto se ha guardado correctamente.",
-      });
-      router.push(state.redirectPath);
-    } else if (state?.message && !state.errors) {
+    if (state?.message && !state.errors) {
         toast({
             variant: "destructive",
             title: "Error al crear presupuesto",
             description: state.message,
         });
     }
-  }, [state, router, toast]);
+  }, [state, toast]);
 
 
   return (

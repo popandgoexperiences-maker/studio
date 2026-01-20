@@ -184,12 +184,12 @@ export async function createInvoice(prevState: any, formData: FormData) {
       status: 'pending',
     });
 
-    return { success: true, redirectPath: '/invoices' };
   } catch (e: any) {
     return {
       message: `Error al crear la factura: ${e?.message || String(e)}`,
     };
   }
+  redirect('/invoices');
 }
 
 export async function deleteInvoice(invoiceId: string) {
@@ -302,10 +302,10 @@ export async function createQuote(prevState: any, formData: FormData) {
       status: 'draft',
     });
 
-    return { success: true, redirectPath: '/quotes' };
   } catch (e: any) {
     return { message: `Error al crear el presupuesto: ${e.message}` };
   }
+  redirect('/quotes');
 }
 
 export async function deleteQuote(quoteId: string) {
