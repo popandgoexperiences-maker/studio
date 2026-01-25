@@ -20,7 +20,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { InvoiceActions } from './invoice-actions';
 
 export function InvoicesTable({ invoices, user }: { invoices: Invoice[], user: User }) {
-  if (invoices.length === 0) {
+  if (!invoices || invoices.length === 0) {
     return (
       <Card>
         <CardContent className="pt-6">
@@ -51,20 +51,20 @@ export function InvoicesTable({ invoices, user }: { invoices: Invoice[], user: U
             </TableHeader>
             <TableBody>
               {invoices.map((invoice) => (
-                <TableRow key={invoice.id}>
+                <TableRow key={invoice?.id}>
                   <TableCell className="font-medium">
-                    <Link href={`/invoices/${invoice.id}`} className="text-primary hover:underline">
-                      {invoice.invoiceNumber}
+                    <Link href={`/invoices/${invoice?.id}`} className="text-primary hover:underline">
+                      {invoice?.invoiceNumber ?? 'N/A'}
                     </Link>
                   </TableCell>
-                  <TableCell>{invoice.client.name}</TableCell>
-                  <TableCell className="hidden sm:table-cell">{new Date(invoice.date).toLocaleDateString('es-ES')}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(invoice.total)}</TableCell>
+                  <TableCell>{invoice?.client?.name ?? 'Cliente no disponible'}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{invoice?.date ? new Date(invoice.date).toLocaleDateString('es-ES') : 'Sin fecha'}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(invoice?.total ?? 0)}</TableCell>
                   <TableCell className="hidden md:table-cell">
-                    <StatusBadge status={invoice.status} />
+                    {invoice?.status && <StatusBadge status={invoice.status} />}
                   </TableCell>
                   <TableCell>
-                    <InvoiceActions invoice={invoice} />
+                    {invoice && <InvoiceActions invoice={invoice} />}
                   </TableCell>
                 </TableRow>
               ))}

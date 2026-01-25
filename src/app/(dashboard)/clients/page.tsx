@@ -99,8 +99,8 @@ function ClientsTableWrapper({ userId }: { userId: string }) {
     }
     const lowercasedQuery = searchQuery.toLowerCase();
     return allClients.filter(client => 
-      client.name.toLowerCase().includes(lowercasedQuery) ||
-      client.nif.toLowerCase().includes(lowercasedQuery)
+      client.name?.toLowerCase().includes(lowercasedQuery) ||
+      client.nif?.toLowerCase().includes(lowercasedQuery)
     );
   }, [allClients, searchQuery]);
 
@@ -111,7 +111,7 @@ function ClientsTableWrapper({ userId }: { userId: string }) {
   const clientsWithInvoiceCount = filteredClients.map((client) => ({
     ...client,
     invoiceCount: (invoices || []).filter(
-      (invoice) => invoice.client.id === client.id
+      (invoice) => invoice.client?.id === client.id
     ).length,
   }));
   
@@ -145,29 +145,29 @@ function ClientsTableWrapper({ userId }: { userId: string }) {
             </TableHeader>
             <TableBody>
               {clientsWithInvoiceCount.map((client) => (
-                <TableRow key={client.id}>
+                <TableRow key={client?.id}>
                   <TableCell className="font-medium">
-                     <Link href={`/clients/${client.id}`} className="text-primary hover:underline">
-                      {client.name}
+                     <Link href={`/clients/${client?.id}`} className="text-primary hover:underline">
+                      {client?.name ?? 'Cliente sin nombre'}
                     </Link>
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell">{client.nif}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{client?.nif ?? 'N/A'}</TableCell>
                   <TableCell className="hidden md:table-cell">
-                    {client.address}
+                    {client?.address ?? 'N/A'}
                   </TableCell>
                   <TableCell className="text-right hidden sm:table-cell">
-                    <Link href={`/invoices?query=${encodeURIComponent(client.name)}`} className="text-primary hover:underline">
-                      {client.invoiceCount}
+                    <Link href={`/invoices?query=${encodeURIComponent(client?.name ?? '')}`} className="text-primary hover:underline">
+                      {client?.invoiceCount ?? 0}
                     </Link>
                   </TableCell>
                   <TableCell className="flex justify-end gap-1">
                      <Button asChild variant="ghost" size="icon" className="h-8 w-8">
-                        <Link href={`/clients/${client.id}/edit`}>
+                        <Link href={`/clients/${client?.id}/edit`}>
                             <Pencil className="h-4 w-4" />
                             <span className="sr-only">Editar cliente</span>
                         </Link>
                     </Button>
-                    <DeleteClientButton clientId={client.id} />
+                    {client?.id && <DeleteClientButton clientId={client.id} />}
                   </TableCell>
                 </TableRow>
               ))}

@@ -189,6 +189,8 @@ export async function createInvoice(prevState: any, formData: FormData) {
       message: `Error al crear la factura: ${e?.message || String(e)}`,
     };
   }
+
+  await new Promise(resolve => setTimeout(resolve, 500));
   redirect('/invoices');
 }
 
@@ -305,6 +307,8 @@ export async function createQuote(prevState: any, formData: FormData) {
   } catch (e: any) {
     return { message: `Error al crear el presupuesto: ${e.message}` };
   }
+
+  await new Promise(resolve => setTimeout(resolve, 500));
   redirect('/quotes');
 }
 
@@ -410,6 +414,7 @@ export async function createClient(prevState: any, formData: FormData) {
     return { message: `Error al guardar el cliente: ${e?.message || String(e)}` };
   }
 
+  await new Promise(resolve => setTimeout(resolve, 500));
   redirect('/clients');
 }
 
@@ -446,6 +451,7 @@ export async function updateClient(
     return { message: `Error al actualizar el cliente: ${e.message}` };
   }
 
+  await new Promise(resolve => setTimeout(resolve, 500));
   redirect('/clients');
 }
 

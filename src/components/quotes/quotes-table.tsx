@@ -21,7 +21,7 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 
 export function QuotesTable({ quotes, user }: { quotes: Quote[], user: User }) {
-  if (quotes.length === 0) {
+  if (!quotes || quotes.length === 0) {
     return (
       <Card>
         <CardContent className="pt-6">
@@ -52,28 +52,28 @@ export function QuotesTable({ quotes, user }: { quotes: Quote[], user: User }) {
             </TableHeader>
             <TableBody>
               {quotes.map((quote) => (
-                <TableRow key={quote.id}>
+                <TableRow key={quote?.id}>
                   <TableCell className="font-medium">
-                     <Link href={`/quotes/${quote.id}`} className="text-primary hover:underline">
-                        {quote.quoteNumber}
+                     <Link href={`/quotes/${quote?.id}`} className="text-primary hover:underline">
+                        {quote?.quoteNumber ?? 'N/A'}
                     </Link>
                   </TableCell>
-                  <TableCell>{quote.client.name}</TableCell>
-                  <TableCell className="hidden sm:table-cell">{new Date(quote.date).toLocaleDateString('es-ES')}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(quote.total)}</TableCell>
+                  <TableCell>{quote?.client?.name ?? 'Cliente no disponible'}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{quote?.date ? new Date(quote.date).toLocaleDateString('es-ES') : 'Sin fecha'}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(quote?.total ?? 0)}</TableCell>
                   <TableCell className="hidden md:table-cell">
-                    {quote.invoiceId ? (
+                    {quote?.invoiceId ? (
                         <Link href={`/invoices/${quote.invoiceId}`}>
                             <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700/50 cursor-pointer">
                                 Facturado
                             </Badge>
                         </Link>
                     ) : (
-                        <StatusBadge status={quote.status} />
+                        quote?.status && <StatusBadge status={quote.status} />
                     )}
                   </TableCell>
                   <TableCell>
-                    <QuoteActions quote={quote} />
+                    {quote && <QuoteActions quote={quote} />}
                   </TableCell>
                 </TableRow>
               ))}
