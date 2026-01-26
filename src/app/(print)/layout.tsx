@@ -1,13 +1,9 @@
-export default function PrintRootLayout({ children }: { children: React.ReactNode }) {
+import type { PropsWithChildren } from "react";
+
+export default function PrintRootLayout({ children }: PropsWithChildren) {
   return (
-    <html lang="es">
-      <body
-        style={{
-          background: '#fff', // White background for printing
-        }}
-      >
-        {children}
-      </body>
-    </html>
+    <div style={{ background: "#fff" }}>
+      {children}
+    </div>
   );
 }

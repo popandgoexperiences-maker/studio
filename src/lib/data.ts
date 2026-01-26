@@ -26,6 +26,15 @@ export async function fetchInvoices(userId: string): Promise<Invoice[]> {
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Invoice));
 }
 
+export async function fetchInvoice(userId: string, invoiceId: string): Promise<Invoice | null> {
+  const db = getFirestoreSafe();
+  const invoiceDoc = await db.collection('users').doc(userId).collection('invoices').doc(invoiceId).get();
+  if (!invoiceDoc.exists) {
+    return null;
+  }
+  return { id: invoiceDoc.id, ...invoiceDoc.data() } as Invoice;
+}
+
 export async function fetchUser(userId: string): Promise<User | null> {
   const db = getFirestoreSafe();
   const userDocRef = db.collection('users').doc(userId);
