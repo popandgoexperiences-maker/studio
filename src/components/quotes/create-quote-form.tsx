@@ -247,11 +247,35 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
                                                 {errors.lineItems?.[index]?.descripcion && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.descripcion?.message}</p>}
                                             </TableCell>
                                             <TableCell>
-                                                <Input type="text" inputMode="decimal" {...register(`lineItems.${index}.cantidad`)} className="text-right" onFocus={(e) => e.target.select()}/>
+                                                <Controller
+                                                    control={control}
+                                                    name={`lineItems.${index}.cantidad`}
+                                                    render={({ field }) => (
+                                                        <Input
+                                                            {...field}
+                                                            type="text"
+                                                            inputMode="decimal"
+                                                            className="text-right"
+                                                            onFocus={(e) => e.target.select()}
+                                                        />
+                                                    )}
+                                                />
                                                 {errors.lineItems?.[index]?.cantidad && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.cantidad?.message}</p>}
                                             </TableCell>
                                             <TableCell>
-                                                <Input type="text" inputMode="decimal" {...register(`lineItems.${index}.precioUnitario`)} className="text-right" onFocus={(e) => e.target.select()}/>
+                                                <Controller
+                                                    control={control}
+                                                    name={`lineItems.${index}.precioUnitario`}
+                                                    render={({ field }) => (
+                                                        <Input
+                                                            {...field}
+                                                            type="text"
+                                                            inputMode="decimal"
+                                                            className="text-right"
+                                                            onFocus={(e) => e.target.select()}
+                                                        />
+                                                    )}
+                                                />
                                                 {errors.lineItems?.[index]?.precioUnitario && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.precioUnitario?.message}</p>}
                                             </TableCell>
                                             <TableCell className="text-right font-medium align-top pt-5">
@@ -288,12 +312,38 @@ export function CreateQuoteForm({ clients, user }: { clients: Client[], user: Us
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <Label htmlFor={`lineItems.${index}.cantidad`}>Cantidad</Label>
-                                            <Input id={`lineItems.${index}.cantidad`} type="text" inputMode="decimal" {...register(`lineItems.${index}.cantidad`)} className="text-right" onFocus={(e) => e.target.select()} />
+                                             <Controller
+                                                control={control}
+                                                name={`lineItems.${index}.cantidad`}
+                                                render={({ field }) => (
+                                                    <Input
+                                                        {...field}
+                                                        id={`lineItems.${index}.cantidad`}
+                                                        type="text"
+                                                        inputMode="decimal"
+                                                        className="text-right"
+                                                        onFocus={(e) => e.target.select()}
+                                                    />
+                                                )}
+                                            />
                                             {errors.lineItems?.[index]?.cantidad && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.cantidad?.message}</p>}
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor={`lineItems.${index}.precioUnitario`}>{watch('priceIncludesVAT') ? 'Precio (IVA incl.)' : 'Precio Unit.'}</Label>
-                                            <Input id={`lineItems.${index}.precioUnitario`} type="text" inputMode="decimal" {...register(`lineItems.${index}.precioUnitario`)} className="text-right" onFocus={(e) => e.target.select()} />
+                                            <Controller
+                                                control={control}
+                                                name={`lineItems.${index}.precioUnitario`}
+                                                render={({ field }) => (
+                                                    <Input
+                                                        {...field}
+                                                        id={`lineItems.${index}.precioUnitario`}
+                                                        type="text"
+                                                        inputMode="decimal"
+                                                        className="text-right"
+                                                        onFocus={(e) => e.target.select()}
+                                                    />
+                                                )}
+                                            />
                                             {errors.lineItems?.[index]?.precioUnitario && <p className="text-sm text-destructive mt-1">{errors.lineItems[index]?.precioUnitario?.message}</p>}
                                         </div>
                                     </div>
