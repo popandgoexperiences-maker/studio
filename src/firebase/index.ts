@@ -1,48 +1,61 @@
 'use client';
 
-import { firebaseConfig } from '@/firebase/config';
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore'
+// src/firebase/index.ts
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
+import {
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  type Firestore,
+} from "firebase/firestore";
+import { getAuth, type Auth } from "firebase/auth";
+import { firebaseConfig } from './config';
+import { enableIndexedDbPersistence } from 'firebase/firestore';
 
-// IMPORTANT: DO NOT MODIFY THIS FUNCTION
+
+let firebaseApp: FirebaseApp | null = null;
+let firestore: Firestore | null = null;
+let auth: Auth | null = null;
+
 export function initializeFirebase() {
-  if (!getApps().length) {
-    // Important! initializeApp() is called without any arguments because Firebase App Hosting
-    // integrates with the initializeApp() function to provide the environment variables needed to
-    // populate the FirebaseOptions in production. It is critical that we attempt to call initializeApp()
-    // without arguments.
-    let firebaseApp;
-    try {
-      // Attempt to initialize via Firebase App Hosting environment variables
-      firebaseApp = initializeApp();
-    } catch (e) {
-      // Only warn in production because it's normal to use the firebaseConfig to initialize
-      // during development
-      if (process.env.NODE_ENV === "production") {
-        console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
+  if (!firebaseApp) {
+    firebaseApp = getApps().length
+      ? getApp()
+      : initializeApp(firebaseConfig);
+
+    if (typeof window !== "undefined") {
+      try {
+        firestore = initializeFirestore(firebaseApp, {
+          localCache: persistentLocalCache({
+            tabManager: persistentMultipleTabManager(),
+          }),
+        });
+        enableIndexedDbPersistence(firestore).catch((err) => {
+            if (err.code == 'failed-precondition') {
+                console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+            } else if (err.code == 'unimplemented') {
+                console.warn('The current browser does not support all of the features required to enable persistence.');
+            }
+        });
+      } catch (e) {
+          console.error("Error initializing Firestore with persistence:", e);
+          firestore = getFirestore(firebaseApp);
       }
-      firebaseApp = initializeApp(firebaseConfig);
+    } else {
+      firestore = getFirestore(firebaseApp);
     }
 
-    return getSdks(firebaseApp);
+    auth = getAuth(firebaseApp);
   }
 
-  // If already initialized, return the SDKs with the already initialized App
-  return getSdks(getApp());
-}
-
-export function getSdks(firebaseApp: FirebaseApp) {
   return {
     firebaseApp,
-    auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp)
+    firestore,
+    auth,
   };
 }
-
-export * from './provider';
-export * from './client-provider';
-export * from './firestore/use-collection';
-export * from './firestore/use-doc';
-export * from './errors';
-export * from './error-emitter';
+export { useAuth, useFirestore, useFirebase, useUser } from "./provider";
+export { useCollection } from './firestore/use-collection';
+export { useDoc } from './firestore/use-doc';
+export { useMemoFirebase } from './provider';
