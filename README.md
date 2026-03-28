@@ -27,8 +27,7 @@
 Si acabas de crear el repositorio `https://github.com/popandgoexperiences-maker/factufacil.git`, sigue estos pasos en tu terminal:
 
 1. **Inicializar Git:**
-   ```bash
-   git init
+   ```bash git init
    ```
 
 2. **Añadir archivos:**
@@ -53,3 +52,4 @@ Si acabas de crear el repositorio `https://github.com/popandgoexperiences-maker/
    ```
 
 *Desarrollado con ❤️ para simplificar la vida del autónomo.*
+# factufacil
